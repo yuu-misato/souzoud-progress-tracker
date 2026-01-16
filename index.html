@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SOUZOUD Inc. - プロジェクト進捗確認</title>
+  <meta name="description" content="プロジェクトの進捗状況をリアルタイムで確認できるサービス">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/index.css">
+</head>
+
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="container">
+      <div class="header__inner">
+        <a href="index.html" class="header__logo">
+          <div class="header__logo-icon">📊</div>
+          <span class="header__logo-text">SOUZOUD Inc.</span>
+        </a>
+        <nav class="header__nav">
+          <a href="admin.html" class="btn btn--ghost">管理画面</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main class="container container--narrow">
+    <!-- Search Section -->
+    <section id="search-section" class="hero">
+      <h1 class="hero__title">プロジェクト進捗確認</h1>
+      <p class="hero__subtitle">
+        クライアントIDを入力して、プロジェクトの進捗状況をご確認ください
+      </p>
+      <div class="search-box">
+        <input type="text" id="client-id-input" class="input input--lg" placeholder="クライアントID（例：DEMO01）"
+          autocomplete="off">
+        <button id="search-btn" class="btn btn--primary btn--lg">確認する</button>
+      </div>
+      <p style="margin-top: var(--space-4); font-size: var(--font-size-sm); color: var(--color-text-muted);">
+        ※ デモ用ID: <code
+          style="background: var(--color-bg-secondary); padding: 2px 8px; border-radius: 4px;">DEMO01</code>
+      </p>
+    </section>
+
+    <!-- Client Portal Section (Hidden by default) -->
+    <section id="client-section" style="display: none;">
+      <!-- Back Button -->
+      <button id="back-btn" class="btn btn--ghost" style="margin-bottom: var(--space-6);">
+        ← 検索に戻る
+      </button>
+
+      <!-- Client Info -->
+      <div class="card" style="margin-bottom: var(--space-6);">
+        <div style="display: flex; align-items: center; gap: var(--space-4); margin-bottom: var(--space-4);">
+          <div class="status-card__icon" style="width: 60px; height: 60px; font-size: 28px; margin: 0;">🏢</div>
+          <div>
+            <h2 id="display-client-name" style="margin-bottom: var(--space-1);">-</h2>
+            <p style="color: var(--color-text-muted);">クライアントID: <span id="display-client-id">-</span></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Project List -->
+      <h3 style="margin-bottom: var(--space-4);">プロジェクト一覧</h3>
+      <div id="project-list" class="project-cards">
+        <!-- Projects will be rendered here -->
+      </div>
+    </section>
+
+    <!-- Project Detail Section (Hidden by default) -->
+    <section id="project-section" style="display: none;">
+      <!-- Back Button -->
+      <button id="back-to-list-btn" class="btn btn--ghost" style="margin-bottom: var(--space-6);">
+        ← プロジェクト一覧に戻る
+      </button>
+
+      <!-- Project Info -->
+      <div class="card" style="margin-bottom: var(--space-6);">
+        <div class="project-info">
+          <div class="project-info__item">
+            <div class="project-info__label">プロジェクト名</div>
+            <div class="project-info__value" id="display-project-name">-</div>
+          </div>
+          <div class="project-info__item">
+            <div class="project-info__label">クライアント</div>
+            <div class="project-info__value" id="display-project-client">-</div>
+          </div>
+          <div class="project-info__item">
+            <div class="project-info__label">進捗率</div>
+            <div class="project-info__value" id="display-progress">0%</div>
+          </div>
+          <div class="project-info__item">
+            <div class="project-info__label">最終更新</div>
+            <div class="project-info__value" id="display-updated">-</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Status Card -->
+      <div class="card status-card" style="margin-bottom: var(--space-8);">
+        <div class="status-card__icon" id="status-icon">🚀</div>
+        <h2 class="status-card__title" id="status-title">制作・開発中</h2>
+        <p class="status-card__description" id="status-description">
+          現在、制作・開発フェーズを進めています。
+        </p>
+        <div style="margin-top: var(--space-4);">
+          <span class="badge badge--primary" id="status-badge">進行中</span>
+        </div>
+      </div>
+
+      <!-- Progress Steps -->
+      <div class="card">
+        <h3 style="margin-bottom: var(--space-6);">進捗ステップ</h3>
+        <div class="progress-container">
+          <div class="progress-steps" id="progress-steps">
+            <!-- Steps will be rendered by JavaScript -->
+          </div>
+        </div>
+
+        <!-- Timeline -->
+        <h4 style="margin-top: var(--space-8); margin-bottom: var(--space-4);">タイムライン</h4>
+        <div class="timeline" id="timeline">
+          <!-- Timeline items will be rendered by JavaScript -->
+        </div>
+      </div>
+    </section>
+
+    <!-- Not Found Section -->
+    <section id="not-found-section" style="display: none;">
+      <div class="card empty-state">
+        <div class="empty-state__icon">🔍</div>
+        <h2 class="empty-state__title">クライアントが見つかりません</h2>
+        <p class="empty-state__description">
+          入力されたIDに一致するクライアントが見つかりませんでした。IDをご確認ください。
+        </p>
+        <button id="retry-btn" class="btn btn--primary" style="margin-top: var(--space-6);">
+          もう一度検索する
+        </button>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer
+    style="text-align: center; padding: var(--space-8) 0; color: var(--color-text-muted); font-size: var(--font-size-sm);">
+    <p>© 2024 SOUZOUD Inc.</p>
+  </footer>
+
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+
+  <style>
+    /* Project Cards Grid */
+    .project-cards {
+      display: grid;
+      gap: var(--space-4);
+    }
+
+    .project-card {
+      background: var(--color-bg-card);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-xl);
+      padding: var(--space-6);
+      cursor: pointer;
+      transition: all var(--transition-base);
+    }
+
+    .project-card:hover {
+      border-color: var(--color-primary);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .project-card__header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: var(--space-4);
+    }
+
+    .project-card__name {
+      font-size: var(--font-size-lg);
+      font-weight: 600;
+      margin-bottom: var(--space-1);
+    }
+
+    .project-card__description {
+      font-size: var(--font-size-sm);
+      color: var(--color-text-muted);
+    }
+
+    .project-card__progress {
+      display: flex;
+      align-items: center;
+      gap: var(--space-4);
+    }
+
+    .project-card__progress-bar {
+      flex: 1;
+      height: 8px;
+      background: var(--color-bg-secondary);
+      border-radius: var(--radius-full);
+      overflow: hidden;
+    }
+
+    .project-card__progress-fill {
+      height: 100%;
+      background: var(--gradient-primary);
+      border-radius: var(--radius-full);
+      transition: width var(--transition-base);
+    }
+
+    .project-card__progress-text {
+      font-size: var(--font-size-sm);
+      font-weight: 600;
+      color: var(--color-primary-light);
+      min-width: 45px;
+      text-align: right;
+    }
+
+    .project-card__status {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      margin-top: var(--space-4);
+      padding-top: var(--space-4);
+      border-top: 1px solid var(--color-border);
+      font-size: var(--font-size-sm);
+      color: var(--color-text-secondary);
+    }
+
+    .project-card__status-icon {
+      font-size: 16px;
+    }
+  </style>
+</body>
+
+</html>

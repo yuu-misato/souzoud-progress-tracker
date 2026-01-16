@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SOUZOUD Inc. - 管理画面</title>
+    <meta name="description" content="プロジェクト進捗を管理・更新する管理画面">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/index.css">
+</head>
+
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header__inner">
+                <a href="index.html" class="header__logo">
+                    <div class="header__logo-icon">📊</div>
+                    <span class="header__logo-text">SOUZOUD Inc.</span>
+                </a>
+                <nav class="header__nav">
+                    <span class="badge badge--primary">管理画面</span>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="admin-grid">
+            <!-- Sidebar -->
+            <aside class="sidebar">
+                <div
+                    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-4);">
+                    <h2 class="sidebar__title" style="margin: 0;">プロジェクト</h2>
+                    <button id="new-project-btn" class="btn btn--primary btn--sm">+ 新規</button>
+                </div>
+                <ul class="project-list" id="project-list">
+                    <!-- Projects will be rendered here -->
+                </ul>
+            </aside>
+
+            <!-- Main Content -->
+            <div class="main-content">
+                <!-- Empty State -->
+                <div id="empty-state" class="card empty-state">
+                    <div class="empty-state__icon">📁</div>
+                    <h2 class="empty-state__title">プロジェクトを選択</h2>
+                    <p class="empty-state__description">
+                        左のリストからプロジェクトを選択するか、新しいプロジェクトを作成してください。
+                    </p>
+                </div>
+
+                <!-- Project Editor -->
+                <div id="project-editor" style="display: none;">
+                    <!-- Project Header -->
+                    <div class="card" style="margin-bottom: var(--space-6);">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--space-6);">
+                            <div>
+                                <h2 id="editor-project-name" style="margin-bottom: var(--space-2);">-</h2>
+                                <p id="editor-client-name" style="font-size: var(--font-size-lg);">-</p>
+                            </div>
+                            <div style="display: flex; gap: var(--space-2);">
+                                <button id="share-btn" class="btn btn--secondary">
+                                    🔗 共有リンク
+                                </button>
+                                <button id="edit-project-btn" class="btn btn--ghost">
+                                    ✏️ 編集
+                                </button>
+                                <button id="delete-project-btn" class="btn btn--ghost" style="color: #ef4444;">
+                                    🗑️ 削除
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="project-info">
+                            <div class="project-info__item">
+                                <div class="project-info__label">クライアントID</div>
+                                <div class="project-info__value" id="editor-client-id"
+                                    style="color: var(--color-primary-light);">-</div>
+                            </div>
+                            <div class="project-info__item">
+                                <div class="project-info__label">進捗率</div>
+                                <div class="project-info__value" id="editor-progress">0%</div>
+                            </div>
+                            <div class="project-info__item">
+                                <div class="project-info__label">作成日</div>
+                                <div class="project-info__value" id="editor-created-at">-</div>
+                            </div>
+                            <div class="project-info__item">
+                                <div class="project-info__label">最終更新</div>
+                                <div class="project-info__value" id="editor-updated-at">-</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step Editor -->
+                    <div class="card">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-6);">
+                            <div>
+                                <h3 style="margin-bottom: var(--space-1);">工程管理</h3>
+                                <p style="color: var(--color-text-muted); font-size: var(--font-size-sm);">
+                                    各工程のステータス更新や仕様・要件を編集できます
+                                </p>
+                            </div>
+                            <button id="add-step-btn" class="btn btn--secondary btn--sm">+ 工程を追加</button>
+                        </div>
+                        <div class="step-editor" id="step-editor">
+                            <!-- Steps will be rendered here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Step Edit Modal -->
+    <div class="modal-overlay" id="step-modal">
+        <div class="modal" style="max-width: 600px;">
+            <div class="modal__header">
+                <h2 class="modal__title" id="step-modal-title">工程を編集</h2>
+                <button class="modal__close" id="step-modal-close">&times;</button>
+            </div>
+            <div class="modal__body">
+                <div class="input-group" style="margin-bottom: var(--space-4);">
+                    <label for="step-name">工程名 *</label>
+                    <input type="text" id="step-name" class="input" placeholder="例：ヒアリング・要件定義">
+                </div>
+                <div class="input-group">
+                    <label for="step-description">仕様・要件（クライアントにも表示されます）</label>
+                    <textarea id="step-description" class="input" rows="6"
+                        placeholder="この工程で対応する内容、決定事項、注意点などを記載"></textarea>
+                </div>
+            </div>
+            <div class="modal__footer">
+                <button class="btn btn--ghost" id="step-delete-btn" style="margin-right: auto; color: #ef4444;">🗑️
+                    削除</button>
+                <button class="btn btn--secondary" id="step-modal-cancel">キャンセル</button>
+                <button class="btn btn--primary" id="step-modal-save">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- New/Edit Project Modal -->
+    <div class="modal-overlay" id="project-modal">
+        <div class="modal">
+            <div class="modal__header">
+                <h2 class="modal__title" id="modal-title">新規プロジェクト</h2>
+                <button class="modal__close" id="modal-close">&times;</button>
+            </div>
+            <div class="modal__body">
+                <div class="input-group">
+                    <label for="input-name">プロジェクト名 *</label>
+                    <input type="text" id="input-name" class="input" placeholder="例：コーポレートサイトリニューアル">
+                </div>
+                <div class="input-group">
+                    <label for="input-client">クライアント名 *</label>
+                    <input type="text" id="input-client" class="input" placeholder="例：株式会社サンプル">
+                </div>
+                <div class="input-group">
+                    <label for="input-description">説明（任意）</label>
+                    <textarea id="input-description" class="input" rows="3" placeholder="プロジェクトの概要を入力"></textarea>
+                </div>
+            </div>
+            <div class="modal__footer">
+                <button class="btn btn--secondary" id="modal-cancel">キャンセル</button>
+                <button class="btn btn--primary" id="modal-save">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Share Modal -->
+    <div class="modal-overlay" id="share-modal">
+        <div class="modal">
+            <div class="modal__header">
+                <h2 class="modal__title">共有リンク</h2>
+                <button class="modal__close" id="share-modal-close">&times;</button>
+            </div>
+            <div class="modal__body">
+                <div class="input-group" style="margin-bottom: var(--space-4);">
+                    <label>クライアント用リンク（全プロジェクト表示）</label>
+                    <div class="copy-link" style="margin-top: var(--space-2);">
+                        <input type="text" id="share-url-client" class="copy-link__input" readonly>
+                        <button class="btn btn--primary copy-btn" data-target="share-url-client">コピー</button>
+                    </div>
+                </div>
+                <p style="font-size: var(--font-size-sm); color: var(--color-text-muted);">
+                    このリンクをクライアントに共有すると、全プロジェクトの進捗状況を確認できます。
+                </p>
+            </div>
+            <div class="modal__footer">
+                <button class="btn btn--secondary" id="share-modal-cancel">閉じる</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal-overlay" id="delete-modal">
+        <div class="modal">
+            <div class="modal__header">
+                <h2 class="modal__title">プロジェクトを削除</h2>
+                <button class="modal__close" id="delete-modal-close">&times;</button>
+            </div>
+            <div class="modal__body">
+                <p style="color: var(--color-text-secondary);">
+                    このプロジェクトを削除しますか？この操作は取り消せません。
+                </p>
+            </div>
+            <div class="modal__footer">
+                <button class="btn btn--secondary" id="delete-modal-cancel">キャンセル</button>
+                <button class="btn btn--primary" id="delete-modal-confirm"
+                    style="background: linear-gradient(135deg, #ef4444 0%, #f87171 100%);">削除する</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast">
+        <span class="toast__icon">✓</span>
+        <span class="toast__message" id="toast-message">保存しました</span>
+    </div>
+
+    <script src="js/data.js"></script>
+    <script src="js/admin.js"></script>
+</body>
+
+</html>
