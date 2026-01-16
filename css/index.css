@@ -572,7 +572,28 @@ p {
   font-size: var(--font-size-base);
   font-weight: 500;
   color: var(--color-text);
-  margin-bottom: var(--space-1);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.timeline__expand {
+  font-size: var(--font-size-xs);
+  color: var(--color-primary);
+  cursor: pointer;
+  padding: var(--space-1);
+  transition: transform var(--transition-fast);
+}
+
+.timeline__expand:hover {
+  transform: scale(1.2);
+}
+
+.timeline__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  width: 100%;
 }
 
 .timeline__item--pending .timeline__title {
@@ -782,6 +803,12 @@ p {
   font-size: var(--font-size-xs);
   font-weight: 600;
   color: var(--color-text-secondary);
+}
+
+.project-list__group-toggle {
+  font-size: var(--font-size-xs);
+  color: var(--color-primary);
+  margin-right: var(--space-1);
 }
 
 .project-list__group-id {

@@ -550,6 +550,67 @@ const DataManager = {
     }
   },
 
+  // ==================== ADMIN OPERATIONS ====================
+
+  async getAllAdmins() {
+    try {
+      const admins = await SupabaseClient.select('admins', 'order=created_at.asc');
+      return admins.map(a => ({
+        id: a.id,
+        email: a.email,
+        name: a.name,
+        role: a.role,
+        isActive: a.is_active,
+        createdAt: a.created_at
+      }));
+    } catch (e) {
+      console.error('Error fetching admins:', e);
+      return [];
+    }
+  },
+
+  async createAdmin(adminData) {
+    try {
+      const result = await SupabaseClient.insert('admins', {
+        email: adminData.email,
+        password_hash: adminData.passwordHash,
+        name: adminData.name,
+        role: adminData.role || 'admin',
+        is_active: true
+      });
+      return result[0];
+    } catch (e) {
+      console.error('Error creating admin:', e);
+      throw e;
+    }
+  },
+
+  async updateAdmin(adminId, updates) {
+    try {
+      const updateData = {};
+      if (updates.name) updateData.name = updates.name;
+      if (updates.email) updateData.email = updates.email;
+      if (updates.role) updateData.role = updates.role;
+      if (updates.passwordHash) updateData.password_hash = updates.passwordHash;
+      if (updates.isActive !== undefined) updateData.is_active = updates.isActive;
+
+      await SupabaseClient.update('admins', `id=eq.${adminId}`, updateData);
+    } catch (e) {
+      console.error('Error updating admin:', e);
+      throw e;
+    }
+  },
+
+  async deleteAdmin(adminId) {
+    try {
+      // Soft delete - just set is_active to false
+      await SupabaseClient.update('admins', `id=eq.${adminId}`, { is_active: false });
+    } catch (e) {
+      console.error('Error deleting admin:', e);
+      throw e;
+    }
+  },
+
   // No-op for compatibility
   initializeSampleData() {
     // Sample data is now in the database

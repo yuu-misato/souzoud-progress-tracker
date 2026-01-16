@@ -306,24 +306,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 detailsContent += `<div class="timeline__url"><a href="${step.url}" target="_blank" rel="noopener noreferrer">📎 関連ファイルを開く</a></div>`;
             }
 
+            // Simple toggle icon next to step name
+            const toggleIcon = hasDetails ? `<span class="timeline__expand" onclick="toggleDetails('${detailsId}')">▶</span>` : '';
+
             const detailsHtml = hasDetails ? `
-            <div class="timeline__details-wrapper">
-              <button class="timeline__toggle" onclick="toggleDetails('${detailsId}')">
-                <span class="timeline__toggle-icon">▶</span>
-                <span class="timeline__toggle-text">詳細を見る</span>
-              </button>
               <div id="${detailsId}" class="timeline__details" style="display: none;">
                 ${detailsContent}
               </div>
-            </div>
-          ` : '';
+            ` : '';
 
             html += `
         <div class="timeline__item ${statusClass}">
           <div class="timeline__dot"></div>
-          <div class="timeline__content" style="flex-direction: column; align-items: stretch;">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-              <div class="timeline__title">${step.name}</div>
+          <div class="timeline__content">
+            <div class="timeline__header">
+              <div class="timeline__title">${step.name} ${toggleIcon}</div>
               <div class="timeline__date">${date}</div>
             </div>
             ${detailsHtml}
@@ -338,18 +335,14 @@ document.addEventListener('DOMContentLoaded', () => {
     // Global function for toggling details
     window.toggleDetails = function (detailsId) {
         const details = document.getElementById(detailsId);
-        const button = details.previousElementSibling;
-        const icon = button.querySelector('.timeline__toggle-icon');
-        const text = button.querySelector('.timeline__toggle-text');
+        const expandIcon = details.parentElement.querySelector('.timeline__expand');
 
         if (details.style.display === 'none') {
             details.style.display = 'block';
-            icon.textContent = '▼';
-            text.textContent = '閉じる';
+            if (expandIcon) expandIcon.textContent = '▼';
         } else {
             details.style.display = 'none';
-            icon.textContent = '▶';
-            text.textContent = '詳細を見る';
+            if (expandIcon) expandIcon.textContent = '▶';
         }
     };
 

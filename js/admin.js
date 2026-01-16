@@ -138,11 +138,18 @@ document.addEventListener('DOMContentLoaded', () => {
             projectsByClient[clientKey].projects.push(project);
         });
 
+        // Get collapsed state from localStorage
+        const collapsedClients = JSON.parse(localStorage.getItem('collapsed_clients') || '{}');
+
         let html = '';
         Object.values(projectsByClient).forEach(group => {
+            const isCollapsed = collapsedClients[group.clientId] === true;
+            const toggleIcon = isCollapsed ? '▶' : '▼';
+
             html += `
         <li class="project-list__group">
-          <div class="project-list__group-header">
+          <div class="project-list__group-header" data-client-id="${group.clientId}" style="cursor: pointer;">
+            <span class="project-list__group-toggle">${toggleIcon}</span>
             <span class="project-list__group-name">🏢 ${group.clientName}</span>
             <span class="project-list__group-id">${group.clientId}</span>
           </div>
@@ -152,10 +159,11 @@ document.addEventListener('DOMContentLoaded', () => {
             group.projects.forEach(project => {
                 const isActive = project.id === currentProjectId;
                 const progress = DataManager.getProgressPercentage(project);
+                const hiddenStyle = isCollapsed ? 'display: none;' : '';
 
                 html += `
           <li class="project-list__item ${isActive ? 'project-list__item--active' : ''}"
-              data-id="${project.id}">
+              data-id="${project.id}" data-client="${group.clientId}" style="${hiddenStyle}">
             <div class="project-list__name">${project.name}</div>
             <div class="project-list__client">${progress}%</div>
           </li>
@@ -165,10 +173,32 @@ document.addEventListener('DOMContentLoaded', () => {
 
         projectList.innerHTML = html;
 
-        // Add click handlers
+        // Add click handlers for project items
         projectList.querySelectorAll('.project-list__item').forEach(item => {
             item.addEventListener('click', () => {
                 selectProject(item.dataset.id);
+            });
+        });
+
+        // Add click handlers for client group toggle
+        projectList.querySelectorAll('.project-list__group-header').forEach(header => {
+            header.addEventListener('click', () => {
+                const clientId = header.dataset.clientId;
+                const toggleIcon = header.querySelector('.project-list__group-toggle');
+                const collapsedClients = JSON.parse(localStorage.getItem('collapsed_clients') || '{}');
+
+                // Toggle state
+                const isNowCollapsed = !collapsedClients[clientId];
+                collapsedClients[clientId] = isNowCollapsed;
+                localStorage.setItem('collapsed_clients', JSON.stringify(collapsedClients));
+
+                // Update icon
+                toggleIcon.textContent = isNowCollapsed ? '▶' : '▼';
+
+                // Toggle visibility of project items
+                projectList.querySelectorAll(`.project-list__item[data-client="${clientId}"]`).forEach(item => {
+                    item.style.display = isNowCollapsed ? 'none' : '';
+                });
             });
         });
     }
@@ -582,5 +612,178 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => {
             toast.classList.remove('show');
         }, 3000);
+    }
+
+    // ==================== ADMIN MANAGEMENT ====================
+
+    const adminListModal = document.getElementById('admin-list-modal');
+    const adminEditModal = document.getElementById('admin-edit-modal');
+    const adminSettingsBtn = document.getElementById('admin-settings-btn');
+    let currentEditAdminId = null;
+
+    // Show admin settings button for master admins
+    if (window.adminSession && window.adminSession.role === 'master' && adminSettingsBtn) {
+        adminSettingsBtn.style.display = 'inline-flex';
+        adminSettingsBtn.addEventListener('click', openAdminListModal);
+    }
+
+    // Admin list modal events
+    document.getElementById('admin-list-modal-close')?.addEventListener('click', closeAdminListModal);
+    document.getElementById('admin-list-modal-cancel')?.addEventListener('click', closeAdminListModal);
+    document.getElementById('add-admin-btn')?.addEventListener('click', openAddAdminModal);
+
+    // Admin edit modal events  
+    document.getElementById('admin-edit-modal-close')?.addEventListener('click', closeAdminEditModal);
+    document.getElementById('admin-edit-modal-cancel')?.addEventListener('click', closeAdminEditModal);
+    document.getElementById('admin-edit-modal-save')?.addEventListener('click', saveAdmin);
+    document.getElementById('admin-delete-btn')?.addEventListener('click', deleteAdmin);
+
+    // Close on overlay click
+    [adminListModal, adminEditModal].forEach(modal => {
+        if (modal) {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.classList.remove('active');
+                }
+            });
+        }
+    });
+
+    async function openAdminListModal() {
+        await renderAdminList();
+        adminListModal.classList.add('active');
+    }
+
+    function closeAdminListModal() {
+        adminListModal.classList.remove('active');
+    }
+
+    async function renderAdminList() {
+        const adminList = document.getElementById('admin-list');
+        const admins = await DataManager.getAllAdmins();
+
+        if (admins.length === 0) {
+            adminList.innerHTML = '<p style="text-align: center; color: var(--color-text-muted);">管理者がいません</p>';
+            return;
+        }
+
+        adminList.innerHTML = admins.map(admin => {
+            const roleLabel = admin.role === 'master' ? '👑 マスター' : '👤 管理者';
+            const statusClass = admin.isActive ? '' : 'opacity: 0.5;';
+            const isSelf = admin.id === window.adminSession?.id;
+
+            return `
+                <div class="admin-item" style="display: flex; justify-content: space-between; align-items: center; padding: var(--space-3); border-bottom: 1px solid var(--color-border); ${statusClass}">
+                    <div>
+                        <div style="font-weight: 500;">${admin.name} ${isSelf ? '(自分)' : ''}</div>
+                        <div style="font-size: var(--font-size-sm); color: var(--color-text-muted);">${admin.email}</div>
+                        <div style="font-size: var(--font-size-xs); color: var(--color-text-muted);">${roleLabel} ${!admin.isActive ? '(無効)' : ''}</div>
+                    </div>
+                    <button class="btn btn--secondary btn--sm" onclick="editAdmin('${admin.id}')" ${isSelf ? 'disabled' : ''}>編集</button>
+                </div>
+            `;
+        }).join('');
+    }
+
+    // Global function for edit button
+    window.editAdmin = async function (adminId) {
+        const admins = await DataManager.getAllAdmins();
+        const admin = admins.find(a => a.id === adminId);
+        if (!admin) return;
+
+        currentEditAdminId = adminId;
+        document.getElementById('admin-edit-title').textContent = '管理者を編集';
+        document.getElementById('admin-email').value = admin.email;
+        document.getElementById('admin-display-name').value = admin.name;
+        document.getElementById('admin-password').value = '';
+        document.getElementById('admin-role').value = admin.role;
+        document.getElementById('admin-delete-btn').style.display = 'block';
+
+        adminEditModal.classList.add('active');
+    };
+
+    function openAddAdminModal() {
+        currentEditAdminId = null;
+        document.getElementById('admin-edit-title').textContent = '管理者を追加';
+        document.getElementById('admin-email').value = '';
+        document.getElementById('admin-display-name').value = '';
+        document.getElementById('admin-password').value = '';
+        document.getElementById('admin-role').value = 'admin';
+        document.getElementById('admin-delete-btn').style.display = 'none';
+
+        adminEditModal.classList.add('active');
+        document.getElementById('admin-email').focus();
+    }
+
+    function closeAdminEditModal() {
+        adminEditModal.classList.remove('active');
+        currentEditAdminId = null;
+    }
+
+    async function saveAdmin() {
+        const email = document.getElementById('admin-email').value.trim();
+        const name = document.getElementById('admin-display-name').value.trim();
+        const password = document.getElementById('admin-password').value;
+        const role = document.getElementById('admin-role').value;
+
+        if (!email || !name) {
+            showToast('メールアドレスと表示名は必須です');
+            return;
+        }
+
+        if (!currentEditAdminId && !password) {
+            showToast('パスワードは必須です');
+            return;
+        }
+
+        if (password && password.length < 8) {
+            showToast('パスワードは8文字以上で入力してください');
+            return;
+        }
+
+        try {
+            let passwordHash = null;
+            if (password) {
+                passwordHash = await hashPassword(password);
+            }
+
+            if (currentEditAdminId) {
+                const updates = { email, name, role };
+                if (passwordHash) updates.passwordHash = passwordHash;
+                await DataManager.updateAdmin(currentEditAdminId, updates);
+                showToast('管理者を更新しました');
+            } else {
+                await DataManager.createAdmin({ email, name, role, passwordHash });
+                showToast('管理者を追加しました');
+            }
+
+            closeAdminEditModal();
+            await renderAdminList();
+        } catch (e) {
+            showToast('エラーが発生しました');
+        }
+    }
+
+    async function deleteAdmin() {
+        if (!currentEditAdminId) return;
+
+        if (confirm('この管理者を無効化しますか？')) {
+            try {
+                await DataManager.deleteAdmin(currentEditAdminId);
+                showToast('管理者を無効化しました');
+                closeAdminEditModal();
+                await renderAdminList();
+            } catch (e) {
+                showToast('エラーが発生しました');
+            }
+        }
+    }
+
+    async function hashPassword(password) {
+        const encoder = new TextEncoder();
+        const data = encoder.encode(password);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
     }
 });
