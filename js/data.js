@@ -1,25 +1,71 @@
 /**
- * Data Management Module
- * Handles localStorage operations for project and client data
+ * Supabase Configuration
  */
+const SUPABASE_URL = 'https://icoblusdkpcniysjnaus.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imljb2JsdXNka3Bjbml5c2puYXVzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg1NzQzNDgsImV4cCI6MjA4NDE1MDM0OH0.eGRudlk7CQHpj2ej0XA67b-l72SeRXP0xrqps6mYL88';
 
+/**
+ * Supabase Client - Simple REST API wrapper
+ */
+const SupabaseClient = {
+  async fetch(endpoint, options = {}) {
+    const url = `${SUPABASE_URL}/rest/v1/${endpoint}`;
+    const headers = {
+      'apikey': SUPABASE_ANON_KEY,
+      'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+      'Content-Type': 'application/json',
+      'Prefer': options.prefer || 'return=representation'
+    };
+
+    const response = await fetch(url, {
+      ...options,
+      headers: { ...headers, ...options.headers }
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(`Supabase error: ${error}`);
+    }
+
+    const text = await response.text();
+    return text ? JSON.parse(text) : null;
+  },
+
+  // SELECT
+  async select(table, query = '') {
+    return this.fetch(`${table}?${query}`);
+  },
+
+  // INSERT
+  async insert(table, data) {
+    return this.fetch(table, {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  },
+
+  // UPDATE
+  async update(table, query, data) {
+    return this.fetch(`${table}?${query}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data)
+    });
+  },
+
+  // DELETE
+  async delete(table, query) {
+    return this.fetch(`${table}?${query}`, {
+      method: 'DELETE'
+    });
+  }
+};
+
+/**
+ * Data Management Module - Supabase Version
+ */
 const DataManager = {
-  STORAGE_KEY: 'progress_tracker_projects',
-  CLIENTS_KEY: 'progress_tracker_clients',
-
-  // Default steps for new projects (can be customized)
-  defaultSteps: [
-    { id: 1, name: 'ヒアリング・要件定義', description: '', status: 'pending', completedAt: null },
-    { id: 2, name: '企画・コンセプト設計', description: '', status: 'pending', completedAt: null },
-    { id: 3, name: 'デザイン制作', description: '', status: 'pending', completedAt: null },
-    { id: 4, name: '制作・開発', description: '', status: 'pending', completedAt: null },
-    { id: 5, name: 'レビュー・修正', description: '', status: 'pending', completedAt: null },
-    { id: 6, name: '最終確認', description: '', status: 'pending', completedAt: null },
-    { id: 7, name: '納品完了', description: '', status: 'pending', completedAt: null }
-  ],
-
   /**
-   * Generate a unique ID (8 chars for projects, 6 chars for clients)
+   * Generate a unique ID
    */
   generateId(length = 8) {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -30,294 +76,324 @@ const DataManager = {
     return result;
   },
 
-  /**
-   * Generate a client ID (shorter and prefixed with CL)
-   */
   generateClientId() {
     return 'CL' + this.generateId(4);
   },
 
   // ==================== CLIENT OPERATIONS ====================
 
-  /**
-   * Get all clients
-   */
-  getAllClients() {
-    const data = localStorage.getItem(this.CLIENTS_KEY);
-    return data ? JSON.parse(data) : [];
-  },
-
-  /**
-   * Save all clients
-   */
-  saveAllClients(clients) {
-    localStorage.setItem(this.CLIENTS_KEY, JSON.stringify(clients));
-  },
-
-  /**
-   * Get a single client by ID
-   */
-  getClient(clientId) {
-    const clients = this.getAllClients();
-    return clients.find(c => c.id === clientId) || null;
-  },
-
-  /**
-   * Create a new client
-   */
-  createClient(clientData) {
-    const clients = this.getAllClients();
-
-    const newClient = {
-      id: this.generateClientId(),
-      name: clientData.name,
-      createdAt: new Date().toISOString()
-    };
-
-    clients.push(newClient);
-    this.saveAllClients(clients);
-
-    return newClient;
-  },
-
-  /**
-   * Get or create client by name
-   */
-  getOrCreateClient(clientName) {
-    const clients = this.getAllClients();
-    let client = clients.find(c => c.name === clientName);
-
-    if (!client) {
-      client = this.createClient({ name: clientName });
+  async getAllClients() {
+    try {
+      return await SupabaseClient.select('clients', 'order=created_at.desc');
+    } catch (e) {
+      console.error('Error fetching clients:', e);
+      return [];
     }
-
-    return client;
   },
 
-  /**
-   * Get all projects for a client
-   */
-  getProjectsByClientId(clientId) {
-    const projects = this.getAllProjects();
-    return projects.filter(p => p.clientId === clientId);
+  async getClient(clientId) {
+    try {
+      const clients = await SupabaseClient.select('clients', `id=eq.${clientId}`);
+      return clients[0] || null;
+    } catch (e) {
+      console.error('Error fetching client:', e);
+      return null;
+    }
+  },
+
+  async createClient(clientData) {
+    try {
+      const newClient = {
+        id: this.generateClientId(),
+        name: clientData.name
+      };
+      const result = await SupabaseClient.insert('clients', newClient);
+      return result[0];
+    } catch (e) {
+      console.error('Error creating client:', e);
+      return null;
+    }
+  },
+
+  async getOrCreateClient(clientName) {
+    try {
+      const clients = await SupabaseClient.select('clients', `name=eq.${encodeURIComponent(clientName)}`);
+      if (clients.length > 0) return clients[0];
+      return await this.createClient({ name: clientName });
+    } catch (e) {
+      console.error('Error in getOrCreateClient:', e);
+      return null;
+    }
+  },
+
+  async getProjectsByClientId(clientId) {
+    try {
+      const projects = await SupabaseClient.select('projects', `client_id=eq.${clientId}&order=created_at.desc`);
+      // Load steps for each project
+      for (const project of projects) {
+        project.steps = await this.getStepsForProject(project.id);
+      }
+      return projects;
+    } catch (e) {
+      console.error('Error fetching projects by client:', e);
+      return [];
+    }
   },
 
   // ==================== PROJECT OPERATIONS ====================
 
-  /**
-   * Get all projects
-   */
-  getAllProjects() {
-    const data = localStorage.getItem(this.STORAGE_KEY);
-    return data ? JSON.parse(data) : [];
-  },
-
-  /**
-   * Save all projects
-   */
-  saveAllProjects(projects) {
-    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(projects));
-  },
-
-  /**
-   * Get a single project by ID
-   */
-  getProject(projectId) {
-    const projects = this.getAllProjects();
-    return projects.find(p => p.id === projectId) || null;
-  },
-
-  /**
-   * Create a new project
-   */
-  createProject(projectData) {
-    const projects = this.getAllProjects();
-
-    // Get or create client
-    const client = this.getOrCreateClient(projectData.client);
-
-    // Use custom steps if provided, otherwise use defaults
-    const steps = projectData.steps || JSON.parse(JSON.stringify(this.defaultSteps));
-
-    const newProject = {
-      id: this.generateId(),
-      name: projectData.name,
-      client: projectData.client,
-      clientId: client.id,
-      description: projectData.description || '',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      steps: steps
-    };
-
-    projects.push(newProject);
-    this.saveAllProjects(projects);
-
-    return newProject;
-  },
-
-  /**
-   * Update a project
-   */
-  updateProject(projectId, updates) {
-    const projects = this.getAllProjects();
-    const index = projects.findIndex(p => p.id === projectId);
-
-    if (index === -1) return null;
-
-    // If client name changed, update clientId
-    if (updates.client && updates.client !== projects[index].client) {
-      const client = this.getOrCreateClient(updates.client);
-      updates.clientId = client.id;
+  async getAllProjects() {
+    try {
+      const projects = await SupabaseClient.select('projects', 'order=created_at.desc');
+      for (const project of projects) {
+        project.steps = await this.getStepsForProject(project.id);
+        project.clientId = project.client_id;
+        project.createdAt = project.created_at;
+        project.updatedAt = project.updated_at;
+      }
+      return projects;
+    } catch (e) {
+      console.error('Error fetching projects:', e);
+      return [];
     }
-
-    projects[index] = {
-      ...projects[index],
-      ...updates,
-      updatedAt: new Date().toISOString()
-    };
-
-    this.saveAllProjects(projects);
-    return projects[index];
   },
 
-  /**
-   * Delete a project
-   */
-  deleteProject(projectId) {
-    const projects = this.getAllProjects();
-    const filtered = projects.filter(p => p.id !== projectId);
-    this.saveAllProjects(filtered);
+  async getProject(projectId) {
+    try {
+      const projects = await SupabaseClient.select('projects', `id=eq.${projectId}`);
+      if (projects.length === 0) return null;
+
+      const project = projects[0];
+      project.steps = await this.getStepsForProject(project.id);
+      project.clientId = project.client_id;
+      project.createdAt = project.created_at;
+      project.updatedAt = project.updated_at;
+      return project;
+    } catch (e) {
+      console.error('Error fetching project:', e);
+      return null;
+    }
+  },
+
+  async getStepsForProject(projectId) {
+    try {
+      const steps = await SupabaseClient.select('steps', `project_id=eq.${projectId}&order=step_order.asc`);
+      return steps.map(s => ({
+        id: s.step_order,
+        name: s.name,
+        description: s.description || '',
+        status: s.status,
+        completedAt: s.completed_at
+      }));
+    } catch (e) {
+      console.error('Error fetching steps:', e);
+      return [];
+    }
+  },
+
+  async createProject(projectData) {
+    try {
+      const client = await this.getOrCreateClient(projectData.client);
+
+      const newProject = {
+        id: this.generateId(),
+        name: projectData.name,
+        client: projectData.client,
+        client_id: client.id,
+        description: projectData.description || ''
+      };
+
+      const result = await SupabaseClient.insert('projects', newProject);
+      const project = result[0];
+
+      // Create default steps
+      const defaultSteps = [
+        { name: 'ヒアリング・要件定義', description: '' },
+        { name: '企画・コンセプト設計', description: '' },
+        { name: 'デザイン制作', description: '' },
+        { name: '制作・開発', description: '' },
+        { name: 'レビュー・修正', description: '' },
+        { name: '最終確認', description: '' },
+        { name: '納品完了', description: '' }
+      ];
+
+      for (let i = 0; i < defaultSteps.length; i++) {
+        await SupabaseClient.insert('steps', {
+          project_id: project.id,
+          step_order: i + 1,
+          name: defaultSteps[i].name,
+          description: defaultSteps[i].description,
+          status: i === 0 ? 'current' : 'pending'
+        });
+      }
+
+      project.steps = await this.getStepsForProject(project.id);
+      project.clientId = project.client_id;
+      project.createdAt = project.created_at;
+      project.updatedAt = project.updated_at;
+
+      return project;
+    } catch (e) {
+      console.error('Error creating project:', e);
+      return null;
+    }
+  },
+
+  async updateProject(projectId, updates) {
+    try {
+      const updateData = {
+        updated_at: new Date().toISOString()
+      };
+
+      if (updates.name) updateData.name = updates.name;
+      if (updates.description !== undefined) updateData.description = updates.description;
+
+      if (updates.client) {
+        updateData.client = updates.client;
+        const client = await this.getOrCreateClient(updates.client);
+        updateData.client_id = client.id;
+      }
+
+      await SupabaseClient.update('projects', `id=eq.${projectId}`, updateData);
+      return await this.getProject(projectId);
+    } catch (e) {
+      console.error('Error updating project:', e);
+      return null;
+    }
+  },
+
+  async deleteProject(projectId) {
+    try {
+      await SupabaseClient.delete('projects', `id=eq.${projectId}`);
+    } catch (e) {
+      console.error('Error deleting project:', e);
+    }
   },
 
   // ==================== STEP OPERATIONS ====================
 
-  /**
-   * Add a new step to a project
-   */
-  addStep(projectId, stepData) {
-    const project = this.getProject(projectId);
-    if (!project) return null;
+  async addStep(projectId, stepData) {
+    try {
+      const steps = await this.getStepsForProject(projectId);
+      const newOrder = steps.length + 1;
 
-    const newStep = {
-      id: project.steps.length > 0 ? Math.max(...project.steps.map(s => s.id)) + 1 : 1,
-      name: stepData.name,
-      description: stepData.description || '',
-      status: 'pending',
-      completedAt: null
-    };
+      await SupabaseClient.insert('steps', {
+        project_id: projectId,
+        step_order: newOrder,
+        name: stepData.name,
+        description: stepData.description || '',
+        status: 'pending'
+      });
 
-    project.steps.push(newStep);
-    return this.updateProject(projectId, { steps: project.steps });
+      await SupabaseClient.update('projects', `id=eq.${projectId}`, {
+        updated_at: new Date().toISOString()
+      });
+
+      return await this.getProject(projectId);
+    } catch (e) {
+      console.error('Error adding step:', e);
+      return null;
+    }
   },
 
-  /**
-   * Update a step
-   */
-  updateStep(projectId, stepId, updates) {
-    const project = this.getProject(projectId);
-    if (!project) return null;
+  async updateStep(projectId, stepId, updates) {
+    try {
+      const updateData = {};
+      if (updates.name) updateData.name = updates.name;
+      if (updates.description !== undefined) updateData.description = updates.description;
 
-    const step = project.steps.find(s => s.id === stepId);
-    if (!step) return null;
+      await SupabaseClient.update('steps', `project_id=eq.${projectId}&step_order=eq.${stepId}`, updateData);
 
-    Object.assign(step, updates);
-    return this.updateProject(projectId, { steps: project.steps });
+      await SupabaseClient.update('projects', `id=eq.${projectId}`, {
+        updated_at: new Date().toISOString()
+      });
+
+      return await this.getProject(projectId);
+    } catch (e) {
+      console.error('Error updating step:', e);
+      return null;
+    }
   },
 
-  /**
-   * Delete a step from a project
-   */
-  deleteStep(projectId, stepId) {
-    const project = this.getProject(projectId);
-    if (!project) return null;
+  async deleteStep(projectId, stepId) {
+    try {
+      await SupabaseClient.delete('steps', `project_id=eq.${projectId}&step_order=eq.${stepId}`);
 
-    project.steps = project.steps.filter(s => s.id !== stepId);
+      // Re-order remaining steps
+      const steps = await SupabaseClient.select('steps', `project_id=eq.${projectId}&order=step_order.asc`);
+      for (let i = 0; i < steps.length; i++) {
+        await SupabaseClient.update('steps', `project_id=eq.${projectId}&id=eq.${steps[i].id}`, {
+          step_order: i + 1
+        });
+      }
 
-    // Re-order step IDs
-    project.steps.forEach((step, index) => {
-      step.id = index + 1;
-    });
+      await SupabaseClient.update('projects', `id=eq.${projectId}`, {
+        updated_at: new Date().toISOString()
+      });
 
-    return this.updateProject(projectId, { steps: project.steps });
+      return await this.getProject(projectId);
+    } catch (e) {
+      console.error('Error deleting step:', e);
+      return null;
+    }
   },
 
-  /**
-   * Reorder steps
-   */
-  reorderSteps(projectId, fromIndex, toIndex) {
-    const project = this.getProject(projectId);
-    if (!project) return null;
+  async updateStepStatus(projectId, stepId, status) {
+    try {
+      const completedAt = status === 'completed' ? new Date().toISOString() : null;
 
-    const [removed] = project.steps.splice(fromIndex, 1);
-    project.steps.splice(toIndex, 0, removed);
+      // Update the target step
+      await SupabaseClient.update('steps', `project_id=eq.${projectId}&step_order=eq.${stepId}`, {
+        status: status,
+        completed_at: completedAt
+      });
 
-    // Re-order step IDs
-    project.steps.forEach((step, index) => {
-      step.id = index + 1;
-    });
-
-    return this.updateProject(projectId, { steps: project.steps });
-  },
-
-  /**
-   * Update step status
-   */
-  updateStepStatus(projectId, stepId, status) {
-    const project = this.getProject(projectId);
-    if (!project) return null;
-
-    const step = project.steps.find(s => s.id === stepId);
-    if (!step) return null;
-
-    step.status = status;
-    step.completedAt = status === 'completed' ? new Date().toISOString() : null;
-
-    // If completing a step, mark all previous steps as completed
-    if (status === 'completed' || status === 'current') {
-      project.steps.forEach(s => {
-        if (s.id < stepId) {
-          s.status = 'completed';
-          if (!s.completedAt) {
-            s.completedAt = new Date().toISOString();
+      // If completing or setting current, update previous steps
+      if (status === 'completed' || status === 'current') {
+        const steps = await SupabaseClient.select('steps', `project_id=eq.${projectId}&step_order=lt.${stepId}`);
+        for (const step of steps) {
+          if (step.status !== 'completed') {
+            await SupabaseClient.update('steps', `project_id=eq.${projectId}&step_order=eq.${step.step_order}`, {
+              status: 'completed',
+              completed_at: step.completed_at || new Date().toISOString()
+            });
           }
         }
-      });
-    }
+      }
 
-    // If setting a step as current, mark subsequent steps as pending
-    if (status === 'current') {
-      project.steps.forEach(s => {
-        if (s.id > stepId) {
-          s.status = 'pending';
-          s.completedAt = null;
-        }
-      });
-    }
+      // If setting current, mark subsequent as pending
+      if (status === 'current') {
+        await SupabaseClient.update('steps', `project_id=eq.${projectId}&step_order=gt.${stepId}`, {
+          status: 'pending',
+          completed_at: null
+        });
+      }
 
-    return this.updateProject(projectId, { steps: project.steps });
+      await SupabaseClient.update('projects', `id=eq.${projectId}`, {
+        updated_at: new Date().toISOString()
+      });
+
+      return await this.getProject(projectId);
+    } catch (e) {
+      console.error('Error updating step status:', e);
+      return null;
+    }
   },
 
-  /**
-   * Get current step for a project
-   */
+  // ==================== UTILITY FUNCTIONS ====================
+
   getCurrentStep(project) {
     if (!project || !project.steps) return null;
 
     const currentStep = project.steps.find(s => s.status === 'current');
     if (currentStep) return currentStep;
 
-    // If no current step, find the first pending step
     const pendingStep = project.steps.find(s => s.status === 'pending');
     if (pendingStep) return pendingStep;
 
-    // All completed
     return project.steps[project.steps.length - 1];
   },
 
-  /**
-   * Get progress percentage
-   */
   getProgressPercentage(project) {
     if (!project || !project.steps || project.steps.length === 0) return 0;
 
@@ -325,9 +401,6 @@ const DataManager = {
     return Math.round((completedCount / project.steps.length) * 100);
   },
 
-  /**
-   * Format date for display
-   */
   formatDate(isoString) {
     if (!isoString) return '';
 
@@ -341,77 +414,20 @@ const DataManager = {
     return `${year}/${month}/${day} ${hours}:${minutes}`;
   },
 
-  /**
-   * Get share URL for a client (shows all their projects)
-   */
   getShareUrl(clientId) {
     const baseUrl = window.location.origin + window.location.pathname.replace(/\/[^/]*$/, '');
     return `${baseUrl}/index.html?client=${clientId}`;
   },
 
-  /**
-   * Get share URL for a specific project
-   */
   getProjectShareUrl(projectId) {
     const baseUrl = window.location.origin + window.location.pathname.replace(/\/[^/]*$/, '');
     return `${baseUrl}/index.html?project=${projectId}`;
   },
 
-  /**
-   * Initialize with sample data (for demo)
-   */
+  // No-op for compatibility
   initializeSampleData() {
-    const existing = this.getAllProjects();
-    if (existing.length > 0) return;
-
-    // Create sample client
-    const sampleClient = {
-      id: 'DEMO01',
-      name: '株式会社サンプル',
-      createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
-    };
-    this.saveAllClients([sampleClient]);
-
-    // Create sample projects for the client with descriptions
-    const sampleProjects = [
-      {
-        id: 'PROJ0001',
-        name: 'コーポレートサイトリニューアル',
-        client: '株式会社サンプル',
-        clientId: 'DEMO01',
-        description: 'コーポレートサイトの全面リニューアルプロジェクト',
-        createdAt: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
-        updatedAt: new Date().toISOString(),
-        steps: [
-          { id: 1, name: 'ヒアリング・要件定義', description: '・ターゲットユーザー：30-50代のビジネスパーソン\n・必須ページ：トップ、会社概要、サービス、お問い合わせ\n・レスポンシブ対応必須', status: 'completed', completedAt: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000).toISOString() },
-          { id: 2, name: '企画・コンセプト設計', description: '・コンセプト：信頼感と先進性の両立\n・カラー：ネイビー×ホワイト基調\n・競合分析完了', status: 'completed', completedAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString() },
-          { id: 3, name: 'デザイン制作', description: '・TOPページ + 下層5ページ\n・SP/PC両対応\n・バナー3種含む', status: 'completed', completedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString() },
-          { id: 4, name: '制作・開発', description: '・WordPress実装\n・お問い合わせフォーム設置\n・Google Analytics連携', status: 'current', completedAt: null },
-          { id: 5, name: 'レビュー・修正', description: '', status: 'pending', completedAt: null },
-          { id: 6, name: '最終確認', description: '', status: 'pending', completedAt: null },
-          { id: 7, name: '納品・公開', description: '', status: 'pending', completedAt: null }
-        ]
-      },
-      {
-        id: 'PROJ0002',
-        name: '採用サイト制作',
-        client: '株式会社サンプル',
-        clientId: 'DEMO01',
-        description: '新卒・中途採用向けサイトの新規制作',
-        createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-        updatedAt: new Date().toISOString(),
-        steps: [
-          { id: 1, name: 'ヒアリング・要件定義', description: '・新卒・中途両方に対応\n・社員インタビュー5名分\n・エントリーフォーム連携必須', status: 'completed', completedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString() },
-          { id: 2, name: '企画・コンセプト設計', description: '・コンセプト検討中\n・競合採用サイト調査', status: 'current', completedAt: null },
-          { id: 3, name: 'デザイン制作', description: '', status: 'pending', completedAt: null },
-          { id: 4, name: '制作・開発', description: '', status: 'pending', completedAt: null },
-          { id: 5, name: 'レビュー・修正', description: '', status: 'pending', completedAt: null },
-          { id: 6, name: '納品・公開', description: '', status: 'pending', completedAt: null }
-        ]
-      }
-    ];
-
-    this.saveAllProjects(sampleProjects);
+    // Sample data is now in the database
+    console.log('Using Supabase for data storage');
   }
 };
 

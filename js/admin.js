@@ -1,13 +1,8 @@
 /**
- * Admin Panel Application
+ * Admin Panel Application (Supabase Version)
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Clear old data and initialize fresh sample data
-    localStorage.removeItem('progress_tracker_projects');
-    localStorage.removeItem('progress_tracker_clients');
-    DataManager.initializeSampleData();
-
     // State
     let currentProjectId = null;
     let currentStepId = null;
@@ -33,7 +28,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const toast = document.getElementById('toast');
 
     // Initialize
-    renderProjectList();
+    init();
+
+    async function init() {
+        await renderProjectList();
+    }
 
     // Event Listeners
     newProjectBtn.addEventListener('click', () => openProjectModal());
@@ -55,10 +54,11 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    editProjectBtn.addEventListener('click', () => {
+    editProjectBtn.addEventListener('click', async () => {
         if (currentProjectId) {
             isEditMode = true;
-            openProjectModal(DataManager.getProject(currentProjectId));
+            const project = await DataManager.getProject(currentProjectId);
+            openProjectModal(project);
         }
     });
 
@@ -86,8 +86,8 @@ document.addEventListener('DOMContentLoaded', () => {
     /**
      * Render the project list grouped by client
      */
-    function renderProjectList() {
-        const projects = DataManager.getAllProjects();
+    async function renderProjectList() {
+        const projects = await DataManager.getAllProjects();
 
         if (projects.length === 0) {
             projectList.innerHTML = `
@@ -101,11 +101,11 @@ document.addEventListener('DOMContentLoaded', () => {
         // Group projects by client
         const projectsByClient = {};
         projects.forEach(project => {
-            const clientKey = project.clientId || 'unknown';
+            const clientKey = project.clientId || project.client_id || 'unknown';
             if (!projectsByClient[clientKey]) {
                 projectsByClient[clientKey] = {
                     clientName: project.client,
-                    clientId: project.clientId,
+                    clientId: clientKey,
                     projects: []
                 };
             }
@@ -150,9 +150,9 @@ document.addEventListener('DOMContentLoaded', () => {
     /**
      * Select a project
      */
-    function selectProject(projectId) {
+    async function selectProject(projectId) {
         currentProjectId = projectId;
-        const project = DataManager.getProject(projectId);
+        const project = await DataManager.getProject(projectId);
 
         if (!project) {
             showEmptyState();
@@ -160,7 +160,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Update list highlight
-        renderProjectList();
+        await renderProjectList();
 
         // Show editor
         emptyState.style.display = 'none';
@@ -169,13 +169,13 @@ document.addEventListener('DOMContentLoaded', () => {
         // Update project info
         document.getElementById('editor-project-name').textContent = project.name;
         document.getElementById('editor-client-name').textContent = project.client;
-        document.getElementById('editor-client-id').textContent = project.clientId || '-';
+        document.getElementById('editor-client-id').textContent = project.clientId || project.client_id || '-';
         document.getElementById('editor-progress').textContent =
             `${DataManager.getProgressPercentage(project)}%`;
         document.getElementById('editor-created-at').textContent =
-            DataManager.formatDate(project.createdAt);
+            DataManager.formatDate(project.createdAt || project.created_at);
         document.getElementById('editor-updated-at').textContent =
-            DataManager.formatDate(project.updatedAt);
+            DataManager.formatDate(project.updatedAt || project.updated_at);
 
         // Render step editor
         renderStepEditor(project);
@@ -193,7 +193,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const date = step.completedAt ? DataManager.formatDate(step.completedAt) :
                 step.status === 'current' ? '進行中' : '未着手';
 
-            // Truncate description for display
             const descriptionPreview = step.description
                 ? step.description.substring(0, 60) + (step.description.length > 60 ? '...' : '')
                 : '仕様未設定（クリックで編集）';
@@ -227,24 +226,23 @@ document.addEventListener('DOMContentLoaded', () => {
         stepEditor.querySelectorAll('.step-editor__item').forEach(item => {
             const stepId = parseInt(item.dataset.stepId);
 
-            // Edit step on click
             item.querySelector('[data-edit-step]')?.addEventListener('click', () => {
                 openEditStepModal(stepId);
             });
 
-            item.querySelector('.action-complete')?.addEventListener('click', (e) => {
+            item.querySelector('.action-complete')?.addEventListener('click', async (e) => {
                 e.stopPropagation();
-                updateStepStatus(stepId, 'completed');
+                await updateStepStatus(stepId, 'completed');
             });
 
-            item.querySelector('.action-current')?.addEventListener('click', (e) => {
+            item.querySelector('.action-current')?.addEventListener('click', async (e) => {
                 e.stopPropagation();
-                updateStepStatus(stepId, 'current');
+                await updateStepStatus(stepId, 'current');
             });
 
-            item.querySelector('.action-revert')?.addEventListener('click', (e) => {
+            item.querySelector('.action-revert')?.addEventListener('click', async (e) => {
                 e.stopPropagation();
-                updateStepStatus(stepId, 'current');
+                await updateStepStatus(stepId, 'current');
             });
         });
     }
@@ -252,9 +250,9 @@ document.addEventListener('DOMContentLoaded', () => {
     /**
      * Update step status
      */
-    function updateStepStatus(stepId, status) {
-        DataManager.updateStepStatus(currentProjectId, stepId, status);
-        selectProject(currentProjectId);
+    async function updateStepStatus(stepId, status) {
+        await DataManager.updateStepStatus(currentProjectId, stepId, status);
+        await selectProject(currentProjectId);
         showToast('ステータスを更新しました');
     }
 
@@ -279,10 +277,10 @@ document.addEventListener('DOMContentLoaded', () => {
     /**
      * Open edit step modal
      */
-    function openEditStepModal(stepId) {
+    async function openEditStepModal(stepId) {
         if (!currentProjectId) return;
 
-        const project = DataManager.getProject(currentProjectId);
+        const project = await DataManager.getProject(currentProjectId);
         const step = project?.steps.find(s => s.id === stepId);
         if (!step) return;
 
@@ -309,7 +307,7 @@ document.addEventListener('DOMContentLoaded', () => {
     /**
      * Save step (add or update)
      */
-    function saveStep() {
+    async function saveStep() {
         const name = document.getElementById('step-name').value.trim();
         const description = document.getElementById('step-description').value.trim();
 
@@ -319,33 +317,33 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (isNewStep) {
-            DataManager.addStep(currentProjectId, { name, description });
+            await DataManager.addStep(currentProjectId, { name, description });
             showToast('工程を追加しました');
         } else {
-            DataManager.updateStep(currentProjectId, currentStepId, { name, description });
+            await DataManager.updateStep(currentProjectId, currentStepId, { name, description });
             showToast('工程を更新しました');
         }
 
         closeStepModal();
-        selectProject(currentProjectId);
+        await selectProject(currentProjectId);
     }
 
     /**
      * Delete step
      */
-    function deleteStep() {
+    async function deleteStep() {
         if (!currentProjectId || !currentStepId) return;
 
-        const project = DataManager.getProject(currentProjectId);
+        const project = await DataManager.getProject(currentProjectId);
         if (project.steps.length <= 1) {
             showToast('最後の工程は削除できません');
             return;
         }
 
         if (confirm('この工程を削除しますか？')) {
-            DataManager.deleteStep(currentProjectId, currentStepId);
+            await DataManager.deleteStep(currentProjectId, currentStepId);
             closeStepModal();
-            selectProject(currentProjectId);
+            await selectProject(currentProjectId);
             showToast('工程を削除しました');
         }
     }
@@ -353,11 +351,11 @@ document.addEventListener('DOMContentLoaded', () => {
     /**
      * Show empty state
      */
-    function showEmptyState() {
+    async function showEmptyState() {
         emptyState.style.display = 'flex';
         projectEditor.style.display = 'none';
         currentProjectId = null;
-        renderProjectList();
+        await renderProjectList();
     }
 
     /**
@@ -387,7 +385,7 @@ document.addEventListener('DOMContentLoaded', () => {
     /**
      * Save project (create or update)
      */
-    function saveProject() {
+    async function saveProject() {
         const name = document.getElementById('input-name').value.trim();
         const client = document.getElementById('input-client').value.trim();
         const description = document.getElementById('input-description').value.trim();
@@ -398,13 +396,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (isEditMode && currentProjectId) {
-            DataManager.updateProject(currentProjectId, { name, client, description });
+            await DataManager.updateProject(currentProjectId, { name, client, description });
             showToast('プロジェクトを更新しました');
-            selectProject(currentProjectId);
+            await selectProject(currentProjectId);
         } else {
-            const newProject = DataManager.createProject({ name, client, description });
+            const newProject = await DataManager.createProject({ name, client, description });
             showToast('プロジェクトを作成しました');
-            selectProject(newProject.id);
+            await selectProject(newProject.id);
         }
 
         closeProjectModal();
@@ -413,14 +411,13 @@ document.addEventListener('DOMContentLoaded', () => {
     /**
      * Open share modal
      */
-    function openShareModal() {
+    async function openShareModal() {
         if (!currentProjectId) return;
 
-        const project = DataManager.getProject(currentProjectId);
+        const project = await DataManager.getProject(currentProjectId);
         if (!project) return;
 
-        // Client share URL (shows all projects for this client)
-        const clientShareUrl = DataManager.getShareUrl(project.clientId);
+        const clientShareUrl = DataManager.getShareUrl(project.clientId || project.client_id);
         document.getElementById('share-url-client').value = clientShareUrl;
 
         shareModal.classList.add('active');
@@ -463,12 +460,12 @@ document.addEventListener('DOMContentLoaded', () => {
     /**
      * Confirm delete project
      */
-    function confirmDelete() {
+    async function confirmDelete() {
         if (!currentProjectId) return;
 
-        DataManager.deleteProject(currentProjectId);
+        await DataManager.deleteProject(currentProjectId);
         closeDeleteModal();
-        showEmptyState();
+        await showEmptyState();
         showToast('プロジェクトを削除しました');
     }
 

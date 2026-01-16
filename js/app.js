@@ -1,13 +1,8 @@
 /**
- * Client-facing Progress Tracker Application
+ * Client-facing Progress Tracker Application (Supabase Version)
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Clear old data and initialize fresh sample data
-    localStorage.removeItem('progress_tracker_projects');
-    localStorage.removeItem('progress_tracker_clients');
-    DataManager.initializeSampleData();
-
     // State
     let currentClientId = null;
     let currentProjectId = null;
@@ -32,14 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
         clientIdInput.value = urlClientId;
         searchClient(urlClientId);
     } else if (urlProjectId) {
-        // Direct project access - find the client first
-        const project = DataManager.getProject(urlProjectId);
-        if (project) {
-            currentClientId = project.clientId;
-            displayProject(project);
-        } else {
-            showNotFound();
-        }
+        loadProjectDirect(urlProjectId);
     }
 
     // Event Listeners
@@ -70,10 +58,23 @@ document.addEventListener('DOMContentLoaded', () => {
     retryBtn.addEventListener('click', showSearchSection);
 
     /**
+     * Load project directly by ID
+     */
+    async function loadProjectDirect(projectId) {
+        const project = await DataManager.getProject(projectId);
+        if (project) {
+            currentClientId = project.clientId;
+            displayProject(project);
+        } else {
+            showNotFound();
+        }
+    }
+
+    /**
      * Search for a client and display their projects
      */
-    function searchClient(clientId) {
-        const client = DataManager.getClient(clientId);
+    async function searchClient(clientId) {
+        const client = await DataManager.getClient(clientId);
 
         if (client) {
             currentClientId = clientId;
@@ -86,9 +87,9 @@ document.addEventListener('DOMContentLoaded', () => {
     /**
      * Display client portal with project list
      */
-    function displayClientProjects(clientId) {
-        const client = DataManager.getClient(clientId);
-        const projects = DataManager.getProjectsByClientId(clientId);
+    async function displayClientProjects(clientId) {
+        const client = await DataManager.getClient(clientId);
+        const projects = await DataManager.getProjectsByClientId(clientId);
 
         // Update URL
         const newUrl = `${window.location.pathname}?client=${clientId}`;
@@ -155,9 +156,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Add click handlers
         document.querySelectorAll('.project-card').forEach(card => {
-            card.addEventListener('click', () => {
+            card.addEventListener('click', async () => {
                 const projectId = card.dataset.projectId;
-                const project = DataManager.getProject(projectId);
+                const project = await DataManager.getProject(projectId);
                 if (project) {
                     displayProject(project);
                 }
@@ -187,7 +188,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('display-progress').textContent =
             `${DataManager.getProgressPercentage(project)}%`;
         document.getElementById('display-updated').textContent =
-            DataManager.formatDate(project.updatedAt);
+            DataManager.formatDate(project.updatedAt || project.updated_at);
 
         // Current Step Status
         const currentStep = DataManager.getCurrentStep(project);
@@ -217,18 +218,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 'linear-gradient(135deg, #10b981 0%, #34d399 100%)';
         } else if (currentStep) {
             const icons = {
-                1: '📋',
-                2: '💡',
-                3: '🎨',
-                4: '🚀',
-                5: '🔍',
-                6: '✅',
-                7: '📦'
+                1: '📋', 2: '💡', 3: '🎨', 4: '🚀', 5: '🔍', 6: '✅', 7: '📦'
             };
 
             statusIcon.textContent = icons[currentStep.id] || '📊';
             statusTitle.textContent = currentStep.name;
-            statusDescription.textContent = getStepDescription(currentStep.id);
+            statusDescription.textContent = currentStep.description || getDefaultStepDescription(currentStep.id);
             statusBadge.textContent = '進行中';
             statusBadge.className = 'badge badge--primary';
             document.querySelector('.status-card .status-card__icon').style.background =
@@ -237,9 +232,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
-     * Get description for each step
+     * Get default description for each step
      */
-    function getStepDescription(stepId) {
+    function getDefaultStepDescription(stepId) {
         const descriptions = {
             1: 'ご要望やご希望をお聞きし、プロジェクトの方向性を決定しています。',
             2: '企画の骨子とコンセプトを設計しています。',
@@ -259,7 +254,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const container = document.getElementById('progress-steps');
         const completedCount = project.steps.filter(s => s.status === 'completed').length;
 
-        // Calculate progress line width
         const totalSteps = project.steps.length;
         const progressWidth = completedCount > 0
             ? ((completedCount - 1) / (totalSteps - 1)) * 100
@@ -301,7 +295,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 ? DataManager.formatDate(step.completedAt)
                 : step.status === 'current' ? '進行中' : '未着手';
 
-            // Format description with line breaks
             const descriptionHtml = step.description
                 ? `<div class="timeline__description">${step.description.replace(/\n/g, '<br>')}</div>`
                 : '';
@@ -335,7 +328,6 @@ document.addEventListener('DOMContentLoaded', () => {
         currentClientId = null;
         currentProjectId = null;
 
-        // Clear URL params
         window.history.pushState({}, '', window.location.pathname);
     }
 
