@@ -13,8 +13,9 @@ CREATE TABLE IF NOT EXISTS admins (
 -- 2. stepsテーブルにURL列を追加
 ALTER TABLE steps
 ADD COLUMN IF NOT EXISTS url TEXT DEFAULT '';
--- 3. RLS設定
+-- 3. RLS設定（既存のポリシーを削除してから作成）
 ALTER TABLE admins ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Allow all access to admins" ON admins;
 CREATE POLICY "Allow all access to admins" ON admins FOR ALL USING (true) WITH CHECK (true);
 -- 4. マスター管理者を作成
 -- メール: yusaku.suzuki@sou-zou-do.com

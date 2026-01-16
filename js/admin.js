@@ -38,6 +38,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if (adminNameEl) {
                 adminNameEl.textContent = window.adminSession.name || window.adminSession.email;
             }
+
+            // Hide new project button for directors (they can only manage assigned projects)
+            if (window.adminSession.role === 'director') {
+                newProjectBtn.style.display = 'none';
+            }
         }
 
         // Logout button handler
@@ -113,7 +118,8 @@ document.addEventListener('DOMContentLoaded', () => {
      * Render the project list grouped by client
      */
     async function renderProjectList() {
-        const projects = await DataManager.getAllProjects();
+        // Get projects filtered by user role (directors see only assigned projects)
+        const projects = await DataManager.getProjectsForCurrentUser();
 
         if (projects.length === 0) {
             projectList.innerHTML = `
@@ -668,7 +674,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         adminList.innerHTML = admins.map(admin => {
-            const roleLabel = admin.role === 'master' ? '👑 マスター' : '👤 管理者';
+            const roleLabels = { master: '👑 マスター', admin: '👤 管理者', director: '🎬 ディレクター' };
+            const roleLabel = roleLabels[admin.role] || admin.role;
             const statusClass = admin.isActive ? '' : 'opacity: 0.5;';
             const isSelf = admin.id === window.adminSession?.id;
 
@@ -699,8 +706,42 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('admin-role').value = admin.role;
         document.getElementById('admin-delete-btn').style.display = 'block';
 
+        // Show/hide project assignment for directors
+        await updateProjectAssignmentVisibility(admin.role, adminId);
+
         adminEditModal.classList.add('active');
     };
+
+    // Update project assignment visibility based on role
+    async function updateProjectAssignmentVisibility(role, adminId = null) {
+        const groupEl = document.getElementById('project-assignment-group');
+        const listEl = document.getElementById('project-assignment-list');
+
+        if (role === 'director') {
+            groupEl.style.display = 'block';
+
+            // Get all projects and current assignments
+            const projects = await DataManager.getAllProjects();
+            const assignedProjectIds = adminId ? await DataManager.getDirectorProjects(adminId) : [];
+
+            listEl.innerHTML = projects.map(p => `
+                <label style="display: flex; align-items: center; gap: var(--space-2); padding: var(--space-1); cursor: pointer;">
+                    <input type="checkbox" name="assigned-project" value="${p.id}" 
+                           ${assignedProjectIds.includes(p.id) ? 'checked' : ''}>
+                    <span>${p.name}</span>
+                    <span style="color: var(--color-text-muted); font-size: var(--font-size-xs);">(${p.client})</span>
+                </label>
+            `).join('');
+        } else {
+            groupEl.style.display = 'none';
+            listEl.innerHTML = '';
+        }
+    }
+
+    // Listen for role change
+    document.getElementById('admin-role')?.addEventListener('change', (e) => {
+        updateProjectAssignmentVisibility(e.target.value, currentEditAdminId);
+    });
 
     function openAddAdminModal() {
         currentEditAdminId = null;
@@ -708,8 +749,11 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('admin-email').value = '';
         document.getElementById('admin-display-name').value = '';
         document.getElementById('admin-password').value = '';
-        document.getElementById('admin-role').value = 'admin';
+        document.getElementById('admin-role').value = 'director';
         document.getElementById('admin-delete-btn').style.display = 'none';
+
+        // Show project assignment for new directors
+        updateProjectAssignmentVisibility('director');
 
         adminEditModal.classList.add('active');
         document.getElementById('admin-email').focus();
@@ -747,19 +791,48 @@ document.addEventListener('DOMContentLoaded', () => {
                 passwordHash = await hashPassword(password);
             }
 
+            let adminId = currentEditAdminId;
+
             if (currentEditAdminId) {
                 const updates = { email, name, role };
                 if (passwordHash) updates.passwordHash = passwordHash;
                 await DataManager.updateAdmin(currentEditAdminId, updates);
                 showToast('管理者を更新しました');
             } else {
-                await DataManager.createAdmin({ email, name, role, passwordHash });
+                const newAdmin = await DataManager.createAdmin({ email, name, role, passwordHash });
+                adminId = newAdmin?.id;
                 showToast('管理者を追加しました');
+            }
+
+            // Save director project assignments
+            if (role === 'director' && adminId) {
+                // Get selected projects
+                const checkboxes = document.querySelectorAll('input[name="assigned-project"]');
+                const selectedIds = Array.from(checkboxes).filter(cb => cb.checked).map(cb => cb.value);
+                const unselectedIds = Array.from(checkboxes).filter(cb => !cb.checked).map(cb => cb.value);
+
+                // Get currently assigned projects
+                const currentlyAssigned = await DataManager.getDirectorProjects(adminId);
+
+                // Add new assignments
+                for (const projectId of selectedIds) {
+                    if (!currentlyAssigned.includes(projectId)) {
+                        await DataManager.assignProjectToDirector(adminId, projectId);
+                    }
+                }
+
+                // Remove unassignments
+                for (const projectId of unselectedIds) {
+                    if (currentlyAssigned.includes(projectId)) {
+                        await DataManager.removeProjectFromDirector(adminId, projectId);
+                    }
+                }
             }
 
             closeAdminEditModal();
             await renderAdminList();
         } catch (e) {
+            console.error('Error saving admin:', e);
             showToast('エラーが発生しました');
         }
     }

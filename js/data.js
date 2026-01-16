@@ -611,6 +611,62 @@ const DataManager = {
     }
   },
 
+  // ==================== DIRECTOR PROJECT ASSIGNMENTS ====================
+
+  async getDirectorProjects(adminId) {
+    try {
+      const assignments = await SupabaseClient.select('director_projects', `admin_id=eq.${adminId}`);
+      return assignments.map(a => a.project_id);
+    } catch (e) {
+      console.error('Error fetching director projects:', e);
+      return [];
+    }
+  },
+
+  async assignProjectToDirector(adminId, projectId) {
+    try {
+      await SupabaseClient.insert('director_projects', {
+        admin_id: adminId,
+        project_id: projectId
+      });
+    } catch (e) {
+      console.error('Error assigning project to director:', e);
+      throw e;
+    }
+  },
+
+  async removeProjectFromDirector(adminId, projectId) {
+    try {
+      await SupabaseClient.delete('director_projects', `admin_id=eq.${adminId}&project_id=eq.${projectId}`);
+    } catch (e) {
+      console.error('Error removing project from director:', e);
+      throw e;
+    }
+  },
+
+  async getProjectsForCurrentUser() {
+    // Get projects filtered by user role
+    const session = JSON.parse(localStorage.getItem('admin_session') || '{}');
+
+    if (!session.role || session.role === 'master' || session.role === 'admin') {
+      // Admin and master see all projects
+      return await this.getAllProjects();
+    }
+
+    if (session.role === 'director') {
+      // Director sees only assigned projects
+      const assignedProjectIds = await this.getDirectorProjects(session.id);
+      if (assignedProjectIds.length === 0) {
+        return [];
+      }
+
+      const allProjects = await this.getAllProjects();
+      return allProjects.filter(p => assignedProjectIds.includes(p.id));
+    }
+
+    return [];
+  },
+
   // No-op for compatibility
   initializeSampleData() {
     // Sample data is now in the database
