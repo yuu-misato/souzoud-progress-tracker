@@ -22,7 +22,10 @@
                     <span class="header__logo-text">SOUZOUD Inc.</span>
                 </a>
                 <nav class="header__nav">
+                    <span id="admin-name" class="badge badge--secondary" style="margin-right: var(--space-2);"></span>
                     <span class="badge badge--primary">管理画面</span>
+                    <button id="logout-btn" class="btn btn--ghost btn--sm"
+                        style="margin-left: var(--space-3);">ログアウト</button>
                 </nav>
             </div>
         </div>
@@ -130,10 +133,18 @@
                     <label for="step-name">工程名 *</label>
                     <input type="text" id="step-name" class="input" placeholder="例：ヒアリング・要件定義">
                 </div>
-                <div class="input-group">
+                <div class="input-group" style="margin-bottom: var(--space-4);">
                     <label for="step-description">仕様・要件（クライアントにも表示されます）</label>
                     <textarea id="step-description" class="input" rows="6"
                         placeholder="この工程で対応する内容、決定事項、注意点などを記載"></textarea>
+                </div>
+                <div class="input-group">
+                    <label for="step-url">関連ファイルURL（Google Drive等）</label>
+                    <input type="url" id="step-url" class="input" placeholder="https://drive.google.com/...">
+                    <p
+                        style="font-size: var(--font-size-xs); color: var(--color-text-muted); margin-top: var(--space-1);">
+                        クライアント画面に「関連ファイルを開く」リンクとして表示されます
+                    </p>
                 </div>
             </div>
             <div class="modal__footer">
@@ -159,7 +170,22 @@
                 </div>
                 <div class="input-group">
                     <label for="input-client">クライアント名 *</label>
-                    <input type="text" id="input-client" class="input" placeholder="例：株式会社サンプル">
+                    <input type="text" id="input-client" class="input" list="client-list" placeholder="例：株式会社サンプル"
+                        autocomplete="off">
+                    <datalist id="client-list">
+                        <!-- Client options will be populated dynamically -->
+                    </datalist>
+                    <p
+                        style="font-size: var(--font-size-xs); color: var(--color-text-muted); margin-top: var(--space-1);">
+                        過去のクライアント名から選択または新規入力
+                    </p>
+                </div>
+                <div class="input-group">
+                    <label for="input-template">工程テンプレート</label>
+                    <select id="input-template" class="input">
+                        <option value="default">デフォルト（Web制作）</option>
+                        <option value="custom">カスタム（後で設定）</option>
+                    </select>
                 </div>
                 <div class="input-group">
                     <label for="input-description">説明（任意）</label>
@@ -167,8 +193,32 @@
                 </div>
             </div>
             <div class="modal__footer">
+                <button class="btn btn--ghost" id="modal-save-template" style="margin-right: auto;">📋 テンプレ保存</button>
                 <button class="btn btn--secondary" id="modal-cancel">キャンセル</button>
                 <button class="btn btn--primary" id="modal-save">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Template Modal -->
+    <div class="modal-overlay" id="template-modal">
+        <div class="modal" style="max-width: 500px;">
+            <div class="modal__header">
+                <h2 class="modal__title">テンプレートとして保存</h2>
+                <button class="modal__close" id="template-modal-close">&times;</button>
+            </div>
+            <div class="modal__body">
+                <div class="input-group">
+                    <label for="template-name">テンプレート名 *</label>
+                    <input type="text" id="template-name" class="input" placeholder="例：LP制作用">
+                </div>
+                <p style="font-size: var(--font-size-sm); color: var(--color-text-secondary);">
+                    現在のプロジェクトの工程をテンプレートとして保存します。新規プロジェクト作成時に利用できます。
+                </p>
+            </div>
+            <div class="modal__footer">
+                <button class="btn btn--secondary" id="template-modal-cancel">キャンセル</button>
+                <button class="btn btn--primary" id="template-modal-save">保存</button>
             </div>
         </div>
     </div>
@@ -225,6 +275,29 @@
     </div>
 
     <script src="js/data.js"></script>
+    <script>
+        // Authentication check
+        (function () {
+            const session = localStorage.getItem('admin_session');
+            if (!session) {
+                window.location.href = 'login.html';
+                return;
+            }
+            try {
+                const sessionData = JSON.parse(session);
+                if (!sessionData.email || sessionData.expiry <= Date.now()) {
+                    localStorage.removeItem('admin_session');
+                    window.location.href = 'login.html';
+                    return;
+                }
+                // Make session available globally
+                window.adminSession = sessionData;
+            } catch (e) {
+                localStorage.removeItem('admin_session');
+                window.location.href = 'login.html';
+            }
+        })();
+    </script>
     <script src="js/admin.js"></script>
 </body>
 

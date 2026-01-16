@@ -182,6 +182,7 @@ const DataManager = {
         id: s.step_order,
         name: s.name,
         description: s.description || '',
+        url: s.url || '',
         status: s.status,
         completedAt: s.completed_at
       }));
@@ -282,6 +283,7 @@ const DataManager = {
         step_order: newOrder,
         name: stepData.name,
         description: stepData.description || '',
+        url: stepData.url || '',
         status: 'pending'
       });
 
@@ -301,6 +303,7 @@ const DataManager = {
       const updateData = {};
       if (updates.name) updateData.name = updates.name;
       if (updates.description !== undefined) updateData.description = updates.description;
+      if (updates.url !== undefined) updateData.url = updates.url;
 
       await SupabaseClient.update('steps', `project_id=eq.${projectId}&step_order=eq.${stepId}`, updateData);
 
@@ -422,6 +425,129 @@ const DataManager = {
   getProjectShareUrl(projectId) {
     const baseUrl = window.location.origin + window.location.pathname.replace(/\/[^/]*$/, '');
     return `${baseUrl}/index.html?project=${projectId}`;
+  },
+
+  // ==================== TEMPLATE OPERATIONS ====================
+  // Templates are stored in localStorage for simplicity
+
+  TEMPLATES_KEY: 'progress_tracker_templates',
+
+  getDefaultTemplates() {
+    return [
+      {
+        id: 'default',
+        name: 'デフォルト（Web制作）',
+        steps: [
+          { name: 'ヒアリング・要件定義', description: '' },
+          { name: '企画・コンセプト設計', description: '' },
+          { name: 'デザイン制作', description: '' },
+          { name: '制作・開発', description: '' },
+          { name: 'レビュー・修正', description: '' },
+          { name: '最終確認', description: '' },
+          { name: '納品完了', description: '' }
+        ]
+      },
+      {
+        id: 'lp',
+        name: 'LP制作',
+        steps: [
+          { name: 'ヒアリング', description: '' },
+          { name: '構成案作成', description: '' },
+          { name: 'デザイン制作', description: '' },
+          { name: 'コーディング', description: '' },
+          { name: 'テスト・修正', description: '' },
+          { name: '納品', description: '' }
+        ]
+      },
+      {
+        id: 'branding',
+        name: 'ブランディング',
+        steps: [
+          { name: 'ヒアリング・調査', description: '' },
+          { name: 'コンセプト設計', description: '' },
+          { name: 'ロゴ・VI提案', description: '' },
+          { name: '修正・ブラッシュアップ', description: '' },
+          { name: 'ガイドライン作成', description: '' },
+          { name: '納品', description: '' }
+        ]
+      }
+    ];
+  },
+
+  getAllTemplates() {
+    const stored = localStorage.getItem(this.TEMPLATES_KEY);
+    const customTemplates = stored ? JSON.parse(stored) : [];
+    return [...this.getDefaultTemplates(), ...customTemplates];
+  },
+
+  getTemplate(templateId) {
+    const templates = this.getAllTemplates();
+    return templates.find(t => t.id === templateId);
+  },
+
+  saveTemplate(name, steps) {
+    const stored = localStorage.getItem(this.TEMPLATES_KEY);
+    const customTemplates = stored ? JSON.parse(stored) : [];
+
+    const newTemplate = {
+      id: 'custom_' + this.generateId(6),
+      name: name,
+      steps: steps.map(s => ({ name: s.name, description: s.description || '' }))
+    };
+
+    customTemplates.push(newTemplate);
+    localStorage.setItem(this.TEMPLATES_KEY, JSON.stringify(customTemplates));
+    return newTemplate;
+  },
+
+  deleteTemplate(templateId) {
+    if (!templateId.startsWith('custom_')) return; // Can't delete default templates
+
+    const stored = localStorage.getItem(this.TEMPLATES_KEY);
+    const customTemplates = stored ? JSON.parse(stored) : [];
+    const filtered = customTemplates.filter(t => t.id !== templateId);
+    localStorage.setItem(this.TEMPLATES_KEY, JSON.stringify(filtered));
+  },
+
+  async createProjectWithTemplate(projectData, templateId) {
+    try {
+      const client = await this.getOrCreateClient(projectData.client);
+
+      const newProject = {
+        id: this.generateId(),
+        name: projectData.name,
+        client: projectData.client,
+        client_id: client.id,
+        description: projectData.description || ''
+      };
+
+      const result = await SupabaseClient.insert('projects', newProject);
+      const project = result[0];
+
+      // Get template steps
+      const template = this.getTemplate(templateId);
+      const steps = template ? template.steps : this.getDefaultTemplates()[0].steps;
+
+      for (let i = 0; i < steps.length; i++) {
+        await SupabaseClient.insert('steps', {
+          project_id: project.id,
+          step_order: i + 1,
+          name: steps[i].name,
+          description: steps[i].description || '',
+          status: i === 0 ? 'current' : 'pending'
+        });
+      }
+
+      project.steps = await this.getStepsForProject(project.id);
+      project.clientId = project.client_id;
+      project.createdAt = project.created_at;
+      project.updatedAt = project.updated_at;
+
+      return project;
+    } catch (e) {
+      console.error('Error creating project with template:', e);
+      return null;
+    }
   },
 
   // No-op for compatibility

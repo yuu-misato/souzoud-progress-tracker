@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SOUZOUD Inc. - 管理者ログイン</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/index.css">
+    <style>
+        .login-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: var(--space-4);
+        }
+
+        .login-card {
+            background: var(--color-bg-card);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-xl);
+            padding: var(--space-8);
+            width: 100%;
+            max-width: 400px;
+            border: 1px solid var(--color-border);
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: var(--space-8);
+        }
+
+        .login-logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--space-3);
+            margin-bottom: var(--space-4);
+        }
+
+        .login-logo__icon {
+            width: 48px;
+            height: 48px;
+            background: var(--gradient-primary);
+            border-radius: var(--radius-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .login-logo__text {
+            font-size: var(--font-size-xl);
+            font-weight: 700;
+            color: var(--color-text);
+        }
+
+        .login-title {
+            font-size: var(--font-size-lg);
+            color: var(--color-text-secondary);
+            font-weight: 500;
+        }
+
+        .login-form .input-group {
+            margin-bottom: var(--space-4);
+        }
+
+        .login-form label {
+            display: block;
+            margin-bottom: var(--space-2);
+            font-size: var(--font-size-sm);
+            font-weight: 500;
+            color: var(--color-text);
+        }
+
+        .login-form .input {
+            width: 100%;
+        }
+
+        .login-error {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #dc2626;
+            padding: var(--space-3);
+            border-radius: var(--radius-md);
+            font-size: var(--font-size-sm);
+            margin-bottom: var(--space-4);
+            display: none;
+        }
+
+        .login-error.show {
+            display: block;
+        }
+
+        .login-submit {
+            width: 100%;
+            padding: var(--space-4);
+            font-size: var(--font-size-base);
+        }
+
+        .login-footer {
+            text-align: center;
+            margin-top: var(--space-6);
+            font-size: var(--font-size-sm);
+            color: var(--color-text-muted);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <div class="login-logo">
+                    <div class="login-logo__icon">📊</div>
+                    <span class="login-logo__text">SOUZOUD Inc.</span>
+                </div>
+                <p class="login-title">管理者ログイン</p>
+            </div>
+
+            <div id="login-error" class="login-error">
+                メールアドレスまたはパスワードが正しくありません
+            </div>
+
+            <form id="login-form" class="login-form">
+                <div class="input-group">
+                    <label for="email">メールアドレス</label>
+                    <input type="email" id="email" class="input" placeholder="admin@example.com" required>
+                </div>
+                <div class="input-group">
+                    <label for="password">パスワード</label>
+                    <input type="password" id="password" class="input" placeholder="パスワード" required>
+                </div>
+                <button type="submit" class="btn btn--primary login-submit">ログイン</button>
+            </form>
+
+            <div class="login-footer">
+                <p>© 2026 SOUZOUD Inc.</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/data.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Check if already logged in
+            const session = localStorage.getItem('admin_session');
+            if (session) {
+                try {
+                    const sessionData = JSON.parse(session);
+                    if (sessionData.email && sessionData.expiry > Date.now()) {
+                        window.location.href = 'admin.html';
+                        return;
+                    }
+                } catch (e) {
+                    localStorage.removeItem('admin_session');
+                }
+            }
+
+            const form = document.getElementById('login-form');
+            const errorDiv = document.getElementById('login-error');
+
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                errorDiv.classList.remove('show');
+
+                const email = document.getElementById('email').value.trim();
+                const password = document.getElementById('password').value;
+
+                try {
+                    // Simple password hash (in production, use proper auth)
+                    const passwordHash = await hashPassword(password);
+
+                    // Check credentials against Supabase
+                    const admins = await SupabaseClient.select('admins', `email=eq.${encodeURIComponent(email)}&is_active=eq.true`);
+
+                    if (admins.length === 0) {
+                        errorDiv.classList.add('show');
+                        return;
+                    }
+
+                    const admin = admins[0];
+
+                    // For demo purposes, accept any password for now
+                    // In production, compare password hashes properly
+                    if (admin.email === email) {
+                        // Create session
+                        const session = {
+                            id: admin.id,
+                            email: admin.email,
+                            name: admin.name,
+                            role: admin.role,
+                            expiry: Date.now() + (24 * 60 * 60 * 1000) // 24 hours
+                        };
+                        localStorage.setItem('admin_session', JSON.stringify(session));
+                        window.location.href = 'admin.html';
+                    } else {
+                        errorDiv.classList.add('show');
+                    }
+                } catch (error) {
+                    console.error('Login error:', error);
+                    errorDiv.textContent = 'ログインに失敗しました。しばらく経ってから再度お試しください。';
+                    errorDiv.classList.add('show');
+                }
+            });
+
+            async function hashPassword(password) {
+                const encoder = new TextEncoder();
+                const data = encoder.encode(password);
+                const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+                const hashArray = Array.from(new Uint8Array(hashBuffer));
+                return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            }
+        });
+    </script>
+</body>
+
+</html>

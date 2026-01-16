@@ -279,14 +279,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
-     * Render timeline with descriptions
+     * Render timeline with collapsible descriptions
      */
     function renderTimeline(project) {
         const container = document.getElementById('timeline');
 
         let html = '';
 
-        project.steps.forEach(step => {
+        project.steps.forEach((step, index) => {
             const statusClass = step.status === 'completed' ? 'timeline__item--completed' :
                 step.status === 'current' ? 'timeline__item--current' :
                     'timeline__item--pending';
@@ -295,9 +295,28 @@ document.addEventListener('DOMContentLoaded', () => {
                 ? DataManager.formatDate(step.completedAt)
                 : step.status === 'current' ? '進行中' : '未着手';
 
-            const descriptionHtml = step.description
-                ? `<div class="timeline__description">${step.description.replace(/\n/g, '<br>')}</div>`
-                : '';
+            const hasDetails = step.description || step.url;
+            const detailsId = `step-details-${index}`;
+
+            let detailsContent = '';
+            if (step.description) {
+                detailsContent += `<div class="timeline__description">${step.description.replace(/\n/g, '<br>')}</div>`;
+            }
+            if (step.url) {
+                detailsContent += `<div class="timeline__url"><a href="${step.url}" target="_blank" rel="noopener noreferrer">📎 関連ファイルを開く</a></div>`;
+            }
+
+            const detailsHtml = hasDetails ? `
+            <div class="timeline__details-wrapper">
+              <button class="timeline__toggle" onclick="toggleDetails('${detailsId}')">
+                <span class="timeline__toggle-icon">▶</span>
+                <span class="timeline__toggle-text">詳細を見る</span>
+              </button>
+              <div id="${detailsId}" class="timeline__details" style="display: none;">
+                ${detailsContent}
+              </div>
+            </div>
+          ` : '';
 
             html += `
         <div class="timeline__item ${statusClass}">
@@ -307,7 +326,7 @@ document.addEventListener('DOMContentLoaded', () => {
               <div class="timeline__title">${step.name}</div>
               <div class="timeline__date">${date}</div>
             </div>
-            ${descriptionHtml}
+            ${detailsHtml}
           </div>
         </div>
       `;
@@ -315,6 +334,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
         container.innerHTML = html;
     }
+
+    // Global function for toggling details
+    window.toggleDetails = function (detailsId) {
+        const details = document.getElementById(detailsId);
+        const button = details.previousElementSibling;
+        const icon = button.querySelector('.timeline__toggle-icon');
+        const text = button.querySelector('.timeline__toggle-text');
+
+        if (details.style.display === 'none') {
+            details.style.display = 'block';
+            icon.textContent = '▼';
+            text.textContent = '閉じる';
+        } else {
+            details.style.display = 'none';
+            icon.textContent = '▶';
+            text.textContent = '詳細を見る';
+        }
+    };
 
     /**
      * Show search section

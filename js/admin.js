@@ -1,5 +1,5 @@
 /**
- * Admin Panel Application (Supabase Version)
+ * Admin Panel Application (Supabase Version with Templates)
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -25,12 +25,30 @@ document.addEventListener('DOMContentLoaded', () => {
     const shareModal = document.getElementById('share-modal');
     const deleteModal = document.getElementById('delete-modal');
     const stepModal = document.getElementById('step-modal');
+    const templateModal = document.getElementById('template-modal');
     const toast = document.getElementById('toast');
 
     // Initialize
     init();
 
     async function init() {
+        // Display admin name
+        if (window.adminSession) {
+            const adminNameEl = document.getElementById('admin-name');
+            if (adminNameEl) {
+                adminNameEl.textContent = window.adminSession.name || window.adminSession.email;
+            }
+        }
+
+        // Logout button handler
+        const logoutBtn = document.getElementById('logout-btn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', () => {
+                localStorage.removeItem('admin_session');
+                window.location.href = 'login.html';
+            });
+        }
+
         await renderProjectList();
     }
 
@@ -74,13 +92,21 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('step-modal-save').addEventListener('click', saveStep);
     document.getElementById('step-delete-btn').addEventListener('click', deleteStep);
 
+    // Template Modal Event Listeners
+    document.getElementById('modal-save-template')?.addEventListener('click', openSaveTemplateModal);
+    document.getElementById('template-modal-close')?.addEventListener('click', closeTemplateModal);
+    document.getElementById('template-modal-cancel')?.addEventListener('click', closeTemplateModal);
+    document.getElementById('template-modal-save')?.addEventListener('click', saveCurrentAsTemplate);
+
     // Close modals on overlay click
-    [projectModal, shareModal, deleteModal, stepModal].forEach(modal => {
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) {
-                modal.classList.remove('active');
-            }
-        });
+    [projectModal, shareModal, deleteModal, stepModal, templateModal].forEach(modal => {
+        if (modal) {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.classList.remove('active');
+                }
+            });
+        }
     });
 
     /**
@@ -290,6 +316,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('step-modal-title').textContent = '工程を編集';
         document.getElementById('step-name').value = step.name;
         document.getElementById('step-description').value = step.description || '';
+        document.getElementById('step-url').value = step.url || '';
         document.getElementById('step-delete-btn').style.display = 'block';
 
         stepModal.classList.add('active');
@@ -310,6 +337,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function saveStep() {
         const name = document.getElementById('step-name').value.trim();
         const description = document.getElementById('step-description').value.trim();
+        const url = document.getElementById('step-url').value.trim();
 
         if (!name) {
             showToast('工程名は必須です');
@@ -317,10 +345,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (isNewStep) {
-            await DataManager.addStep(currentProjectId, { name, description });
+            await DataManager.addStep(currentProjectId, { name, description, url });
             showToast('工程を追加しました');
         } else {
-            await DataManager.updateStep(currentProjectId, currentStepId, { name, description });
+            await DataManager.updateStep(currentProjectId, currentStepId, { name, description, url });
             showToast('工程を更新しました');
         }
 
@@ -361,7 +389,7 @@ document.addEventListener('DOMContentLoaded', () => {
     /**
      * Open project modal (create or edit)
      */
-    function openProjectModal(project = null) {
+    async function openProjectModal(project = null) {
         isEditMode = !!project;
         document.getElementById('modal-title').textContent =
             isEditMode ? 'プロジェクトを編集' : '新規プロジェクト';
@@ -369,6 +397,34 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('input-name').value = project?.name || '';
         document.getElementById('input-client').value = project?.client || '';
         document.getElementById('input-description').value = project?.description || '';
+
+        // Populate client datalist from existing clients
+        const clientList = document.getElementById('client-list');
+        if (clientList) {
+            const clients = await DataManager.getAllClients();
+            clientList.innerHTML = clients.map(c => `<option value="${c.name}">`).join('');
+        }
+
+        // Populate template dropdown
+        const templateSelect = document.getElementById('input-template');
+        if (templateSelect) {
+            const templates = DataManager.getAllTemplates();
+            templateSelect.innerHTML = templates.map(t =>
+                `<option value="${t.id}">${t.name}</option>`
+            ).join('');
+
+            // Hide template selection in edit mode
+            const templateGroup = templateSelect.closest('.input-group');
+            if (templateGroup) {
+                templateGroup.style.display = isEditMode ? 'none' : 'block';
+            }
+        }
+
+        // Hide/show save template button
+        const saveTemplateBtn = document.getElementById('modal-save-template');
+        if (saveTemplateBtn) {
+            saveTemplateBtn.style.display = isEditMode ? 'inline-flex' : 'none';
+        }
 
         projectModal.classList.add('active');
         document.getElementById('input-name').focus();
@@ -389,6 +445,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const name = document.getElementById('input-name').value.trim();
         const client = document.getElementById('input-client').value.trim();
         const description = document.getElementById('input-description').value.trim();
+        const templateSelect = document.getElementById('input-template');
+        const templateId = templateSelect ? templateSelect.value : 'default';
 
         if (!name || !client) {
             showToast('プロジェクト名とクライアント名は必須です');
@@ -400,12 +458,55 @@ document.addEventListener('DOMContentLoaded', () => {
             showToast('プロジェクトを更新しました');
             await selectProject(currentProjectId);
         } else {
-            const newProject = await DataManager.createProject({ name, client, description });
+            // Use template for new project
+            const newProject = await DataManager.createProjectWithTemplate(
+                { name, client, description },
+                templateId
+            );
             showToast('プロジェクトを作成しました');
             await selectProject(newProject.id);
         }
 
         closeProjectModal();
+    }
+
+    /**
+     * Open save template modal
+     */
+    function openSaveTemplateModal() {
+        if (!currentProjectId) {
+            showToast('プロジェクトを選択してください');
+            return;
+        }
+        closeProjectModal();
+        document.getElementById('template-name').value = '';
+        templateModal.classList.add('active');
+        document.getElementById('template-name').focus();
+    }
+
+    /**
+     * Close template modal
+     */
+    function closeTemplateModal() {
+        templateModal.classList.remove('active');
+    }
+
+    /**
+     * Save current project's steps as template
+     */
+    async function saveCurrentAsTemplate() {
+        const templateName = document.getElementById('template-name').value.trim();
+        if (!templateName) {
+            showToast('テンプレート名を入力してください');
+            return;
+        }
+
+        const project = await DataManager.getProject(currentProjectId);
+        if (!project) return;
+
+        DataManager.saveTemplate(templateName, project.steps);
+        closeTemplateModal();
+        showToast('テンプレートを保存しました');
     }
 
     /**

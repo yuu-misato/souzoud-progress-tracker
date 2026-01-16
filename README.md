@@ -35,4 +35,4 @@ python3 -m http.server 8080
 
 ## ライセンス
 
-© 2024 SOUZOUD Inc.
+© 2026 SOUZOUD Inc.
