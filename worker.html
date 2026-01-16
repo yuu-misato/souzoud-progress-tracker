@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SOUZOUD Inc. - 作業者ポータル</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/index.css">
+    <style>
+        .worker-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: var(--space-6);
+        }
+
+        .task-card {
+            background: var(--color-bg-card);
+            border-radius: var(--radius-lg);
+            padding: var(--space-5);
+            margin-bottom: var(--space-4);
+            border: 1px solid var(--color-border);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .task-card--overdue {
+            border-left: 4px solid #ef4444;
+        }
+
+        .task-card--submitted {
+            border-left: 4px solid #f59e0b;
+        }
+
+        .task-card--approved {
+            border-left: 4px solid #10b981;
+            opacity: 0.7;
+        }
+
+        .task-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: var(--space-3);
+        }
+
+        .task-title {
+            font-size: var(--font-size-lg);
+            font-weight: 600;
+            color: var(--color-text);
+        }
+
+        .task-project {
+            font-size: var(--font-size-sm);
+            color: var(--color-text-muted);
+            margin-top: var(--space-1);
+        }
+
+        .task-due {
+            font-size: var(--font-size-sm);
+            font-weight: 500;
+            padding: var(--space-1) var(--space-2);
+            border-radius: var(--radius-sm);
+            background: #f3f4f6;
+        }
+
+        .task-due--overdue {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .task-due--soon {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .task-notes {
+            background: #f8fafc;
+            border-left: 3px solid var(--color-primary);
+            padding: var(--space-3);
+            border-radius: var(--radius-md);
+            margin: var(--space-3) 0;
+            font-size: var(--font-size-sm);
+            color: var(--color-text-secondary);
+        }
+
+        .task-status {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            font-size: var(--font-size-sm);
+            margin-bottom: var(--space-3);
+        }
+
+        .status-badge {
+            padding: var(--space-1) var(--space-2);
+            border-radius: var(--radius-sm);
+            font-weight: 500;
+        }
+
+        .status-badge--pending {
+            background: #e0e7ff;
+            color: #4f46e5;
+        }
+
+        .status-badge--in_progress {
+            background: #dbeafe;
+            color: #2563eb;
+        }
+
+        .status-badge--submitted {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .status-badge--approved {
+            background: #d1fae5;
+            color: #059669;
+        }
+
+        .submit-section {
+            border-top: 1px solid var(--color-border);
+            padding-top: var(--space-4);
+            margin-top: var(--space-4);
+        }
+
+        .submit-title {
+            font-size: var(--font-size-sm);
+            font-weight: 500;
+            margin-bottom: var(--space-3);
+        }
+
+        .submit-buttons {
+            display: flex;
+            gap: var(--space-2);
+            flex-wrap: wrap;
+        }
+
+        .submission-history {
+            margin-top: var(--space-4);
+        }
+
+        .submission-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--space-2);
+            background: #f8fafc;
+            border-radius: var(--radius-sm);
+            margin-bottom: var(--space-2);
+            font-size: var(--font-size-sm);
+        }
+
+        .submission-item--approved {
+            background: #d1fae5;
+        }
+
+        .submission-item--rejected {
+            background: #fee2e2;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: var(--space-10);
+            color: var(--color-text-muted);
+        }
+
+        .login-section {
+            display: none;
+        }
+
+        .login-section.show {
+            display: block;
+        }
+
+        .tasks-section {
+            display: none;
+        }
+
+        .tasks-section.show {
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="header__inner">
+                <a href="worker.html" class="header__logo">
+                    <div class="header__logo-icon">🔧</div>
+                    <span class="header__logo-text">作業者ポータル</span>
+                </a>
+                <nav class="header__nav" id="user-nav" style="display: none;">
+                    <span id="worker-name" class="badge badge--secondary"></span>
+                    <button id="logout-btn" class="btn btn--ghost btn--sm">ログアウト</button>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main class="worker-container">
+        <!-- Login Section -->
+        <section id="login-section" class="login-section show">
+            <div class="card" style="max-width: 400px; margin: var(--space-10) auto;">
+                <h2 style="margin-bottom: var(--space-4);">作業者ログイン</h2>
+                <div id="login-error" class="login-error"></div>
+                <form id="login-form">
+                    <div class="input-group" style="margin-bottom: var(--space-4);">
+                        <label for="email">メールアドレス</label>
+                        <input type="email" id="email" class="input" placeholder="worker@example.com" required>
+                    </div>
+                    <div class="input-group" style="margin-bottom: var(--space-4);">
+                        <label for="password">パスワード</label>
+                        <input type="password" id="password" class="input" placeholder="パスワード" required>
+                    </div>
+                    <button type="submit" class="btn btn--primary" style="width: 100%;">ログイン</button>
+                </form>
+            </div>
+        </section>
+
+        <!-- Tasks Section -->
+        <section id="tasks-section" class="tasks-section">
+            <h1 style="margin-bottom: var(--space-6);">📋 担当タスク</h1>
+            <div id="task-list">
+                <!-- Tasks will be rendered here -->
+            </div>
+        </section>
+    </main>
+
+    <!-- Submit Modal -->
+    <div class="modal-overlay" id="submit-modal">
+        <div class="modal" style="max-width: 500px;">
+            <div class="modal__header">
+                <h2 class="modal__title">成果物を提出</h2>
+                <button class="modal__close" id="submit-modal-close">&times;</button>
+            </div>
+            <div class="modal__body">
+                <input type="hidden" id="submit-assignment-id">
+                <div class="input-group" style="margin-bottom: var(--space-4);">
+                    <label for="submit-stage">提出種別 *</label>
+                    <select id="submit-stage" class="input">
+                        <option value="draft">初稿</option>
+                        <option value="revision">修正稿</option>
+                        <option value="final">最終稿</option>
+                    </select>
+                </div>
+                <div class="input-group" style="margin-bottom: var(--space-4);">
+                    <label for="submit-url">成果物URL</label>
+                    <input type="url" id="submit-url" class="input" placeholder="https://drive.google.com/...">
+                </div>
+                <div class="input-group">
+                    <label for="submit-comment">コメント</label>
+                    <textarea id="submit-comment" class="input" rows="3" placeholder="備考があれば入力"></textarea>
+                </div>
+            </div>
+            <div class="modal__footer">
+                <button class="btn btn--secondary" id="submit-modal-cancel">キャンセル</button>
+                <button class="btn btn--primary" id="submit-modal-save">提出する</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/data.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const loginSection = document.getElementById('login-section');
+            const tasksSection = document.getElementById('tasks-section');
+            const userNav = document.getElementById('user-nav');
+            const workerNameEl = document.getElementById('worker-name');
+            const taskList = document.getElementById('task-list');
+            const submitModal = document.getElementById('submit-modal');
+
+            let currentWorker = null;
+
+            // Check existing session
+            const session = localStorage.getItem('worker_session');
+            if (session) {
+                try {
+                    const sessionData = JSON.parse(session);
+                    if (sessionData.email && sessionData.expiry > Date.now()) {
+                        currentWorker = sessionData;
+                        showTasksSection();
+                    } else {
+                        localStorage.removeItem('worker_session');
+                    }
+                } catch (e) {
+                    localStorage.removeItem('worker_session');
+                }
+            }
+
+            // Login form
+            document.getElementById('login-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const email = document.getElementById('email').value.trim();
+                const password = document.getElementById('password').value;
+
+                try {
+                    const passwordHash = await hashPassword(password);
+                    const workers = await SupabaseClient.select('workers', `email=eq.${encodeURIComponent(email)}&is_active=eq.true`);
+
+                    if (workers.length === 0) {
+                        showError('メールアドレスまたはパスワードが正しくありません');
+                        return;
+                    }
+
+                    const worker = workers[0];
+                    if (worker.password_hash === passwordHash) {
+                        currentWorker = {
+                            id: worker.id,
+                            email: worker.email,
+                            name: worker.name,
+                            expiry: Date.now() + (24 * 60 * 60 * 1000)
+                        };
+                        localStorage.setItem('worker_session', JSON.stringify(currentWorker));
+                        showTasksSection();
+                    } else {
+                        showError('メールアドレスまたはパスワードが正しくありません');
+                    }
+                } catch (error) {
+                    console.error('Login error:', error);
+                    showError('ログインに失敗しました');
+                }
+            });
+
+            // Logout
+            document.getElementById('logout-btn').addEventListener('click', () => {
+                localStorage.removeItem('worker_session');
+                currentWorker = null;
+                loginSection.classList.add('show');
+                tasksSection.classList.remove('show');
+                userNav.style.display = 'none';
+            });
+
+            // Show tasks section
+            async function showTasksSection() {
+                loginSection.classList.remove('show');
+                tasksSection.classList.add('show');
+                userNav.style.display = 'flex';
+                workerNameEl.textContent = currentWorker.name;
+                await renderTasks();
+            }
+
+            // Render tasks
+            async function renderTasks() {
+                const assignments = await DataManager.getAssignmentsForWorker(currentWorker.id);
+
+                if (assignments.length === 0) {
+                    taskList.innerHTML = `
+                        <div class="empty-state">
+                            <p>📭 現在担当しているタスクはありません</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                const now = new Date();
+                let html = '';
+
+                for (const assignment of assignments) {
+                    const submissions = await DataManager.getSubmissionsForAssignment(assignment.id);
+                    const dueDate = assignment.dueDate ? new Date(assignment.dueDate) : null;
+                    const isOverdue = dueDate && dueDate < now && assignment.status !== 'approved';
+                    const isSoon = dueDate && !isOverdue && (dueDate - now) < (2 * 24 * 60 * 60 * 1000);
+
+                    const statusLabels = {
+                        pending: '未着手',
+                        in_progress: '作業中',
+                        submitted: '確認待ち',
+                        approved: '完了'
+                    };
+
+                    let cardClass = 'task-card';
+                    if (assignment.status === 'approved') cardClass += ' task-card--approved';
+                    else if (assignment.status === 'submitted') cardClass += ' task-card--submitted';
+                    else if (isOverdue) cardClass += ' task-card--overdue';
+
+                    let dueClass = '';
+                    if (isOverdue) dueClass = 'task-due--overdue';
+                    else if (isSoon) dueClass = 'task-due--soon';
+
+                    html += `
+                        <div class="${cardClass}">
+                            <div class="task-header">
+                                <div>
+                                    <div class="task-title">${assignment.stepName}</div>
+                                    <div class="task-project">${assignment.clientName} / ${assignment.projectName}</div>
+                                </div>
+                                ${dueDate ? `<div class="task-due ${dueClass}">📅 ${formatDate(dueDate)}${isOverdue ? ' (期限超過)' : ''}</div>` : ''}
+                            </div>
+                            
+                            <div class="task-status">
+                                <span class="status-badge status-badge--${assignment.status}">${statusLabels[assignment.status]}</span>
+                            </div>
+                            
+                            ${assignment.notes ? `<div class="task-notes">📝 ${assignment.notes}</div>` : ''}
+                            
+                            ${renderSubmissions(submissions)}
+                            
+                            ${assignment.status !== 'approved' ? `
+                                <div class="submit-section">
+                                    <div class="submit-title">成果物を提出</div>
+                                    <div class="submit-buttons">
+                                        <button class="btn btn--secondary btn--sm" onclick="openSubmitModal('${assignment.id}', 'draft')">📄 初稿</button>
+                                        <button class="btn btn--secondary btn--sm" onclick="openSubmitModal('${assignment.id}', 'revision')">✏️ 修正稿</button>
+                                        <button class="btn btn--primary btn--sm" onclick="openSubmitModal('${assignment.id}', 'final')">✅ 最終稿</button>
+                                    </div>
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                }
+
+                taskList.innerHTML = html;
+            }
+
+            function renderSubmissions(submissions) {
+                if (submissions.length === 0) return '';
+
+                const stageLabels = { draft: '初稿', revision: '修正稿', final: '最終稿' };
+                const statusLabels = { submitted: '確認中', approved: '承認', rejected: '差戻し' };
+
+                let html = '<div class="submission-history"><small style="color: var(--color-text-muted);">提出履歴:</small>';
+                for (const s of submissions) {
+                    let itemClass = 'submission-item';
+                    if (s.status === 'approved') itemClass += ' submission-item--approved';
+                    if (s.status === 'rejected') itemClass += ' submission-item--rejected';
+
+                    html += `
+                        <div class="${itemClass}">
+                            <span>${stageLabels[s.stage]} - ${formatDateTime(s.submittedAt)}</span>
+                            <span>${statusLabels[s.status]}${s.status === 'rejected' && s.comment ? ': ' + s.comment : ''}</span>
+                        </div>
+                    `;
+                }
+                html += '</div>';
+                return html;
+            }
+
+            // Open submit modal
+            window.openSubmitModal = function (assignmentId, stage) {
+                document.getElementById('submit-assignment-id').value = assignmentId;
+                document.getElementById('submit-stage').value = stage;
+                document.getElementById('submit-url').value = '';
+                document.getElementById('submit-comment').value = '';
+                submitModal.classList.add('active');
+            };
+
+            // Close submit modal
+            document.getElementById('submit-modal-close').addEventListener('click', () => submitModal.classList.remove('active'));
+            document.getElementById('submit-modal-cancel').addEventListener('click', () => submitModal.classList.remove('active'));
+            submitModal.addEventListener('click', (e) => { if (e.target === submitModal) submitModal.classList.remove('active'); });
+
+            // Submit
+            document.getElementById('submit-modal-save').addEventListener('click', async () => {
+                const assignmentId = document.getElementById('submit-assignment-id').value;
+                const stage = document.getElementById('submit-stage').value;
+                const url = document.getElementById('submit-url').value;
+                const comment = document.getElementById('submit-comment').value;
+
+                try {
+                    await DataManager.createSubmission({
+                        assignmentId,
+                        stage,
+                        url,
+                        comment
+                    });
+                    submitModal.classList.remove('active');
+                    await renderTasks();
+                } catch (e) {
+                    alert('提出に失敗しました');
+                }
+            });
+
+            // Helpers
+            function showError(msg) {
+                const errorEl = document.getElementById('login-error');
+                errorEl.textContent = msg;
+                errorEl.style.display = 'block';
+            }
+
+            function formatDate(date) {
+                return date.toLocaleDateString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit' });
+            }
+
+            function formatDateTime(dateStr) {
+                const d = new Date(dateStr);
+                return d.toLocaleDateString('ja-JP') + ' ' + d.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
+            }
+
+            async function hashPassword(password) {
+                const encoder = new TextEncoder();
+                const data = encoder.encode(password);
+                const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+                const hashArray = Array.from(new Uint8Array(hashBuffer));
+                return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            }
+        });
+    </script>
+</body>
+
+</html>

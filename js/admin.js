@@ -43,6 +43,21 @@ document.addEventListener('DOMContentLoaded', () => {
             if (window.adminSession.role === 'director') {
                 newProjectBtn.style.display = 'none';
             }
+
+            // Show worker management button for master/admin
+            if (window.adminSession.role === 'master' || window.adminSession.role === 'admin') {
+                const workerSettingsBtn = document.getElementById('worker-settings-btn');
+                if (workerSettingsBtn) workerSettingsBtn.style.display = 'inline-block';
+            }
+
+            // Show approval button for directors
+            if (window.adminSession.role === 'director' || window.adminSession.role === 'master') {
+                const approvalBtn = document.getElementById('approval-btn');
+                if (approvalBtn) {
+                    approvalBtn.style.display = 'inline-block';
+                    approvalBtn.addEventListener('click', openApprovalModal);
+                }
+            }
         }
 
         // Logout button handler
@@ -321,7 +336,7 @@ document.addEventListener('DOMContentLoaded', () => {
     /**
      * Open add step modal
      */
-    function openAddStepModal() {
+    async function openAddStepModal() {
         if (!currentProjectId) return;
 
         isNewStep = true;
@@ -330,7 +345,14 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('step-modal-title').textContent = '工程を追加';
         document.getElementById('step-name').value = '';
         document.getElementById('step-description').value = '';
+        document.getElementById('step-url').value = '';
         document.getElementById('step-delete-btn').style.display = 'none';
+
+        // Populate worker dropdown
+        await populateWorkerDropdown();
+        document.getElementById('step-worker').value = '';
+        document.getElementById('step-due-date').value = '';
+        document.getElementById('step-notes').value = '';
 
         stepModal.classList.add('active');
         document.getElementById('step-name').focus();
@@ -355,7 +377,33 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('step-url').value = step.url || '';
         document.getElementById('step-delete-btn').style.display = 'block';
 
+        // Populate worker dropdown and load assignment
+        await populateWorkerDropdown();
+        const assignments = await DataManager.getAssignmentsForStep(stepId);
+        if (assignments.length > 0) {
+            const a = assignments[0];
+            document.getElementById('step-worker').value = a.worker_id || '';
+            document.getElementById('step-due-date').value = a.due_date ? a.due_date.slice(0, 16) : '';
+            document.getElementById('step-notes').value = a.notes || '';
+        } else {
+            document.getElementById('step-worker').value = '';
+            document.getElementById('step-due-date').value = '';
+            document.getElementById('step-notes').value = '';
+        }
+
         stepModal.classList.add('active');
+    }
+
+    /**
+     * Populate worker dropdown
+     */
+    async function populateWorkerDropdown() {
+        const workers = await DataManager.getAllWorkers();
+        const select = document.getElementById('step-worker');
+        select.innerHTML = '<option value="">選択してください</option>';
+        workers.filter(w => w.isActive).forEach(w => {
+            select.innerHTML += `<option value="${w.id}">${w.name}</option>`;
+        });
     }
 
     /**
@@ -381,10 +429,46 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (isNewStep) {
-            await DataManager.addStep(currentProjectId, { name, description, url });
+            const newStep = await DataManager.addStep(currentProjectId, { name, description, url });
+            // Save assignment if worker selected
+            const workerId = document.getElementById('step-worker').value;
+            if (workerId && newStep) {
+                await DataManager.createAssignment({
+                    stepId: newStep.id,
+                    workerId: workerId,
+                    directorId: window.adminSession?.id,
+                    dueDate: document.getElementById('step-due-date').value || null,
+                    notes: document.getElementById('step-notes').value,
+                    createdBy: window.adminSession?.id
+                });
+            }
             showToast('工程を追加しました');
         } else {
             await DataManager.updateStep(currentProjectId, currentStepId, { name, description, url });
+            // Update or create assignment
+            const workerId = document.getElementById('step-worker').value;
+            const assignments = await DataManager.getAssignmentsForStep(currentStepId);
+            if (workerId) {
+                if (assignments.length > 0) {
+                    await DataManager.updateAssignment(assignments[0].id, {
+                        dueDate: document.getElementById('step-due-date').value || null,
+                        notes: document.getElementById('step-notes').value,
+                        directorId: window.adminSession?.id
+                    });
+                } else {
+                    await DataManager.createAssignment({
+                        stepId: currentStepId,
+                        workerId: workerId,
+                        directorId: window.adminSession?.id,
+                        dueDate: document.getElementById('step-due-date').value || null,
+                        notes: document.getElementById('step-notes').value,
+                        createdBy: window.adminSession?.id
+                    });
+                }
+            } else if (assignments.length > 0) {
+                // Remove assignment if worker deselected
+                await DataManager.deleteAssignment(assignments[0].id);
+            }
             showToast('工程を更新しました');
         }
 
@@ -859,4 +943,69 @@ document.addEventListener('DOMContentLoaded', () => {
         const hashArray = Array.from(new Uint8Array(hashBuffer));
         return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
     }
+
+    /**
+     * Open approval modal (show pending submissions)
+     */
+    async function openApprovalModal() {
+        const directorId = window.adminSession?.id;
+        if (!directorId) return;
+
+        try {
+            const pendingSubmissions = await DataManager.getPendingSubmissionsForDirector(directorId);
+
+            if (pendingSubmissions.length === 0) {
+                showToast('承認待ちの提出物はありません');
+                return;
+            }
+
+            // Create and show approval modal
+            let modalHtml = `<div style="max-height: 400px; overflow-y: auto;">`;
+            const stageLabels = { draft: '初稿', revision: '修正稿', final: '最終稿' };
+
+            for (const s of pendingSubmissions) {
+                modalHtml += `
+                    <div style="padding: var(--space-3); border: 1px solid var(--color-border); border-radius: var(--radius-md); margin-bottom: var(--space-3);">
+                        <div style="font-weight: 500;">${stageLabels[s.stage]} 提出</div>
+                        <div style="font-size: var(--font-size-sm); color: var(--color-text-muted);">
+                            提出日: ${new Date(s.submitted_at).toLocaleString('ja-JP')}
+                        </div>
+                        ${s.url ? `<div style="margin-top: var(--space-2);"><a href="${s.url}" target="_blank">🔗 成果物を確認</a></div>` : ''}
+                        <div style="margin-top: var(--space-3); display: flex; gap: var(--space-2);">
+                            <button class="btn btn--primary btn--sm" onclick="approveSubmission('${s.id}')">✓ 承認</button>
+                            <button class="btn btn--secondary btn--sm" onclick="rejectSubmission('${s.id}')">↩ 差戻し</button>
+                        </div>
+                    </div>
+                `;
+            }
+            modalHtml += `</div>`;
+
+            // Use alert for simplicity (TODO: Create proper modal)
+            alert(`承認待ちの提出が ${pendingSubmissions.length} 件あります。\n管理画面の工程編集から確認・承認してください。`);
+        } catch (e) {
+            console.error('Error opening approval modal:', e);
+            showToast('承認待ちの取得に失敗しました');
+        }
+    }
+
+    // Global approval functions
+    window.approveSubmission = async function (submissionId) {
+        try {
+            await DataManager.approveSubmission(submissionId, window.adminSession?.id);
+            showToast('承認しました');
+        } catch (e) {
+            showToast('承認に失敗しました');
+        }
+    };
+
+    window.rejectSubmission = async function (submissionId) {
+        const comment = prompt('差戻しの理由を入力してください:');
+        if (comment === null) return;
+        try {
+            await DataManager.rejectSubmission(submissionId, comment);
+            showToast('差戻しました');
+        } catch (e) {
+            showToast('差戻しに失敗しました');
+        }
+    };
 });

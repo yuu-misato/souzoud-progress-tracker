@@ -24,8 +24,12 @@
                 <nav class="header__nav">
                     <span id="admin-name" class="badge badge--secondary" style="margin-right: var(--space-2);"></span>
                     <span class="badge badge--primary">管理画面</span>
+                    <button id="worker-settings-btn" class="btn btn--secondary btn--sm"
+                        style="margin-left: var(--space-3); display: none;">🔧 作業者管理</button>
+                    <button id="approval-btn" class="btn btn--secondary btn--sm"
+                        style="margin-left: var(--space-2); display: none;">📋 承認待ち</button>
                     <button id="admin-settings-btn" class="btn btn--secondary btn--sm"
-                        style="margin-left: var(--space-3); display: none;">👥 管理者設定</button>
+                        style="margin-left: var(--space-2); display: none;">👥 管理者設定</button>
                     <button id="logout-btn" class="btn btn--ghost btn--sm"
                         style="margin-left: var(--space-2);">ログアウト</button>
                 </nav>
@@ -147,6 +151,26 @@
                         style="font-size: var(--font-size-xs); color: var(--color-text-muted); margin-top: var(--space-1);">
                         クライアント画面に「関連ファイルを開く」リンクとして表示されます
                     </p>
+                </div>
+
+                <!-- Task Assignment Section -->
+                <div
+                    style="border-top: 1px solid var(--color-border); margin-top: var(--space-4); padding-top: var(--space-4);">
+                    <h4 style="margin-bottom: var(--space-3); color: var(--color-text-secondary);">🔧 作業者割り当て</h4>
+                    <div class="input-group" style="margin-bottom: var(--space-3);">
+                        <label for="step-worker">作業者</label>
+                        <select id="step-worker" class="input">
+                            <option value="">選択してください</option>
+                        </select>
+                    </div>
+                    <div class="input-group" style="margin-bottom: var(--space-3);">
+                        <label for="step-due-date">期日</label>
+                        <input type="datetime-local" id="step-due-date" class="input">
+                    </div>
+                    <div class="input-group">
+                        <label for="step-notes">作業者への注意事項（作業者のみ表示）</label>
+                        <textarea id="step-notes" class="input" rows="3" placeholder="注意点、参考資料など"></textarea>
+                    </div>
                 </div>
             </div>
             <div class="modal__footer">

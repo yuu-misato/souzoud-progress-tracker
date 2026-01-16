@@ -667,6 +667,273 @@ const DataManager = {
     return [];
   },
 
+  // ==================== WORKER OPERATIONS ====================
+
+  async getAllWorkers() {
+    try {
+      const workers = await SupabaseClient.select('workers', 'order=created_at.asc');
+      return workers.map(w => ({
+        id: w.id,
+        email: w.email,
+        name: w.name,
+        isActive: w.is_active,
+        createdAt: w.created_at
+      }));
+    } catch (e) {
+      console.error('Error fetching workers:', e);
+      return [];
+    }
+  },
+
+  async createWorker(workerData) {
+    try {
+      const result = await SupabaseClient.insert('workers', {
+        email: workerData.email,
+        password_hash: workerData.passwordHash,
+        name: workerData.name,
+        is_active: true
+      });
+      return result[0];
+    } catch (e) {
+      console.error('Error creating worker:', e);
+      throw e;
+    }
+  },
+
+  async updateWorker(workerId, updates) {
+    try {
+      const updateData = {};
+      if (updates.name) updateData.name = updates.name;
+      if (updates.email) updateData.email = updates.email;
+      if (updates.passwordHash) updateData.password_hash = updates.passwordHash;
+      if (updates.isActive !== undefined) updateData.is_active = updates.isActive;
+      await SupabaseClient.update('workers', `id=eq.${workerId}`, updateData);
+    } catch (e) {
+      console.error('Error updating worker:', e);
+      throw e;
+    }
+  },
+
+  async deleteWorker(workerId) {
+    try {
+      await SupabaseClient.update('workers', `id=eq.${workerId}`, { is_active: false });
+    } catch (e) {
+      console.error('Error deleting worker:', e);
+      throw e;
+    }
+  },
+
+  // ==================== TASK ASSIGNMENT OPERATIONS ====================
+
+  async getAssignmentsForWorker(workerId) {
+    try {
+      const assignments = await SupabaseClient.select('task_assignments', `worker_id=eq.${workerId}&order=due_date.asc`);
+      // Fetch related step and project data
+      const enrichedAssignments = await Promise.all(assignments.map(async a => {
+        const steps = await SupabaseClient.select('steps', `id=eq.${a.step_id}`);
+        const step = steps[0];
+        let project = null;
+        if (step) {
+          const projects = await SupabaseClient.select('projects', `id=eq.${step.project_id}`);
+          project = projects[0];
+        }
+        return {
+          id: a.id,
+          stepId: a.step_id,
+          stepName: step?.name || '',
+          projectId: step?.project_id || '',
+          projectName: project?.name || '',
+          clientName: project?.client || '',
+          workerId: a.worker_id,
+          directorId: a.director_id,
+          dueDate: a.due_date,
+          notes: a.notes,
+          status: a.status,
+          createdAt: a.created_at
+        };
+      }));
+      return enrichedAssignments;
+    } catch (e) {
+      console.error('Error fetching assignments:', e);
+      return [];
+    }
+  },
+
+  async getAssignmentsForStep(stepId) {
+    try {
+      const assignments = await SupabaseClient.select('task_assignments', `step_id=eq.${stepId}`);
+      return assignments;
+    } catch (e) {
+      console.error('Error fetching step assignments:', e);
+      return [];
+    }
+  },
+
+  async createAssignment(assignmentData) {
+    try {
+      const result = await SupabaseClient.insert('task_assignments', {
+        step_id: assignmentData.stepId,
+        worker_id: assignmentData.workerId,
+        director_id: assignmentData.directorId,
+        due_date: assignmentData.dueDate,
+        notes: assignmentData.notes || '',
+        status: 'pending',
+        created_by: assignmentData.createdBy
+      });
+      return result[0];
+    } catch (e) {
+      console.error('Error creating assignment:', e);
+      throw e;
+    }
+  },
+
+  async updateAssignment(assignmentId, updates) {
+    try {
+      const updateData = {};
+      if (updates.dueDate) updateData.due_date = updates.dueDate;
+      if (updates.notes !== undefined) updateData.notes = updates.notes;
+      if (updates.status) updateData.status = updates.status;
+      if (updates.directorId) updateData.director_id = updates.directorId;
+      await SupabaseClient.update('task_assignments', `id=eq.${assignmentId}`, updateData);
+    } catch (e) {
+      console.error('Error updating assignment:', e);
+      throw e;
+    }
+  },
+
+  async deleteAssignment(assignmentId) {
+    try {
+      await SupabaseClient.delete('task_assignments', `id=eq.${assignmentId}`);
+    } catch (e) {
+      console.error('Error deleting assignment:', e);
+      throw e;
+    }
+  },
+
+  // ==================== SUBMISSION OPERATIONS ====================
+
+  async getSubmissionsForAssignment(assignmentId) {
+    try {
+      const submissions = await SupabaseClient.select('submissions', `assignment_id=eq.${assignmentId}&order=submitted_at.desc`);
+      return submissions.map(s => ({
+        id: s.id,
+        assignmentId: s.assignment_id,
+        stage: s.stage,
+        submittedAt: s.submitted_at,
+        approvedAt: s.approved_at,
+        approvedBy: s.approved_by,
+        status: s.status,
+        comment: s.comment,
+        url: s.url
+      }));
+    } catch (e) {
+      console.error('Error fetching submissions:', e);
+      return [];
+    }
+  },
+
+  async getPendingSubmissionsForDirector(directorId) {
+    try {
+      // Get all assignments for this director with submitted status
+      const assignments = await SupabaseClient.select('task_assignments', `director_id=eq.${directorId}&status=eq.submitted`);
+
+      const pendingSubmissions = [];
+      for (const a of assignments) {
+        const submissions = await SupabaseClient.select('submissions', `assignment_id=eq.${a.id}&status=eq.submitted`);
+        for (const s of submissions) {
+          pendingSubmissions.push({
+            ...s,
+            assignment: a
+          });
+        }
+      }
+      return pendingSubmissions;
+    } catch (e) {
+      console.error('Error fetching pending submissions:', e);
+      return [];
+    }
+  },
+
+  async createSubmission(submissionData) {
+    try {
+      const result = await SupabaseClient.insert('submissions', {
+        assignment_id: submissionData.assignmentId,
+        stage: submissionData.stage,
+        comment: submissionData.comment || '',
+        url: submissionData.url || '',
+        status: 'submitted'
+      });
+      // Update assignment status to submitted
+      await this.updateAssignment(submissionData.assignmentId, { status: 'submitted' });
+      return result[0];
+    } catch (e) {
+      console.error('Error creating submission:', e);
+      throw e;
+    }
+  },
+
+  async approveSubmission(submissionId, approvedBy) {
+    try {
+      await SupabaseClient.update('submissions', `id=eq.${submissionId}`, {
+        status: 'approved',
+        approved_at: new Date().toISOString(),
+        approved_by: approvedBy
+      });
+
+      // Get the submission to update assignment
+      const submissions = await SupabaseClient.select('submissions', `id=eq.${submissionId}`);
+      if (submissions[0]) {
+        await this.updateAssignment(submissions[0].assignment_id, { status: 'approved' });
+      }
+    } catch (e) {
+      console.error('Error approving submission:', e);
+      throw e;
+    }
+  },
+
+  async rejectSubmission(submissionId, comment) {
+    try {
+      await SupabaseClient.update('submissions', `id=eq.${submissionId}`, {
+        status: 'rejected',
+        comment: comment
+      });
+
+      // Get the submission to update assignment back to in_progress
+      const submissions = await SupabaseClient.select('submissions', `id=eq.${submissionId}`);
+      if (submissions[0]) {
+        await this.updateAssignment(submissions[0].assignment_id, { status: 'in_progress' });
+      }
+    } catch (e) {
+      console.error('Error rejecting submission:', e);
+      throw e;
+    }
+  },
+
+  // ==================== PROJECT DIRECTOR ====================
+
+  async updateProjectDirector(projectId, directorId) {
+    try {
+      await SupabaseClient.update('projects', `id=eq.${projectId}`, { director_id: directorId });
+    } catch (e) {
+      console.error('Error updating project director:', e);
+      throw e;
+    }
+  },
+
+  async getProjectDirector(projectId) {
+    try {
+      const projects = await SupabaseClient.select('projects', `id=eq.${projectId}&select=director_id`);
+      if (projects[0]?.director_id) {
+        const admins = await SupabaseClient.select('admins', `id=eq.${projects[0].director_id}`);
+        return admins[0] || null;
+      }
+      return null;
+    } catch (e) {
+      console.error('Error fetching project director:', e);
+      return null;
+    }
+  },
+
   // No-op for compatibility
   initializeSampleData() {
     // Sample data is now in the database
