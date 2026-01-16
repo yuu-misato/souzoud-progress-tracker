@@ -184,9 +184,8 @@
 
                     const admin = admins[0];
 
-                    // For demo purposes, accept any password for now
-                    // In production, compare password hashes properly
-                    if (admin.email === email) {
+                    // Compare password hash
+                    if (admin.password_hash === passwordHash) {
                         // Create session
                         const session = {
                             id: admin.id,

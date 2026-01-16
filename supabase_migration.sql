@@ -16,13 +16,17 @@ ADD COLUMN IF NOT EXISTS url TEXT DEFAULT '';
 -- 3. RLS設定
 ALTER TABLE admins ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Allow all access to admins" ON admins FOR ALL USING (true) WITH CHECK (true);
--- 4. マスター管理者を作成（初期パスワード: admin123）
--- 注意: 本番環境では必ずパスワードを変更してください
--- パスワードハッシュはSHA-256: 240be518fabd2724ddb6f04eeb9d5b07fb9fd1d0461739d1d9b9a1e9b6c4b5d3 = admin123
+-- 4. マスター管理者を作成
+-- メール: yusaku.suzuki@sou-zou-do.com
+-- パスワード: Yusaku0310!
 INSERT INTO admins (email, password_hash, name, role)
 VALUES (
-        'admin@souzoud.co.jp',
-        '240be518fabd2724ddb6f04eeb9d5b4e5f4b5d3',
-        'マスター管理者',
+        'yusaku.suzuki@sou-zou-do.com',
+        '079aac84dd93adab7687f0d97eb723362d4443e2e929e442a791a7d0bb61adf1',
+        '鈴木 勇作',
         'master'
-    ) ON CONFLICT (email) DO NOTHING;
+    ) ON CONFLICT (email) DO
+UPDATE
+SET password_hash = EXCLUDED.password_hash,
+    role = 'master',
+    is_active = true;
