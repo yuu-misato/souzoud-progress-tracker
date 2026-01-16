@@ -9,9 +9,11 @@ CREATE TABLE IF NOT EXISTS workers (
     is_active BOOLEAN DEFAULT true
 );
 -- 2. タスク割り当てテーブル
+-- Note: steps table has composite PK (project_id, id), so we store step_id as INTEGER without FK constraint
 CREATE TABLE IF NOT EXISTS task_assignments (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    step_id UUID NOT NULL REFERENCES steps(id) ON DELETE CASCADE,
+    step_id INTEGER NOT NULL,
+    project_id TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
     worker_id UUID NOT NULL REFERENCES workers(id) ON DELETE CASCADE,
     director_id UUID REFERENCES admins(id),
     due_date TIMESTAMP WITH TIME ZONE,
@@ -26,7 +28,7 @@ CREATE TABLE IF NOT EXISTS task_assignments (
     ),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     created_by UUID REFERENCES admins(id),
-    UNIQUE(step_id, worker_id)
+    UNIQUE(step_id, project_id, worker_id)
 );
 -- 3. 成果物提出テーブル
 CREATE TABLE IF NOT EXISTS submissions (
@@ -55,7 +57,7 @@ DROP POLICY IF EXISTS "Allow all access to submissions" ON submissions;
 CREATE POLICY "Allow all access to submissions" ON submissions FOR ALL USING (true) WITH CHECK (true);
 -- 6. インデックス
 CREATE INDEX IF NOT EXISTS idx_task_assignments_worker ON task_assignments(worker_id);
-CREATE INDEX IF NOT EXISTS idx_task_assignments_step ON task_assignments(step_id);
+CREATE INDEX IF NOT EXISTS idx_task_assignments_step ON task_assignments(step_id, project_id);
 CREATE INDEX IF NOT EXISTS idx_task_assignments_director ON task_assignments(director_id);
 CREATE INDEX IF NOT EXISTS idx_submissions_assignment ON submissions(assignment_id);
 CREATE INDEX IF NOT EXISTS idx_projects_director ON projects(director_id);

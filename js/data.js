@@ -273,12 +273,25 @@ const DataManager = {
 
   // ==================== STEP OPERATIONS ====================
 
-  async addStep(projectId, stepData) {
+  async addStep(projectId, stepData, position = null) {
     try {
       const steps = await this.getStepsForProject(projectId);
-      const newOrder = steps.length + 1;
+      let newOrder;
 
-      await SupabaseClient.insert('steps', {
+      if (position !== null && position < steps.length) {
+        // Shift existing steps after the insertion point
+        for (let i = steps.length - 1; i >= position; i--) {
+          await SupabaseClient.update('steps',
+            `project_id=eq.${projectId}&step_order=eq.${steps[i].step_order}`,
+            { step_order: steps[i].step_order + 1 }
+          );
+        }
+        newOrder = position + 1;
+      } else {
+        newOrder = steps.length + 1;
+      }
+
+      const result = await SupabaseClient.insert('steps', {
         project_id: projectId,
         step_order: newOrder,
         name: stepData.name,
@@ -291,7 +304,10 @@ const DataManager = {
         updated_at: new Date().toISOString()
       });
 
-      return await this.getProject(projectId);
+      // Return the new step with id
+      const newSteps = await this.getStepsForProject(projectId);
+      const newStep = newSteps.find(s => s.step_order === newOrder);
+      return newStep || { id: newOrder };
     } catch (e) {
       console.error('Error adding step:', e);
       return null;
@@ -759,9 +775,9 @@ const DataManager = {
     }
   },
 
-  async getAssignmentsForStep(stepId) {
+  async getAssignmentsForStep(stepId, projectId) {
     try {
-      const assignments = await SupabaseClient.select('task_assignments', `step_id=eq.${stepId}`);
+      const assignments = await SupabaseClient.select('task_assignments', `step_id=eq.${stepId}&project_id=eq.${projectId}`);
       return assignments;
     } catch (e) {
       console.error('Error fetching step assignments:', e);
@@ -773,6 +789,7 @@ const DataManager = {
     try {
       const result = await SupabaseClient.insert('task_assignments', {
         step_id: assignmentData.stepId,
+        project_id: assignmentData.projectId,
         worker_id: assignmentData.workerId,
         director_id: assignmentData.directorId,
         due_date: assignmentData.dueDate,

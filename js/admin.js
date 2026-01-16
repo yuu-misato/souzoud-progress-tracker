@@ -348,6 +348,18 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('step-url').value = '';
         document.getElementById('step-delete-btn').style.display = 'none';
 
+        // Populate position selector
+        const project = await DataManager.getProject(currentProjectId);
+        const positionSelect = document.getElementById('step-position');
+        const positionGroup = document.getElementById('step-position-group');
+        positionSelect.innerHTML = '<option value="end">最後に追加</option>';
+        if (project?.steps?.length > 0) {
+            project.steps.forEach((step, index) => {
+                positionSelect.innerHTML += `<option value="${index}">${step.name} の前</option>`;
+            });
+        }
+        positionGroup.style.display = 'block';
+
         // Populate worker dropdown
         await populateWorkerDropdown();
         document.getElementById('step-worker').value = '';
@@ -377,9 +389,12 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('step-url').value = step.url || '';
         document.getElementById('step-delete-btn').style.display = 'block';
 
+        // Hide position selector for edit mode
+        document.getElementById('step-position-group').style.display = 'none';
+
         // Populate worker dropdown and load assignment
         await populateWorkerDropdown();
-        const assignments = await DataManager.getAssignmentsForStep(stepId);
+        const assignments = await DataManager.getAssignmentsForStep(stepId, currentProjectId);
         if (assignments.length > 0) {
             const a = assignments[0];
             document.getElementById('step-worker').value = a.worker_id || '';
@@ -429,12 +444,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (isNewStep) {
-            const newStep = await DataManager.addStep(currentProjectId, { name, description, url });
+            const position = document.getElementById('step-position').value;
+            const newStep = await DataManager.addStep(currentProjectId, { name, description, url }, position === 'end' ? null : parseInt(position));
             // Save assignment if worker selected
             const workerId = document.getElementById('step-worker').value;
             if (workerId && newStep) {
                 await DataManager.createAssignment({
                     stepId: newStep.id,
+                    projectId: currentProjectId,
                     workerId: workerId,
                     directorId: window.adminSession?.id,
                     dueDate: document.getElementById('step-due-date').value || null,
@@ -447,7 +464,7 @@ document.addEventListener('DOMContentLoaded', () => {
             await DataManager.updateStep(currentProjectId, currentStepId, { name, description, url });
             // Update or create assignment
             const workerId = document.getElementById('step-worker').value;
-            const assignments = await DataManager.getAssignmentsForStep(currentStepId);
+            const assignments = await DataManager.getAssignmentsForStep(currentStepId, currentProjectId);
             if (workerId) {
                 if (assignments.length > 0) {
                     await DataManager.updateAssignment(assignments[0].id, {
@@ -458,6 +475,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else {
                     await DataManager.createAssignment({
                         stepId: currentStepId,
+                        projectId: currentProjectId,
                         workerId: workerId,
                         directorId: window.adminSession?.id,
                         dueDate: document.getElementById('step-due-date').value || null,
