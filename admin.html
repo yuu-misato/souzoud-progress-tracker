@@ -278,46 +278,43 @@
                     <span class="header__logo-text">MiERU</span>
                     <span class="header__logo-badge">管理</span>
                 </a>
-                <nav class="header__nav">
+                <!-- Desktop Menu -->
+                <nav class="header__nav header__menu-desktop">
                     <span id="admin-name" class="header__admin-name"></span>
+                    <button id="dashboard-btn" class="btn btn--ghost btn--sm" style="display: none;">ダッシュボード</button>
+                    <a id="switch-to-worker-btn" href="/worker.html" class="btn btn--outline btn--sm" style="display: none;">🔧 作業者</a>
 
-                    <!-- Desktop Menu -->
-                    <div class="header__menu-desktop">
-                        <button id="dashboard-btn" class="btn btn--ghost btn--sm" style="display: none;">ダッシュボード</button>
-                        <a id="switch-to-worker-btn" href="/worker.html" class="btn btn--outline btn--sm" style="display: none;">🔧 作業者</a>
-
-                        <!-- Settings Dropdown -->
-                        <div class="header__dropdown" id="settings-dropdown">
-                            <button id="settings-menu-btn" class="btn btn--ghost btn--sm">
-                                ⚙️ 設定 <span class="header__dropdown-arrow">▼</span>
-                            </button>
-                            <div id="settings-menu" class="header__dropdown-menu">
-                                <button id="desktop-worker-settings-btn" class="header__dropdown-item" style="display: none;">👥 作業者管理</button>
-                                <button id="desktop-approval-btn" class="header__dropdown-item" style="display: none;">✅ 承認待ち</button>
-                                <button id="desktop-template-settings-btn" class="header__dropdown-item" style="display: none;">📋 テンプレート</button>
-                                <button id="desktop-admin-settings-btn" class="header__dropdown-item" style="display: none;">⚙️ 管理者設定</button>
-                            </div>
+                    <!-- Settings Dropdown -->
+                    <div class="header__dropdown" id="settings-dropdown">
+                        <button id="settings-menu-btn" class="btn btn--ghost btn--sm">
+                            ⚙️ 設定 <span class="header__dropdown-arrow">▼</span>
+                        </button>
+                        <div id="settings-menu" class="header__dropdown-menu">
+                            <button id="desktop-worker-settings-btn" class="header__dropdown-item" style="display: none;">👥 作業者管理</button>
+                            <button id="desktop-approval-btn" class="header__dropdown-item" style="display: none;">✅ 承認待ち</button>
+                            <button id="desktop-template-settings-btn" class="header__dropdown-item" style="display: none;">📋 テンプレート</button>
+                            <button id="desktop-admin-settings-btn" class="header__dropdown-item" style="display: none;">⚙️ 管理者設定</button>
                         </div>
-
-                        <button id="logout-btn" class="btn btn--ghost btn--sm">ログアウト</button>
                     </div>
 
-                    <!-- Mobile Menu Button -->
+                    <button id="logout-btn" class="btn btn--ghost btn--sm">ログアウト</button>
+                </nav>
+
+                <!-- Mobile Menu -->
+                <div class="header__mobile-wrapper">
                     <button id="mobile-menu-btn" class="header__menu-toggle">
                         <span class="header__menu-icon">☰</span>
                     </button>
-                </nav>
-
-                <!-- Mobile Dropdown Menu -->
-                <div id="mobile-menu" class="header__mobile-menu">
-                    <button id="mobile-dashboard-btn" class="header__mobile-item" style="display: none;">📊 ダッシュボード</button>
-                    <button id="mobile-worker-settings-btn" class="header__mobile-item" style="display: none;">👥 作業者管理</button>
-                    <button id="mobile-approval-btn" class="header__mobile-item" style="display: none;">✅ 承認待ち</button>
-                    <button id="mobile-template-settings-btn" class="header__mobile-item" style="display: none;">📋 テンプレート</button>
-                    <button id="mobile-admin-settings-btn" class="header__mobile-item" style="display: none;">⚙️ 管理者設定</button>
-                    <a id="mobile-switch-to-worker-btn" href="/worker.html" class="header__mobile-item" style="display: none;">🔧 作業者画面へ</a>
-                    <div class="header__mobile-divider"></div>
-                    <button id="mobile-logout-btn" class="header__mobile-item header__mobile-item--logout">ログアウト</button>
+                    <div id="mobile-menu" class="header__mobile-menu">
+                        <button id="mobile-dashboard-btn" class="header__mobile-item" style="display: none;">📊 ダッシュボード</button>
+                        <button id="mobile-worker-settings-btn" class="header__mobile-item" style="display: none;">👥 作業者管理</button>
+                        <button id="mobile-approval-btn" class="header__mobile-item" style="display: none;">✅ 承認待ち</button>
+                        <button id="mobile-template-settings-btn" class="header__mobile-item" style="display: none;">📋 テンプレート</button>
+                        <button id="mobile-admin-settings-btn" class="header__mobile-item" style="display: none;">⚙️ 管理者設定</button>
+                        <a id="mobile-switch-to-worker-btn" href="/worker.html" class="header__mobile-item" style="display: none;">🔧 作業者画面へ</a>
+                        <div class="header__mobile-divider"></div>
+                        <button id="mobile-logout-btn" class="header__mobile-item header__mobile-item--logout">ログアウト</button>
+                    </div>
                 </div>
 
                 <!-- Hidden buttons for JS compatibility -->
@@ -339,6 +336,10 @@
         }
         .header__inner {
             position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-direction: row !important;
         }
         .header__logo-badge {
             font-size: var(--font-size-xs);
@@ -358,8 +359,11 @@
             align-items: center;
             gap: var(--space-2);
         }
-        .header__menu-toggle {
+        .header__mobile-wrapper {
             display: none;
+            position: relative;
+        }
+        .header__menu-toggle {
             background: none;
             border: 1px solid var(--color-border);
             border-radius: var(--radius-md);
@@ -370,7 +374,7 @@
         .header__mobile-menu {
             display: none;
             position: absolute;
-            top: 100%;
+            top: calc(100% + 8px);
             right: 0;
             background: var(--color-bg-card);
             border: 1px solid var(--color-border);
@@ -379,7 +383,6 @@
             min-width: 200px;
             z-index: 100;
             padding: var(--space-2);
-            margin-top: var(--space-2);
         }
         .header__mobile-menu.active {
             display: block;
@@ -460,7 +463,7 @@
             .header__menu-desktop {
                 display: none;
             }
-            .header__menu-toggle {
+            .header__mobile-wrapper {
                 display: block;
             }
         }
