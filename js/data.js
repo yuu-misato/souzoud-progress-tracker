@@ -1187,6 +1187,7 @@ const DataManager = {
     try {
       // Get all submissions with status 'submitted'
       const submissions = await SupabaseClient.select('submissions', `status=eq.submitted&order=submitted_at.desc`);
+      console.log('[DEBUG] getAllPendingSubmissions - raw submissions:', submissions);
 
       const enrichedSubmissions = [];
       for (const s of submissions) {

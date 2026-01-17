@@ -1686,6 +1686,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Fetch all data needed for dashboard
         const projects = await DataManager.getAllProjects();
         const submissions = await DataManager.getPendingSubmissions();
+        console.log('[DEBUG] initDashboard - submissions count:', submissions.length, submissions);
 
         // Calculate stats
         const activeProjects = projects.filter(p => {
