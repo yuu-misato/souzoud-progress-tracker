@@ -266,34 +266,47 @@ document.addEventListener('DOMContentLoaded', () => {
                 .replace(/'/g, '&#x27;');
         };
 
-        teamList.innerHTML = members.map(m => `
+        teamList.innerHTML = members.map(m => {
+            const isPending = !m.password_set && m.invite_token;
+            const statusBadge = isPending
+                ? '<span style="font-size: var(--font-size-xs); background: #fef3c7; color: #92400e; padding: 2px 8px; border-radius: 9999px; margin-left: var(--space-2);">招待中</span>'
+                : '';
+
+            const resendBtn = isPending
+                ? `<button class="btn btn--ghost btn--sm" onclick="resendTeamInvite('${escapeHtml(m.id)}')" style="color: var(--color-primary);">再送信</button>`
+                : '';
+
+            return `
             <div style="display: flex; justify-content: space-between; align-items: center; padding: var(--space-3); border-bottom: 1px solid var(--color-border);">
                 <div>
-                    <div style="font-weight: 500;">${escapeHtml(m.name)}</div>
+                    <div style="font-weight: 500;">${escapeHtml(m.name)}${statusBadge}</div>
                     <div style="font-size: var(--font-size-sm); color: var(--color-text-muted);">${escapeHtml(m.email)}</div>
                 </div>
-                ${m.id !== currentUser?.id ? `<button class="btn btn--ghost btn--sm" onclick="deleteTeamMember('${escapeHtml(m.id)}')">削除</button>` : '<span style="color: var(--color-text-muted); font-size: var(--font-size-sm);">(あなた)</span>'}
+                <div style="display: flex; gap: var(--space-2); align-items: center;">
+                    ${resendBtn}
+                    ${m.id !== currentUser?.id ? `<button class="btn btn--ghost btn--sm" onclick="deleteTeamMember('${escapeHtml(m.id)}')">削除</button>` : '<span style="color: var(--color-text-muted); font-size: var(--font-size-sm);">(あなた)</span>'}
+                </div>
             </div>
-        `).join('');
+        `;
+        }).join('');
     }
 
     function showAddTeamMemberForm() {
         const teamList = document.getElementById('team-list');
         const formHtml = `
             <div id="add-team-form" style="background: #f8fafc; padding: var(--space-4); border-radius: var(--radius-md); margin-bottom: var(--space-4);">
-                <h4 style="margin-bottom: var(--space-3);">新しい担当者を追加</h4>
+                <h4 style="margin-bottom: var(--space-3);">新しい担当者を招待</h4>
                 <div style="margin-bottom: var(--space-3);">
                     <input type="text" id="new-member-name" class="input" placeholder="担当者名" style="width: 100%;">
                 </div>
                 <div style="margin-bottom: var(--space-3);">
                     <input type="email" id="new-member-email" class="input" placeholder="メールアドレス" style="width: 100%;">
                 </div>
-                <div style="margin-bottom: var(--space-3);">
-                    <input type="password" id="new-member-password" class="input" placeholder="パスワード" style="width: 100%;">
-                </div>
+                <p style="font-size: var(--font-size-xs); color: var(--color-text-muted); margin-bottom: var(--space-3);">招待メールが送信され、担当者自身がパスワードを設定します。</p>
                 <div id="add-member-error" style="color: #ef4444; font-size: var(--font-size-sm); margin-bottom: var(--space-2); display: none;"></div>
+                <div id="add-member-success" style="color: var(--color-success); font-size: var(--font-size-sm); margin-bottom: var(--space-2); display: none;"></div>
                 <div style="display: flex; gap: var(--space-2);">
-                    <button class="btn btn--primary btn--sm" onclick="addTeamMember()">追加</button>
+                    <button class="btn btn--primary btn--sm" onclick="addTeamMember()">招待メールを送信</button>
                     <button class="btn btn--ghost btn--sm" onclick="cancelAddTeamMember()">キャンセル</button>
                 </div>
             </div>
@@ -310,51 +323,90 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addTeamMember = async function () {
         const name = document.getElementById('new-member-name')?.value.trim();
         const email = document.getElementById('new-member-email')?.value.trim();
-        const password = document.getElementById('new-member-password')?.value;
         const errorEl = document.getElementById('add-member-error');
+        const successEl = document.getElementById('add-member-success');
 
-        if (!name || !email || !password) {
-            errorEl.textContent = 'すべての項目を入力してください';
+        // Hide previous messages
+        errorEl.style.display = 'none';
+        successEl.style.display = 'none';
+
+        if (!name || !email) {
+            errorEl.textContent = '担当者名とメールアドレスを入力してください';
             errorEl.style.display = 'block';
             return;
         }
 
-        // パスワード強度チェック
-        if (typeof SecurityUtils !== 'undefined') {
-            const passwordCheck = SecurityUtils.checkPasswordStrength(password);
-            if (!passwordCheck.isValid) {
-                errorEl.textContent = passwordCheck.message;
-                errorEl.style.display = 'block';
-                return;
-            }
-        } else if (password.length < 8) {
-            errorEl.textContent = 'パスワードは8文字以上にしてください';
+        // Basic email validation
+        if (!email.includes('@') || !email.includes('.')) {
+            errorEl.textContent = '有効なメールアドレスを入力してください';
             errorEl.style.display = 'block';
             return;
         }
 
         try {
-            // Hash password
-            const encoder = new TextEncoder();
-            const data = encoder.encode(password);
-            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-            const hashArray = Array.from(new Uint8Array(hashBuffer));
-            const passwordHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-
-            await DataManager.createClientUser({
+            // Create user with invite token
+            const result = await DataManager.inviteClientUser({
                 clientId: currentClientId,
                 email,
-                name,
-                passwordHash
+                name
             });
 
-            document.getElementById('add-team-form')?.remove();
-            document.getElementById('add-team-btn').style.display = 'inline-flex';
-            renderTeamMembers();
+            // Get base URL for invite link
+            const baseUrl = window.location.origin + window.location.pathname.replace(/\/[^\/]*$/, '');
+            const inviteUrl = `${baseUrl}/invite.html?token=${result.inviteToken}`;
+
+            // Send invite email
+            if (window.NotificationService) {
+                await NotificationService.send('clientInvite', email, {
+                    name: name,
+                    inviteUrl: inviteUrl
+                });
+            }
+
+            // Clear form and show success
+            document.getElementById('new-member-name').value = '';
+            document.getElementById('new-member-email').value = '';
+            successEl.textContent = '招待メールを送信しました';
+            successEl.style.display = 'block';
+
+            // Refresh list after a short delay
+            setTimeout(() => {
+                document.getElementById('add-team-form')?.remove();
+                document.getElementById('add-team-btn').style.display = 'inline-flex';
+                renderTeamMembers();
+            }, 1500);
         } catch (e) {
-            console.error('Error adding team member:', e);
-            errorEl.textContent = 'このメールアドレスは既に使用されています';
+            console.error('Error inviting team member:', e);
+            const errorMsg = e.message || String(e);
+            if (errorMsg.includes('duplicate') || errorMsg.includes('unique') || errorMsg.includes('23505')) {
+                errorEl.textContent = 'このメールアドレスは既に使用されています';
+            } else {
+                errorEl.textContent = 'エラーが発生しました: ' + errorMsg;
+            }
             errorEl.style.display = 'block';
+        }
+    };
+
+    window.resendTeamInvite = async function (userId) {
+        try {
+            const result = await DataManager.resendInvite(userId);
+
+            // Get base URL for invite link
+            const baseUrl = window.location.origin + window.location.pathname.replace(/\/[^\/]*$/, '');
+            const inviteUrl = `${baseUrl}/invite.html?token=${result.inviteToken}`;
+
+            // Send invite email
+            if (window.NotificationService) {
+                await NotificationService.send('clientInvite', result.email, {
+                    name: result.name,
+                    inviteUrl: inviteUrl
+                });
+            }
+
+            alert('招待メールを再送信しました');
+        } catch (e) {
+            console.error('Error resending invite:', e);
+            alert('再送信に失敗しました');
         }
     };
 

@@ -1365,7 +1365,9 @@ const DataManager = {
         email: u.email,
         name: u.name,
         isActive: u.is_active,
-        createdAt: u.created_at
+        createdAt: u.created_at,
+        invite_token: u.invite_token,
+        password_set: u.password_set
       }));
     } catch (e) {
       console.error('Error fetching client users:', e);
