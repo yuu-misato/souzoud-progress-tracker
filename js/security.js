@@ -197,6 +197,9 @@ const SecurityUtils = {
    * @returns {any} パース結果
    */
   safeJsonParse(jsonString, defaultValue = null) {
+    if (jsonString === null || jsonString === undefined) {
+      return defaultValue;
+    }
     try {
       return JSON.parse(jsonString);
     } catch {
