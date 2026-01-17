@@ -793,7 +793,6 @@ p {
 
 .project-list__group-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
   padding: var(--space-2) var(--space-3);
   margin-top: var(--space-4);
@@ -801,6 +800,7 @@ p {
   background: rgba(99, 102, 241, 0.1);
   border-radius: var(--radius-md);
   border-left: 3px solid var(--color-primary);
+  gap: var(--space-2);
 }
 
 .project-list__group-header:first-child {
@@ -808,9 +808,11 @@ p {
 }
 
 .project-list__group-name {
-  font-size: var(--font-size-xs);
+  font-size: var(--font-size-sm);
   font-weight: 600;
   color: var(--color-text-secondary);
+  flex: 1;
+  text-align: left;
 }
 
 .project-list__group-toggle {
