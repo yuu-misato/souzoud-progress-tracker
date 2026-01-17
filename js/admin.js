@@ -614,6 +614,17 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('input-client').value = project?.client || '';
         document.getElementById('input-description').value = project?.description || '';
 
+        // Folder and Delivery URLs (only shown in edit mode)
+        const folderUrlGroup = document.getElementById('folder-url-group');
+        const deliveryUrlGroup = document.getElementById('delivery-url-group');
+        const folderUrlInput = document.getElementById('input-folder-url');
+        const deliveryUrlInput = document.getElementById('input-delivery-url');
+
+        if (folderUrlGroup) folderUrlGroup.style.display = isEditMode ? 'block' : 'none';
+        if (deliveryUrlGroup) deliveryUrlGroup.style.display = isEditMode ? 'block' : 'none';
+        if (folderUrlInput) folderUrlInput.value = project?.folderUrl || '';
+        if (deliveryUrlInput) deliveryUrlInput.value = project?.deliveryUrl || '';
+
         // Populate client datalist from existing clients
         const clientList = document.getElementById('client-list');
         if (clientList) {
@@ -670,7 +681,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (isEditMode && currentProjectId) {
-            await DataManager.updateProject(currentProjectId, { name, client, description });
+            const folderUrl = document.getElementById('input-folder-url')?.value.trim() || '';
+            const deliveryUrl = document.getElementById('input-delivery-url')?.value.trim() || '';
+            await DataManager.updateProject(currentProjectId, { name, client, description, folderUrl, deliveryUrl });
             showToast('プロジェクトを更新しました');
             await selectProject(currentProjectId);
         } else {

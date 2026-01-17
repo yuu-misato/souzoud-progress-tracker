@@ -168,6 +168,8 @@ const DataManager = {
       project.clientId = project.client_id;
       project.createdAt = project.created_at;
       project.updatedAt = project.updated_at;
+      project.folderUrl = project.folder_url || '';
+      project.deliveryUrl = project.delivery_url || '';
       return project;
     } catch (e) {
       console.error('Error fetching project:', e);
@@ -248,6 +250,8 @@ const DataManager = {
 
       if (updates.name) updateData.name = updates.name;
       if (updates.description !== undefined) updateData.description = updates.description;
+      if (updates.folderUrl !== undefined) updateData.folder_url = updates.folderUrl;
+      if (updates.deliveryUrl !== undefined) updateData.delivery_url = updates.deliveryUrl;
 
       if (updates.client) {
         updateData.client = updates.client;

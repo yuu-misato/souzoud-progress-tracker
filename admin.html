@@ -513,6 +513,20 @@
                     <label for="input-description">説明（任意）</label>
                     <textarea id="input-description" class="input" rows="3" placeholder="プロジェクトの概要を入力"></textarea>
                 </div>
+                <div class="input-group" id="folder-url-group" style="display: none;">
+                    <label for="input-folder-url">📁 専用フォルダURL（任意）</label>
+                    <input type="url" id="input-folder-url" class="input" placeholder="https://drive.google.com/...">
+                    <p style="font-size: var(--font-size-xs); color: var(--color-text-muted); margin-top: var(--space-1);">
+                        クライアント専用のGoogleドライブ等のフォルダURL
+                    </p>
+                </div>
+                <div class="input-group" id="delivery-url-group" style="display: none;">
+                    <label for="input-delivery-url">📦 最終納品物URL（任意）</label>
+                    <input type="url" id="input-delivery-url" class="input" placeholder="https://drive.google.com/...">
+                    <p style="font-size: var(--font-size-xs); color: var(--color-text-muted); margin-top: var(--space-1);">
+                        最終納品物のダウンロードリンク
+                    </p>
+                </div>
             </div>
             <div class="modal__footer">
                 <button class="btn btn--ghost" id="modal-save-template" style="margin-right: auto;">📋 テンプレ保存</button>

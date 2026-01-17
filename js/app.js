@@ -386,6 +386,9 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('display-updated').textContent =
             `更新: ${DataManager.formatDate(project.updatedAt || project.updated_at)}`;
 
+        // Resource Links (folder and delivery URLs)
+        updateResourceLinks(project);
+
         // Current Step Status
         const steps = project.steps || [];
 
@@ -393,6 +396,43 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('timeline').innerHTML = '<p style="color: var(--color-text-muted); text-align: center; padding: var(--space-8);">工程データがありません</p>';
         } else {
             renderSimpleTimeline(project);
+        }
+    }
+
+    /**
+     * Update resource links (folder and delivery URLs)
+     */
+    function updateResourceLinks(project) {
+        const resourceLinksEl = document.getElementById('resource-links');
+        const folderLinkEl = document.getElementById('folder-link');
+        const deliveryLinkEl = document.getElementById('delivery-link');
+
+        if (!resourceLinksEl) return;
+
+        const hasFolderUrl = project.folderUrl && project.folderUrl.trim();
+        const hasDeliveryUrl = project.deliveryUrl && project.deliveryUrl.trim();
+
+        if (!hasFolderUrl && !hasDeliveryUrl) {
+            resourceLinksEl.style.display = 'none';
+            return;
+        }
+
+        resourceLinksEl.style.display = 'flex';
+
+        // Folder link
+        if (hasFolderUrl && folderLinkEl) {
+            folderLinkEl.href = project.folderUrl;
+            folderLinkEl.style.display = 'inline-flex';
+        } else if (folderLinkEl) {
+            folderLinkEl.style.display = 'none';
+        }
+
+        // Delivery link
+        if (hasDeliveryUrl && deliveryLinkEl) {
+            deliveryLinkEl.href = project.deliveryUrl;
+            deliveryLinkEl.style.display = 'inline-flex';
+        } else if (deliveryLinkEl) {
+            deliveryLinkEl.style.display = 'none';
         }
     }
 
