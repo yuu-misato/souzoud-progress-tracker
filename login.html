@@ -175,7 +175,7 @@
                     const passwordHash = await hashPassword(password);
 
                     // Check credentials against Supabase (wrap email in double quotes for special chars)
-                    const admins = await SupabaseClient.select('admins', `email=eq."${encodeURIComponent(email)}"&is_active=eq.true`);
+                    const admins = await SupabaseClient.select('admins', `email=eq."${email}"&is_active=eq.true`);
 
                     if (admins.length === 0) {
                         errorDiv.textContent = 'メールアドレスまたはパスワードが正しくありません';

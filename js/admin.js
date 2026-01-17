@@ -1908,4 +1908,256 @@ document.addEventListener('DOMContentLoaded', () => {
         // Refresh dashboard data
         initDashboard();
     }
+
+    // ==================== EMAIL SETTINGS ====================
+
+    // Default email templates
+    const defaultEmailTemplates = {
+        taskAssigned: {
+            subject: '【SOUZOUD】新しいタスクが割り当てられました',
+            body: `{name}様、
+
+新しいタスクが割り当てられました。
+
+【プロジェクト】{projectName}
+【工程】{stepName}
+【期限】{dueDate}
+【備考】{notes}
+
+詳細を確認し、作業を開始してください。`
+        },
+        submissionReceived: {
+            subject: '【SOUZOUD】新しい提出物があります',
+            body: `{name}様、
+
+作業者から成果物が提出されました。
+
+【作業者】{workerName}
+【プロジェクト】{projectName}
+【工程】{stepName}
+【コメント】{comment}
+
+内容を確認し、承認または差し戻しを行ってください。`
+        },
+        submissionApproved: {
+            subject: '【SOUZOUD】提出物が承認されました',
+            body: `{name}様、
+
+おめでとうございます！提出物が承認されました。
+
+【プロジェクト】{projectName}
+【工程】{stepName}
+
+素晴らしい仕事をありがとうございます。`
+        },
+        submissionRejected: {
+            subject: '【SOUZOUD】提出物に修正が必要です',
+            body: `{name}様、
+
+提出物を確認しましたが、修正が必要です。
+
+【プロジェクト】{projectName}
+【工程】{stepName}
+【フィードバック】{comment}
+
+内容を確認し、再提出をお願いします。`
+        },
+        progressUpdate: {
+            subject: '【SOUZOUD】プロジェクトの進捗更新',
+            body: `{name}様、
+
+プロジェクトの進捗をお知らせします。
+
+【プロジェクト】{projectName}
+【完了した工程】{stepName}
+【全体進捗】{progress}%
+
+詳細はダッシュボードでご確認ください。`
+        },
+        welcomeUser: {
+            subject: '【SOUZOUD】アカウントが作成されました',
+            body: `{name}様、
+
+SOUZOUDへようこそ！
+アカウントが作成されました。
+
+【メールアドレス】{email}
+【役割】{role}
+
+以下のリンクからログインしてください。`
+        }
+    };
+
+    // Load saved settings or use defaults
+    function loadEmailSettings() {
+        const savedSettings = localStorage.getItem('email_settings');
+        if (savedSettings) {
+            return JSON.parse(savedSettings);
+        }
+        return {
+            enabled: true,
+            notifications: {
+                taskAssigned: true,
+                submission: true,
+                approved: true,
+                rejected: true,
+                progress: true,
+                welcome: true
+            },
+            templates: { ...defaultEmailTemplates }
+        };
+    }
+
+    function saveEmailSettings(settings) {
+        localStorage.setItem('email_settings', JSON.stringify(settings));
+        // Also update NotificationService if available
+        if (typeof NotificationService !== 'undefined') {
+            NotificationService.enabled = settings.enabled;
+        }
+    }
+
+    // Setup email settings tab
+    function initEmailSettings() {
+        const tabs = document.querySelectorAll('.settings-tab');
+        const tabContents = {
+            admins: document.getElementById('tab-admins'),
+            email: document.getElementById('tab-email')
+        };
+
+        // Tab switching
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const tabName = tab.dataset.tab;
+
+                // Update active tab
+                tabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+
+                // Show/hide content
+                Object.keys(tabContents).forEach(key => {
+                    if (tabContents[key]) {
+                        tabContents[key].style.display = key === tabName ? 'block' : 'none';
+                    }
+                });
+
+                // Update footer buttons
+                const addAdminBtn = document.getElementById('add-admin-btn');
+                if (addAdminBtn) {
+                    addAdminBtn.style.display = tabName === 'admins' ? 'inline-flex' : 'none';
+                }
+
+                // Load email settings when switching to email tab
+                if (tabName === 'email') {
+                    loadEmailSettingsUI();
+                }
+            });
+        });
+
+        // Email settings event handlers
+        document.getElementById('email-template-select')?.addEventListener('change', (e) => {
+            loadTemplateToEditor(e.target.value);
+        });
+
+        document.getElementById('save-email-template')?.addEventListener('click', saveEmailTemplate);
+        document.getElementById('reset-email-template')?.addEventListener('click', resetEmailTemplate);
+
+        // Checkbox change handlers for notification types
+        const notifyCheckboxes = [
+            'email-enabled',
+            'notify-task-assigned',
+            'notify-submission',
+            'notify-approved',
+            'notify-rejected',
+            'notify-progress',
+            'notify-welcome'
+        ];
+
+        notifyCheckboxes.forEach(id => {
+            document.getElementById(id)?.addEventListener('change', () => {
+                saveNotificationSettings();
+            });
+        });
+    }
+
+    function loadEmailSettingsUI() {
+        const settings = loadEmailSettings();
+
+        // Load enabled state
+        document.getElementById('email-enabled').checked = settings.enabled;
+
+        // Load notification toggles
+        document.getElementById('notify-task-assigned').checked = settings.notifications.taskAssigned;
+        document.getElementById('notify-submission').checked = settings.notifications.submission;
+        document.getElementById('notify-approved').checked = settings.notifications.approved;
+        document.getElementById('notify-rejected').checked = settings.notifications.rejected;
+        document.getElementById('notify-progress').checked = settings.notifications.progress;
+        document.getElementById('notify-welcome').checked = settings.notifications.welcome;
+
+        // Load first template
+        loadTemplateToEditor('taskAssigned');
+    }
+
+    function loadTemplateToEditor(templateType) {
+        const settings = loadEmailSettings();
+        const template = settings.templates[templateType] || defaultEmailTemplates[templateType];
+
+        if (template) {
+            document.getElementById('email-template-subject').value = template.subject;
+            document.getElementById('email-template-body').value = template.body;
+        }
+    }
+
+    function saveNotificationSettings() {
+        const settings = loadEmailSettings();
+
+        settings.enabled = document.getElementById('email-enabled').checked;
+        settings.notifications = {
+            taskAssigned: document.getElementById('notify-task-assigned').checked,
+            submission: document.getElementById('notify-submission').checked,
+            approved: document.getElementById('notify-approved').checked,
+            rejected: document.getElementById('notify-rejected').checked,
+            progress: document.getElementById('notify-progress').checked,
+            welcome: document.getElementById('notify-welcome').checked
+        };
+
+        saveEmailSettings(settings);
+        showToast('設定を保存しました');
+    }
+
+    function saveEmailTemplate() {
+        const templateType = document.getElementById('email-template-select').value;
+        const subject = document.getElementById('email-template-subject').value.trim();
+        const body = document.getElementById('email-template-body').value.trim();
+
+        if (!subject || !body) {
+            showToast('件名と本文を入力してください');
+            return;
+        }
+
+        const settings = loadEmailSettings();
+        settings.templates[templateType] = { subject, body };
+        saveEmailSettings(settings);
+
+        showToast('テンプレートを保存しました');
+    }
+
+    function resetEmailTemplate() {
+        const templateType = document.getElementById('email-template-select').value;
+        const defaultTemplate = defaultEmailTemplates[templateType];
+
+        if (defaultTemplate) {
+            document.getElementById('email-template-subject').value = defaultTemplate.subject;
+            document.getElementById('email-template-body').value = defaultTemplate.body;
+
+            // Also save to settings
+            const settings = loadEmailSettings();
+            settings.templates[templateType] = { ...defaultTemplate };
+            saveEmailSettings(settings);
+
+            showToast('デフォルトに戻しました');
+        }
+    }
+
+    // Initialize email settings
+    initEmailSettings();
 });

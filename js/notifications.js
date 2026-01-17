@@ -11,11 +11,59 @@ const NotificationService = {
   enabled: true,
 
   /**
+   * Get saved email settings from localStorage
+   */
+  getSettings() {
+    try {
+      const saved = localStorage.getItem('email_settings');
+      if (saved) {
+        return JSON.parse(saved);
+      }
+    } catch (e) {
+      console.warn('[Notification] Failed to load settings:', e);
+    }
+    return {
+      enabled: true,
+      notifications: {
+        taskAssigned: true,
+        submission: true,
+        approved: true,
+        rejected: true,
+        progress: true,
+        welcome: true
+      },
+      templates: {}
+    };
+  },
+
+  /**
+   * Check if specific notification type is enabled
+   */
+  isTypeEnabled(type) {
+    const settings = this.getSettings();
+    if (!settings.enabled) return false;
+
+    const typeMap = {
+      taskAssigned: 'taskAssigned',
+      submissionReceived: 'submission',
+      submissionApproved: 'approved',
+      submissionRejected: 'rejected',
+      progressUpdate: 'progress',
+      welcomeUser: 'welcome'
+    };
+
+    const settingKey = typeMap[type];
+    return settingKey ? settings.notifications[settingKey] !== false : true;
+  },
+
+  /**
    * Send notification via Edge Function
    */
   async send(type, to, data) {
-    if (!this.enabled) {
-      console.log('[Notification] Notifications disabled, skipping:', type);
+    const settings = this.getSettings();
+
+    if (!settings.enabled || !this.isTypeEnabled(type)) {
+      console.log('[Notification] Notifications disabled for type:', type);
       return { success: false, skipped: true };
     }
 

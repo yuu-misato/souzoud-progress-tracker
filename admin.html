@@ -607,14 +607,95 @@
 
     <!-- Admin Management Modal -->
     <div class="modal-overlay" id="admin-list-modal">
-        <div class="modal" style="max-width: 600px;">
+        <div class="modal" style="max-width: 700px;">
             <div class="modal__header">
                 <h2 class="modal__title">管理者設定</h2>
                 <button class="modal__close" id="admin-list-modal-close">&times;</button>
             </div>
             <div class="modal__body">
-                <div id="admin-list" style="max-height: 400px; overflow-y: auto;">
-                    <!-- Admin list will be populated dynamically -->
+                <!-- Tab Navigation -->
+                <div class="settings-tabs" style="display: flex; gap: var(--space-2); margin-bottom: var(--space-4); border-bottom: 1px solid var(--color-border); padding-bottom: var(--space-3);">
+                    <button class="settings-tab active" data-tab="admins" style="padding: var(--space-2) var(--space-4); border: none; background: none; cursor: pointer; font-size: var(--font-size-sm); color: var(--color-text-muted); border-bottom: 2px solid transparent;">
+                        👤 管理者
+                    </button>
+                    <button class="settings-tab" data-tab="email" style="padding: var(--space-2) var(--space-4); border: none; background: none; cursor: pointer; font-size: var(--font-size-sm); color: var(--color-text-muted); border-bottom: 2px solid transparent;">
+                        📧 メール設定
+                    </button>
+                </div>
+
+                <!-- Admin Tab Content -->
+                <div id="tab-admins" class="settings-tab-content">
+                    <div id="admin-list" style="max-height: 400px; overflow-y: auto;">
+                        <!-- Admin list will be populated dynamically -->
+                    </div>
+                </div>
+
+                <!-- Email Settings Tab Content -->
+                <div id="tab-email" class="settings-tab-content" style="display: none;">
+                    <div style="margin-bottom: var(--space-4);">
+                        <div class="input-group" style="margin-bottom: var(--space-4);">
+                            <label style="display: flex; align-items: center; gap: var(--space-2);">
+                                <input type="checkbox" id="email-enabled" style="width: auto;">
+                                メール通知を有効にする
+                            </label>
+                        </div>
+
+                        <h4 style="margin-bottom: var(--space-3); color: var(--color-text-secondary);">通知タイプ</h4>
+                        <div style="display: flex; flex-direction: column; gap: var(--space-3);">
+                            <label style="display: flex; align-items: center; gap: var(--space-2);">
+                                <input type="checkbox" id="notify-task-assigned" checked style="width: auto;">
+                                タスク割り当て時（作業者へ通知）
+                            </label>
+                            <label style="display: flex; align-items: center; gap: var(--space-2);">
+                                <input type="checkbox" id="notify-submission" checked style="width: auto;">
+                                提出物受信時（ディレクターへ通知）
+                            </label>
+                            <label style="display: flex; align-items: center; gap: var(--space-2);">
+                                <input type="checkbox" id="notify-approved" checked style="width: auto;">
+                                承認時（作業者へ通知）
+                            </label>
+                            <label style="display: flex; align-items: center; gap: var(--space-2);">
+                                <input type="checkbox" id="notify-rejected" checked style="width: auto;">
+                                差し戻し時（作業者へ通知）
+                            </label>
+                            <label style="display: flex; align-items: center; gap: var(--space-2);">
+                                <input type="checkbox" id="notify-progress" checked style="width: auto;">
+                                進捗更新時（クライアントへ通知）
+                            </label>
+                            <label style="display: flex; align-items: center; gap: var(--space-2);">
+                                <input type="checkbox" id="notify-welcome" checked style="width: auto;">
+                                新規ユーザー登録時（ユーザーへ通知）
+                            </label>
+                        </div>
+                    </div>
+
+                    <div style="border-top: 1px solid var(--color-border); padding-top: var(--space-4); margin-top: var(--space-4);">
+                        <h4 style="margin-bottom: var(--space-3); color: var(--color-text-secondary);">メールテンプレート編集</h4>
+                        <div class="input-group" style="margin-bottom: var(--space-3);">
+                            <label for="email-template-select">テンプレートを選択</label>
+                            <select id="email-template-select" class="input">
+                                <option value="taskAssigned">タスク割り当て通知</option>
+                                <option value="submissionReceived">提出物受信通知</option>
+                                <option value="submissionApproved">承認通知</option>
+                                <option value="submissionRejected">差し戻し通知</option>
+                                <option value="progressUpdate">進捗更新通知</option>
+                                <option value="welcomeUser">新規ユーザー歓迎メール</option>
+                            </select>
+                        </div>
+                        <div class="input-group" style="margin-bottom: var(--space-3);">
+                            <label for="email-template-subject">件名</label>
+                            <input type="text" id="email-template-subject" class="input" placeholder="メールの件名">
+                        </div>
+                        <div class="input-group" style="margin-bottom: var(--space-3);">
+                            <label for="email-template-body">本文</label>
+                            <textarea id="email-template-body" class="input" rows="8" placeholder="メール本文（{name}等の変数が使用できます）"></textarea>
+                            <p style="font-size: var(--font-size-xs); color: var(--color-text-muted); margin-top: var(--space-1);">
+                                使用可能な変数: {name}, {projectName}, {stepName}, {dueDate}, {comment}, {progress}%
+                            </p>
+                        </div>
+                        <button class="btn btn--secondary" id="save-email-template">テンプレートを保存</button>
+                        <button class="btn btn--ghost" id="reset-email-template" style="margin-left: var(--space-2);">デフォルトに戻す</button>
+                    </div>
                 </div>
             </div>
             <div class="modal__footer">
@@ -623,6 +704,16 @@
             </div>
         </div>
     </div>
+
+    <style>
+        .settings-tab.active {
+            color: var(--color-primary) !important;
+            border-bottom-color: var(--color-primary) !important;
+        }
+        .settings-tab:hover {
+            color: var(--color-text) !important;
+        }
+    </style>
 
     <!-- Add/Edit Admin Modal -->
     <div class="modal-overlay" id="admin-edit-modal">
