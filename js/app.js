@@ -6,45 +6,49 @@ document.addEventListener('DOMContentLoaded', () => {
     // State
     let currentClientId = null;
     let currentProjectId = null;
+    let currentUser = null;
 
     // DOM Elements
     const searchSection = document.getElementById('search-section');
     const clientSection = document.getElementById('client-section');
     const projectSection = document.getElementById('project-section');
     const notFoundSection = document.getElementById('not-found-section');
-    const clientIdInput = document.getElementById('client-id-input');
+    const emailInput = document.getElementById('client-email-input');
+    const passwordInput = document.getElementById('client-password-input');
+    const loginError = document.getElementById('login-error');
     const searchBtn = document.getElementById('search-btn');
     const backBtn = document.getElementById('back-btn');
     const backToListBtn = document.getElementById('back-to-list-btn');
     const retryBtn = document.getElementById('retry-btn');
 
-    // Check for client ID or project ID in URL
+    // Check for saved session
+    const savedSession = localStorage.getItem('client_session');
+    if (savedSession) {
+        try {
+            currentUser = JSON.parse(savedSession);
+            currentClientId = currentUser.clientId;
+            displayClientProjects(currentClientId);
+        } catch (e) {
+            localStorage.removeItem('client_session');
+        }
+    }
+
+    // Check for project ID in URL
     const urlParams = new URLSearchParams(window.location.search);
-    const urlClientId = urlParams.get('client');
     const urlProjectId = urlParams.get('project');
 
-    if (urlClientId) {
-        clientIdInput.value = urlClientId;
-        searchClient(urlClientId);
-    } else if (urlProjectId) {
+    if (urlProjectId && currentUser) {
         loadProjectDirect(urlProjectId);
     }
 
     // Event Listeners
-    searchBtn.addEventListener('click', () => {
-        const clientId = clientIdInput.value.trim().toUpperCase();
-        if (clientId) {
-            searchClient(clientId);
-        }
-    });
+    searchBtn.addEventListener('click', handleLogin);
 
-    clientIdInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            const clientId = clientIdInput.value.trim().toUpperCase();
-            if (clientId) {
-                searchClient(clientId);
-            }
-        }
+    emailInput?.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') handleLogin();
+    });
+    passwordInput?.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') handleLogin();
     });
 
     backBtn.addEventListener('click', showSearchSection);
@@ -56,6 +60,41 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
     retryBtn.addEventListener('click', showSearchSection);
+
+    async function handleLogin() {
+        const email = emailInput?.value.trim();
+        const password = passwordInput?.value;
+
+        if (!email || !password) {
+            showLoginError('メールアドレスとパスワードを入力してください');
+            return;
+        }
+
+        const user = await DataManager.loginClientUser(email, password);
+
+        if (user) {
+            currentUser = user;
+            currentClientId = user.clientId;
+            localStorage.setItem('client_session', JSON.stringify(user));
+            hideLoginError();
+            displayClientProjects(currentClientId);
+        } else {
+            showLoginError('メールアドレスまたはパスワードが正しくありません');
+        }
+    }
+
+    function showLoginError(msg) {
+        if (loginError) {
+            loginError.textContent = msg;
+            loginError.style.display = 'block';
+        }
+    }
+
+    function hideLoginError() {
+        if (loginError) {
+            loginError.style.display = 'none';
+        }
+    }
 
     /**
      * Load project directly by ID
@@ -347,16 +386,22 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     /**
-     * Show search section
+     * Show search section (logout)
      */
     function showSearchSection() {
+        // Clear session
+        localStorage.removeItem('client_session');
+        currentUser = null;
+        currentClientId = null;
+        currentProjectId = null;
+
         searchSection.style.display = 'block';
         clientSection.style.display = 'none';
         projectSection.style.display = 'none';
         notFoundSection.style.display = 'none';
-        clientIdInput.value = '';
-        currentClientId = null;
-        currentProjectId = null;
+
+        if (emailInput) emailInput.value = '';
+        if (passwordInput) passwordInput.value = '';
 
         window.history.pushState({}, '', window.location.pathname);
     }

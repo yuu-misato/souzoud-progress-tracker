@@ -1047,6 +1047,90 @@ const DataManager = {
     }
   },
 
+  // ==================== CLIENT USER OPERATIONS ====================
+
+  async loginClientUser(email, password) {
+    try {
+      const encoder = new TextEncoder();
+      const data = encoder.encode(password);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const passwordHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+      const users = await SupabaseClient.select('client_users', `email=eq.${email}&is_active=eq.true`);
+      if (users.length === 0) return null;
+
+      const user = users[0];
+      if (user.password_hash !== passwordHash) return null;
+
+      return {
+        id: user.id,
+        clientId: user.client_id,
+        email: user.email,
+        name: user.name
+      };
+    } catch (e) {
+      console.error('Error logging in client user:', e);
+      return null;
+    }
+  },
+
+  async getClientUsers(clientId) {
+    try {
+      const users = await SupabaseClient.select('client_users', `client_id=eq.${clientId}&order=created_at.asc`);
+      return users.map(u => ({
+        id: u.id,
+        clientId: u.client_id,
+        email: u.email,
+        name: u.name,
+        isActive: u.is_active,
+        createdAt: u.created_at
+      }));
+    } catch (e) {
+      console.error('Error fetching client users:', e);
+      return [];
+    }
+  },
+
+  async createClientUser(userData) {
+    try {
+      const result = await SupabaseClient.insert('client_users', {
+        client_id: userData.clientId,
+        email: userData.email,
+        password_hash: userData.passwordHash,
+        name: userData.name
+      });
+      return result[0];
+    } catch (e) {
+      console.error('Error creating client user:', e);
+      throw e;
+    }
+  },
+
+  async updateClientUser(userId, updates) {
+    try {
+      const data = {};
+      if (updates.name) data.name = updates.name;
+      if (updates.email) data.email = updates.email;
+      if (updates.passwordHash) data.password_hash = updates.passwordHash;
+      if (typeof updates.isActive === 'boolean') data.is_active = updates.isActive;
+
+      await SupabaseClient.update('client_users', `id=eq.${userId}`, data);
+    } catch (e) {
+      console.error('Error updating client user:', e);
+      throw e;
+    }
+  },
+
+  async deleteClientUser(userId) {
+    try {
+      await SupabaseClient.update('client_users', `id=eq.${userId}`, { is_active: false });
+    } catch (e) {
+      console.error('Error deleting client user:', e);
+      throw e;
+    }
+  },
+
   // No-op for compatibility
   initializeSampleData() {
     // Sample data is now in the database

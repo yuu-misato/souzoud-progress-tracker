@@ -29,15 +29,24 @@
   </header>
 
   <main class="container container--narrow">
-    <!-- Search Section -->
+    <!-- Login Section -->
     <section id="search-section" class="hero">
       <h1 class="hero__title">プロジェクト進捗確認</h1>
       <p class="hero__subtitle">
-        クライアントIDを入力して、プロジェクトの進捗状況をご確認ください
+        メールアドレスとパスワードを入力してログインしてください
       </p>
-      <div class="search-box">
-        <input type="text" id="client-id-input" class="input input--lg" placeholder="クライアントID" autocomplete="off">
-        <button id="search-btn" class="btn btn--primary btn--lg">確認する</button>
+      <div class="login-form" style="max-width: 400px; margin: 0 auto;">
+        <div style="margin-bottom: var(--space-3);">
+          <input type="email" id="client-email-input" class="input input--lg" placeholder="メールアドレス" autocomplete="email"
+            style="width: 100%;">
+        </div>
+        <div style="margin-bottom: var(--space-4);">
+          <input type="password" id="client-password-input" class="input input--lg" placeholder="パスワード"
+            autocomplete="current-password" style="width: 100%;">
+        </div>
+        <div id="login-error"
+          style="color: #ef4444; font-size: var(--font-size-sm); margin-bottom: var(--space-3); display: none;"></div>
+        <button id="search-btn" class="btn btn--primary btn--lg" style="width: 100%;">ログイン</button>
       </div>
     </section>
 
