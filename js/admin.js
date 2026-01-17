@@ -72,6 +72,14 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
+        // Dashboard button handler
+        const dashboardBtn = document.getElementById('dashboard-btn');
+        if (dashboardBtn) {
+            dashboardBtn.addEventListener('click', () => {
+                showEmptyState(); // This now shows dashboard
+            });
+        }
+
         await renderProjectList();
         await initDashboard();
     }

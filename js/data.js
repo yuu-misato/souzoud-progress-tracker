@@ -1041,6 +1041,11 @@ const DataManager = {
     }
   },
 
+  // Alias for dashboard
+  async getPendingSubmissions() {
+    return this.getAllPendingSubmissions();
+  },
+
   async createSubmission(submissionData) {
     try {
       const result = await SupabaseClient.insert('submissions', {
