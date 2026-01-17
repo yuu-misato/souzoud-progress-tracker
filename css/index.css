@@ -958,6 +958,8 @@ p {
   padding: var(--space-8);
   max-width: 500px;
   width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
   transform: scale(0.9) translateY(20px);
   transition: transform var(--transition-base);
 }

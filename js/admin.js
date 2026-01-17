@@ -47,7 +47,10 @@ document.addEventListener('DOMContentLoaded', () => {
             // Show worker management button for master/admin
             if (window.adminSession.role === 'master' || window.adminSession.role === 'admin') {
                 const workerSettingsBtn = document.getElementById('worker-settings-btn');
-                if (workerSettingsBtn) workerSettingsBtn.style.display = 'inline-block';
+                if (workerSettingsBtn) {
+                    workerSettingsBtn.style.display = 'inline-block';
+                    workerSettingsBtn.addEventListener('click', openWorkerManagement);
+                }
             }
 
             // Show approval button for directors
@@ -1043,6 +1046,89 @@ document.addEventListener('DOMContentLoaded', () => {
             showToast('差戻しました');
         } catch (e) {
             showToast('差戻しに失敗しました');
+        }
+    };
+
+    /**
+     * Open worker management
+     */
+    async function openWorkerManagement() {
+        try {
+            const workers = await DataManager.getAllWorkers();
+
+            let html = `<h3 style="margin-bottom: var(--space-4);">作業者一覧</h3>`;
+
+            if (workers.length === 0) {
+                html += `<p style="color: var(--color-text-muted);">作業者が登録されていません</p>`;
+            } else {
+                html += `<div style="max-height: 300px; overflow-y: auto;">`;
+                workers.forEach(w => {
+                    html += `
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: var(--space-3); border-bottom: 1px solid var(--color-border);">
+                            <div>
+                                <div style="font-weight: 500;">${w.name}</div>
+                                <div style="font-size: var(--font-size-sm); color: var(--color-text-muted);">${w.email}</div>
+                            </div>
+                            <span style="font-size: var(--font-size-sm); color: ${w.is_active ? 'var(--color-success)' : 'var(--color-text-muted)'};">
+                                ${w.is_active ? '有効' : '無効'}
+                            </span>
+                        </div>
+                    `;
+                });
+                html += `</div>`;
+            }
+
+            html += `
+                <div style="margin-top: var(--space-4); padding-top: var(--space-4); border-top: 1px solid var(--color-border);">
+                    <h4 style="margin-bottom: var(--space-3);">新規作業者追加</h4>
+                    <input type="text" id="new-worker-name" class="input" placeholder="名前" style="margin-bottom: var(--space-2);">
+                    <input type="email" id="new-worker-email" class="input" placeholder="メールアドレス" style="margin-bottom: var(--space-2);">
+                    <input type="password" id="new-worker-password" class="input" placeholder="パスワード" style="margin-bottom: var(--space-3);">
+                    <button class="btn btn--primary" onclick="addNewWorker()">追加</button>
+                </div>
+            `;
+
+            // Create modal dynamically
+            const overlay = document.createElement('div');
+            overlay.className = 'modal-overlay active';
+            overlay.id = 'worker-modal-overlay';
+            overlay.innerHTML = `
+                <div class="modal" style="max-width: 500px;">
+                    <div class="modal__header">
+                        <h2 class="modal__title">作業者管理</h2>
+                        <button class="modal__close" onclick="document.getElementById('worker-modal-overlay').remove();">&times;</button>
+                    </div>
+                    <div class="modal__body">${html}</div>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+
+        } catch (e) {
+            console.error('Error opening worker management:', e);
+            showToast('作業者一覧の取得に失敗しました');
+        }
+    }
+
+    // Global function to add new worker
+    window.addNewWorker = async function () {
+        const name = document.getElementById('new-worker-name').value.trim();
+        const email = document.getElementById('new-worker-email').value.trim();
+        const password = document.getElementById('new-worker-password').value;
+
+        if (!name || !email || !password) {
+            showToast('全ての項目を入力してください');
+            return;
+        }
+
+        try {
+            const passwordHash = await hashPassword(password);
+            await DataManager.createWorker({ name, email, passwordHash });
+            showToast('作業者を追加しました');
+            document.getElementById('worker-modal-overlay').remove();
+            openWorkerManagement(); // Refresh list
+        } catch (e) {
+            console.error('Error adding worker:', e);
+            showToast('作業者の追加に失敗しました');
         }
     };
 });
