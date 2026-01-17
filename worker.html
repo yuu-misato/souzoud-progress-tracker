@@ -411,6 +411,144 @@
             font-weight: 500;
         }
 
+        /* Project Workflow Timeline */
+        .workflow-card {
+            background: var(--color-bg-card);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-4);
+            margin-bottom: var(--space-4);
+        }
+
+        .workflow-card__header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-4);
+        }
+
+        .workflow-card__title {
+            font-size: var(--font-size-base);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .workflow-card__progress {
+            font-size: var(--font-size-sm);
+            color: var(--color-text-muted);
+        }
+
+        .workflow-progress-bar {
+            height: 8px;
+            background: var(--color-bg-secondary);
+            border-radius: var(--radius-full);
+            overflow: hidden;
+            margin-bottom: var(--space-4);
+        }
+
+        .workflow-progress-bar__fill {
+            height: 100%;
+            background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+            border-radius: var(--radius-full);
+            transition: width 0.5s ease;
+        }
+
+        .workflow-timeline {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-1);
+        }
+
+        .workflow-step {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            padding: var(--space-3);
+            border-radius: var(--radius-md);
+            font-size: var(--font-size-sm);
+            transition: background var(--transition-fast);
+        }
+
+        .workflow-step:hover {
+            background: var(--color-bg-secondary);
+        }
+
+        .workflow-step--completed {
+            color: var(--color-text-muted);
+        }
+
+        .workflow-step--current {
+            background: #e0e7ff;
+            font-weight: 500;
+        }
+
+        .workflow-step--mine {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(5, 150, 105, 0.15) 100%);
+            border: 2px solid #10b981;
+            font-weight: 600;
+        }
+
+        .workflow-step--pending {
+            color: var(--color-text-muted);
+        }
+
+        .workflow-step__indicator {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: var(--font-size-xs);
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+
+        .workflow-step--completed .workflow-step__indicator {
+            background: #10b981;
+            color: white;
+        }
+
+        .workflow-step--current .workflow-step__indicator {
+            background: var(--color-primary);
+            color: white;
+        }
+
+        .workflow-step--mine .workflow-step__indicator {
+            background: #10b981;
+            color: white;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.3);
+        }
+
+        .workflow-step--pending .workflow-step__indicator {
+            background: var(--color-bg-secondary);
+            color: var(--color-text-muted);
+            border: 2px solid var(--color-border);
+        }
+
+        .workflow-step__content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .workflow-step__name {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .workflow-step__badge {
+            font-size: var(--font-size-xs);
+            padding: 2px 8px;
+            border-radius: var(--radius-full);
+            background: #10b981;
+            color: white;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+
         /* Empty State */
         .empty-state-simple {
             text-align: center;
@@ -562,6 +700,20 @@
             <!-- Notes -->
             <div id="task-notes-section" style="display: none;">
                 <div class="task-notes" id="display-task-notes"></div>
+            </div>
+
+            <!-- Project Workflow -->
+            <div id="workflow-section" class="workflow-card">
+                <div class="workflow-card__header">
+                    <h3 class="workflow-card__title">📋 プロジェクト全体の工程</h3>
+                    <span id="workflow-progress" class="workflow-card__progress">0%</span>
+                </div>
+                <div class="workflow-progress-bar">
+                    <div id="workflow-progress-bar-fill" class="workflow-progress-bar__fill" style="width: 0%;"></div>
+                </div>
+                <div id="workflow-timeline" class="workflow-timeline">
+                    <!-- Steps will be rendered here -->
+                </div>
             </div>
 
             <!-- Submit Section (for non-approved tasks) -->
@@ -793,7 +945,7 @@
                 });
             }
 
-            // Open task detail (shows only this task - not other project steps)
+            // Open task detail (shows project workflow with my task highlighted)
             async function openTaskDetail(taskId) {
                 const task = allAssignments.find(a => a.id === taskId);
                 if (!task) return;
@@ -802,6 +954,17 @@
 
                 // Fetch submissions for this task
                 const submissions = await DataManager.getSubmissionsForAssignment(taskId);
+
+                // Fetch project data for workflow display
+                let projectSteps = [];
+                let projectProgress = 0;
+                if (task.projectId) {
+                    const project = await DataManager.getProject(task.projectId);
+                    if (project) {
+                        projectSteps = project.steps || [];
+                        projectProgress = DataManager.getProgressPercentage(project);
+                    }
+                }
 
                 tasksSection.classList.remove('show');
                 taskDetailSection.classList.add('show');
@@ -846,6 +1009,9 @@
                     notesSection.style.display = 'none';
                 }
 
+                // Render project workflow
+                renderWorkflow(projectSteps, projectProgress, task.stepName);
+
                 // Submit section (only for non-approved tasks)
                 const submitSection = document.getElementById('submit-section');
                 const approvedMessage = document.getElementById('approved-message');
@@ -883,6 +1049,63 @@
                 } else {
                     historySection.style.display = 'none';
                 }
+            }
+
+            // Render project workflow with my task highlighted
+            function renderWorkflow(steps, progress, myStepName) {
+                const workflowSection = document.getElementById('workflow-section');
+                const workflowTimeline = document.getElementById('workflow-timeline');
+                const workflowProgress = document.getElementById('workflow-progress');
+                const workflowProgressBarFill = document.getElementById('workflow-progress-bar-fill');
+
+                if (!steps || steps.length === 0) {
+                    workflowSection.style.display = 'none';
+                    return;
+                }
+
+                workflowSection.style.display = 'block';
+                workflowProgress.textContent = `${progress}%`;
+                workflowProgressBarFill.style.width = `${progress}%`;
+
+                // Find current step index
+                let currentStepIndex = -1;
+                for (let i = 0; i < steps.length; i++) {
+                    if (steps[i].status !== 'completed') {
+                        currentStepIndex = i;
+                        break;
+                    }
+                }
+                if (currentStepIndex === -1) currentStepIndex = steps.length; // All completed
+
+                workflowTimeline.innerHTML = steps.map((step, idx) => {
+                    const isCompleted = step.status === 'completed';
+                    const isCurrent = idx === currentStepIndex && !isCompleted;
+                    const isMine = step.name === myStepName;
+                    const isPending = !isCompleted && !isCurrent;
+
+                    let stepClass = 'workflow-step';
+                    if (isMine) {
+                        stepClass += ' workflow-step--mine';
+                    } else if (isCompleted) {
+                        stepClass += ' workflow-step--completed';
+                    } else if (isCurrent) {
+                        stepClass += ' workflow-step--current';
+                    } else if (isPending) {
+                        stepClass += ' workflow-step--pending';
+                    }
+
+                    const indicator = isCompleted ? '✓' : (idx + 1);
+
+                    return `
+                        <div class="${stepClass}">
+                            <div class="workflow-step__indicator">${indicator}</div>
+                            <div class="workflow-step__content">
+                                <div class="workflow-step__name">${escapeHtml(step.name)}</div>
+                            </div>
+                            ${isMine ? '<span class="workflow-step__badge">あなたの担当</span>' : ''}
+                        </div>
+                    `;
+                }).join('');
             }
 
             // Submit form
