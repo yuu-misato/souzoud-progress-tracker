@@ -617,13 +617,30 @@ document.addEventListener('DOMContentLoaded', () => {
         // Folder and Delivery URLs (only shown in edit mode)
         const folderUrlGroup = document.getElementById('folder-url-group');
         const deliveryUrlGroup = document.getElementById('delivery-url-group');
+        const directorGroup = document.getElementById('director-group');
         const folderUrlInput = document.getElementById('input-folder-url');
         const deliveryUrlInput = document.getElementById('input-delivery-url');
+        const directorSelect = document.getElementById('input-director');
 
         if (folderUrlGroup) folderUrlGroup.style.display = isEditMode ? 'block' : 'none';
         if (deliveryUrlGroup) deliveryUrlGroup.style.display = isEditMode ? 'block' : 'none';
+        if (directorGroup) directorGroup.style.display = isEditMode ? 'block' : 'none';
         if (folderUrlInput) folderUrlInput.value = project?.folderUrl || '';
         if (deliveryUrlInput) deliveryUrlInput.value = project?.deliveryUrl || '';
+
+        // Populate director dropdown
+        if (directorSelect && isEditMode) {
+            const admins = await DataManager.getAllAdmins();
+            directorSelect.innerHTML = '<option value="">未設定</option>';
+            admins.filter(a => a.isActive).forEach(a => {
+                directorSelect.innerHTML += `<option value="${a.id}">${escapeHtml(a.name)}</option>`;
+            });
+            // Get current director
+            const currentDirector = await DataManager.getProjectDirector(project?.id);
+            if (currentDirector) {
+                directorSelect.value = currentDirector.id;
+            }
+        }
 
         // Populate client datalist from existing clients
         const clientList = document.getElementById('client-list');
@@ -683,7 +700,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (isEditMode && currentProjectId) {
             const folderUrl = document.getElementById('input-folder-url')?.value.trim() || '';
             const deliveryUrl = document.getElementById('input-delivery-url')?.value.trim() || '';
+            const directorId = document.getElementById('input-director')?.value || null;
             await DataManager.updateProject(currentProjectId, { name, client, description, folderUrl, deliveryUrl });
+            // Update director separately
+            if (directorId !== null) {
+                await DataManager.updateProjectDirector(currentProjectId, directorId || null);
+            }
             showToast('プロジェクトを更新しました');
             await selectProject(currentProjectId);
         } else {

@@ -402,6 +402,9 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('display-updated').textContent =
             `更新: ${DataManager.formatDate(project.updatedAt || project.updated_at)}`;
 
+        // Director Contact
+        await updateDirectorContact(project);
+
         // Resource Links (folder and delivery URLs)
         updateResourceLinks(project);
 
@@ -412,6 +415,38 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('timeline').innerHTML = '<p style="color: var(--color-text-muted); text-align: center; padding: var(--space-8);">工程データがありません</p>';
         } else {
             renderSimpleTimeline(project);
+        }
+    }
+
+    /**
+     * Update director contact information
+     */
+    async function updateDirectorContact(project) {
+        const directorContactEl = document.getElementById('director-contact');
+        const directorNameEl = document.getElementById('director-name');
+        const directorEmailEl = document.getElementById('director-email');
+
+        if (!directorContactEl) return;
+
+        try {
+            const director = await DataManager.getProjectDirector(project.id);
+
+            if (director && director.name) {
+                directorContactEl.style.display = 'flex';
+                directorNameEl.textContent = director.name;
+                if (director.email) {
+                    directorEmailEl.href = `mailto:${director.email}`;
+                    directorEmailEl.textContent = director.email;
+                    directorEmailEl.style.display = 'inline';
+                } else {
+                    directorEmailEl.style.display = 'none';
+                }
+            } else {
+                directorContactEl.style.display = 'none';
+            }
+        } catch (e) {
+            console.error('Error fetching director:', e);
+            directorContactEl.style.display = 'none';
         }
     }
 

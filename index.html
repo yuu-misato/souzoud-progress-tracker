@@ -104,6 +104,18 @@
         <span id="display-progress" class="progress-overview-simple__text">0%</span>
       </div>
 
+      <!-- Director Contact -->
+      <div id="director-contact" class="director-contact" style="display: none;">
+        <div class="director-contact__header">
+          <span class="director-contact__icon">👤</span>
+          <span class="director-contact__label">担当ディレクター</span>
+        </div>
+        <div class="director-contact__info">
+          <span id="director-name" class="director-contact__name">-</span>
+          <a id="director-email" href="#" class="director-contact__email">-</a>
+        </div>
+      </div>
+
       <!-- Resource Links -->
       <div id="resource-links" class="resource-links" style="display: none;">
         <a id="folder-link" href="#" target="_blank" rel="noopener noreferrer" class="resource-link">
@@ -553,6 +565,55 @@
     }
 
     .timeline-simple__link:hover {
+      text-decoration: underline;
+    }
+
+    /* Director Contact */
+    .director-contact {
+      display: flex;
+      align-items: center;
+      gap: var(--space-4);
+      padding: var(--space-4);
+      background: var(--color-bg-card);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      margin-bottom: var(--space-4);
+    }
+
+    .director-contact__header {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      flex-shrink: 0;
+    }
+
+    .director-contact__icon {
+      font-size: var(--font-size-xl);
+    }
+
+    .director-contact__label {
+      font-size: var(--font-size-sm);
+      color: var(--color-text-muted);
+    }
+
+    .director-contact__info {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-1);
+    }
+
+    .director-contact__name {
+      font-weight: 600;
+      color: var(--color-text);
+    }
+
+    .director-contact__email {
+      font-size: var(--font-size-sm);
+      color: var(--color-primary);
+      text-decoration: none;
+    }
+
+    .director-contact__email:hover {
       text-decoration: underline;
     }
 
