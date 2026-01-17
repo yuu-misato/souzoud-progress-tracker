@@ -402,7 +402,8 @@ const DataManager = {
   async reorderStep(projectId, stepId, direction) {
     try {
       const steps = await SupabaseClient.select('steps', `project_id=eq.${projectId}&order=step_order.asc`);
-      const currentIndex = steps.findIndex(s => s.step_order === stepId);
+      // Find step by its actual id, not step_order
+      const currentIndex = steps.findIndex(s => s.id === stepId || s.step_order === stepId);
 
       if (currentIndex === -1) return null;
 
