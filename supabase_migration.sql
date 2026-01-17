@@ -5,19 +5,34 @@ CREATE TABLE IF NOT EXISTS admins (
     email TEXT UNIQUE NOT NULL,
     password_hash TEXT NOT NULL,
     name TEXT NOT NULL,
-    role TEXT DEFAULT 'admin' CHECK (role IN ('master', 'admin')),
+    role TEXT DEFAULT 'admin' CHECK (role IN ('master', 'admin', 'director')),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     created_by UUID REFERENCES admins(id),
     is_active BOOLEAN DEFAULT true
 );
+-- 1.5. role constraintの更新（既存テーブル用）
+ALTER TABLE admins DROP CONSTRAINT IF EXISTS admins_role_check;
+ALTER TABLE admins
+ADD CONSTRAINT admins_role_check CHECK (role IN ('master', 'admin', 'director'));
 -- 2. stepsテーブルにURL列を追加
 ALTER TABLE steps
 ADD COLUMN IF NOT EXISTS url TEXT DEFAULT '';
--- 3. RLS設定（既存のポリシーを削除してから作成）
+-- 3. ディレクター担当プロジェクトテーブル
+CREATE TABLE IF NOT EXISTS director_projects (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    admin_id UUID REFERENCES admins(id) ON DELETE CASCADE,
+    project_id TEXT REFERENCES projects(id) ON DELETE CASCADE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    UNIQUE(admin_id, project_id)
+);
+-- 4. RLS設定（既存のポリシーを削除してから作成）
 ALTER TABLE admins ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Allow all access to admins" ON admins;
 CREATE POLICY "Allow all access to admins" ON admins FOR ALL USING (true) WITH CHECK (true);
--- 4. マスター管理者を作成
+ALTER TABLE director_projects ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Allow all access to director_projects" ON director_projects;
+CREATE POLICY "Allow all access to director_projects" ON director_projects FOR ALL USING (true) WITH CHECK (true);
+-- 5. マスター管理者を作成
 -- メール: yusaku.suzuki@sou-zou-do.com
 -- パスワード: Yusaku0310!
 INSERT INTO admins (email, password_hash, name, role)
