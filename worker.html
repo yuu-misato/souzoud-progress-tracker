@@ -181,6 +181,80 @@
         .tasks-section.show {
             display: block;
         }
+
+        .project-timeline {
+            margin-top: var(--space-4);
+            padding-top: var(--space-4);
+            border-top: 1px dashed var(--color-border);
+        }
+
+        .project-timeline__title {
+            font-size: var(--font-size-sm);
+            font-weight: 500;
+            color: var(--color-text-muted);
+            margin-bottom: var(--space-3);
+        }
+
+        .project-timeline__steps {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-2);
+        }
+
+        .project-step {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            padding: var(--space-2) var(--space-3);
+            background: #f8fafc;
+            border-radius: var(--radius-sm);
+            font-size: var(--font-size-sm);
+        }
+
+        .project-step--current {
+            background: #e0e7ff;
+            font-weight: 500;
+        }
+
+        .project-step--completed {
+            background: #d1fae5;
+        }
+
+        .project-step--assigned {
+            background: #fef3c7;
+            border: 2px solid #f59e0b;
+        }
+
+        .project-step__number {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            font-size: var(--font-size-xs);
+            font-weight: 600;
+            background: var(--color-bg-secondary);
+        }
+
+        .project-step--completed .project-step__number {
+            background: #10b981;
+            color: white;
+        }
+
+        .project-step--current .project-step__number {
+            background: var(--color-primary);
+            color: white;
+        }
+
+        .project-step__name {
+            flex: 1;
+        }
+
+        .project-step__status {
+            font-size: var(--font-size-xs);
+            color: var(--color-text-muted);
+        }
     </style>
 </head>
 
@@ -364,6 +438,10 @@
                     const isOverdue = dueDate && dueDate < now && assignment.status !== 'approved';
                     const isSoon = dueDate && !isOverdue && (dueDate - now) < (2 * 24 * 60 * 60 * 1000);
 
+                    // Fetch all steps for this project
+                    const project = await DataManager.getProject(assignment.projectId);
+                    const projectSteps = project?.steps || [];
+
                     const statusLabels = {
                         pending: '未着手',
                         in_progress: '作業中',
@@ -379,6 +457,34 @@
                     let dueClass = '';
                     if (isOverdue) dueClass = 'task-due--overdue';
                     else if (isSoon) dueClass = 'task-due--soon';
+
+                    // Render project timeline
+                    let timelineHtml = '';
+                    if (projectSteps.length > 0) {
+                        timelineHtml = '<div class="project-timeline">';
+                        timelineHtml += '<div class="project-timeline__title">📅 プロジェクト全工程</div>';
+                        timelineHtml += '<div class="project-timeline__steps">';
+                        for (const step of projectSteps) {
+                            let stepClass = 'project-step';
+                            if (step.id === assignment.stepId) stepClass += ' project-step--assigned';
+                            else if (step.status === 'completed') stepClass += ' project-step--completed';
+                            else if (step.status === 'current') stepClass += ' project-step--current';
+
+                            const stepIcon = step.status === 'completed' ? '✓' : step.id;
+                            const stepStatus = step.status === 'completed' ? '完了' :
+                                step.status === 'current' ? '進行中' : '未着手';
+                            const isMyTask = step.id === assignment.stepId ? '<span style="color: #f59e0b; font-weight: 600;"> ← あなたの担当</span>' : '';
+
+                            timelineHtml += `
+                                <div class="${stepClass}">
+                                    <div class="project-step__number">${stepIcon}</div>
+                                    <div class="project-step__name">${step.name}${isMyTask}</div>
+                                    <div class="project-step__status">${stepStatus}</div>
+                                </div>
+                            `;
+                        }
+                        timelineHtml += '</div></div>';
+                    }
 
                     html += `
                         <div class="${cardClass}">
@@ -408,6 +514,8 @@
                                     </div>
                                 </div>
                             ` : ''}
+                            
+                            ${timelineHtml}
                         </div>
                     `;
                 }
