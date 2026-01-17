@@ -401,8 +401,8 @@ const DataManager = {
 
   async reorderStep(projectId, stepId, direction) {
     try {
-      const steps = await this.getStepsForProject(projectId);
-      const currentIndex = steps.findIndex(s => s.id === stepId || s.step_order === stepId);
+      const steps = await SupabaseClient.select('steps', `project_id=eq.${projectId}&order=step_order.asc`);
+      const currentIndex = steps.findIndex(s => s.step_order === stepId);
 
       if (currentIndex === -1) return null;
 
@@ -414,17 +414,27 @@ const DataManager = {
       const currentStep = steps[currentIndex];
       const swapStep = steps[newIndex];
 
-      // Swap step_order values
-      const tempOrder = currentStep.step_order;
+      // Use a temp value to swap (e.g., -1)
+      const tempOrder = -999;
+      const origCurrentOrder = currentStep.step_order;
+      const origSwapOrder = swapStep.step_order;
 
+      // Step 1: Move current to temp
       await SupabaseClient.update('steps',
-        `project_id=eq.${projectId}&id=eq.${currentStep.id}`,
-        { step_order: swapStep.step_order }
+        `project_id=eq.${projectId}&step_order=eq.${origCurrentOrder}`,
+        { step_order: tempOrder }
       );
 
+      // Step 2: Move swap to current's original position
       await SupabaseClient.update('steps',
-        `project_id=eq.${projectId}&id=eq.${swapStep.id}`,
-        { step_order: tempOrder }
+        `project_id=eq.${projectId}&step_order=eq.${origSwapOrder}`,
+        { step_order: origCurrentOrder }
+      );
+
+      // Step 3: Move current from temp to swap's original position
+      await SupabaseClient.update('steps',
+        `project_id=eq.${projectId}&step_order=eq.${tempOrder}`,
+        { step_order: origSwapOrder }
       );
 
       await SupabaseClient.update('projects', `id=eq.${projectId}`, {
