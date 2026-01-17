@@ -106,8 +106,9 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        // Setup mobile menu
+        // Setup menus
         setupMobileMenu();
+        setupDesktopSettingsMenu();
 
         await renderProjectList();
         await initDashboard();
@@ -198,6 +199,79 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (role === 'master') {
                 document.getElementById('mobile-admin-settings-btn').style.display = 'block';
+            }
+        }
+    }
+
+    // Desktop Settings Menu Setup
+    function setupDesktopSettingsMenu() {
+        const settingsBtn = document.getElementById('settings-menu-btn');
+        const settingsMenu = document.getElementById('settings-menu');
+
+        if (!settingsBtn || !settingsMenu) return;
+
+        // Toggle menu
+        settingsBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            settingsMenu.classList.toggle('active');
+        });
+
+        // Close menu when clicking outside
+        document.addEventListener('click', (e) => {
+            const dropdown = document.getElementById('settings-dropdown');
+            if (dropdown && !dropdown.contains(e.target)) {
+                settingsMenu.classList.remove('active');
+            }
+        });
+
+        // Desktop menu item handlers
+        const desktopWorkerSettings = document.getElementById('desktop-worker-settings-btn');
+        if (desktopWorkerSettings) {
+            desktopWorkerSettings.addEventListener('click', () => {
+                settingsMenu.classList.remove('active');
+                openWorkerManagement();
+            });
+        }
+
+        const desktopApproval = document.getElementById('desktop-approval-btn');
+        if (desktopApproval) {
+            desktopApproval.addEventListener('click', () => {
+                settingsMenu.classList.remove('active');
+                openApprovalModal();
+            });
+        }
+
+        const desktopTemplateSettings = document.getElementById('desktop-template-settings-btn');
+        if (desktopTemplateSettings) {
+            desktopTemplateSettings.addEventListener('click', () => {
+                settingsMenu.classList.remove('active');
+                openTemplateManagement();
+            });
+        }
+
+        const desktopAdminSettings = document.getElementById('desktop-admin-settings-btn');
+        if (desktopAdminSettings) {
+            desktopAdminSettings.addEventListener('click', () => {
+                settingsMenu.classList.remove('active');
+                openAdminListModal();
+            });
+        }
+
+        // Show desktop menu items based on role
+        if (window.adminSession) {
+            const role = window.adminSession.role;
+
+            if (role === 'master' || role === 'admin') {
+                document.getElementById('desktop-worker-settings-btn').style.display = 'block';
+                document.getElementById('desktop-template-settings-btn').style.display = 'block';
+            }
+
+            if (role === 'master' || role === 'admin' || role === 'director') {
+                document.getElementById('desktop-approval-btn').style.display = 'block';
+            }
+
+            if (role === 'master') {
+                document.getElementById('desktop-admin-settings-btn').style.display = 'block';
             }
         }
     }
