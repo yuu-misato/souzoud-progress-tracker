@@ -799,11 +799,13 @@
                 setupTaskListEventDelegation();
             }
 
-            // Track if task list events are set up
+            // Track if task list events are set up (defined before function for proper hoisting)
             let taskListEventsAttached = false;
 
             function setupTaskListEventDelegation() {
+                // Prevent duplicate event listeners
                 if (taskListEventsAttached) return;
+                if (!taskList) return;
                 taskListEventsAttached = true;
 
                 taskList.addEventListener('click', (e) => {
@@ -848,11 +850,12 @@
             // Fast action handlers
             async function handleStartWorking(assignmentId) {
                 try {
-                    await DataManager.updateAssignmentStatus(assignmentId, 'in_progress');
-                    WorkflowUI.showToast('作業開始', 'タスクを作業中に変更しました', '🚀');
+                    await DataManager.updateAssignment(assignmentId, { status: 'in_progress' });
+                    WorkflowUI.showToast('作業開始', 'タスクを作業中に変更しました');
                     await renderTasks();
                 } catch (e) {
-                    WorkflowUI.showToast('エラー', '更新に失敗しました', '❌');
+                    console.error('Error starting work:', e);
+                    WorkflowUI.showToast('エラー', '更新に失敗しました');
                 }
             }
 

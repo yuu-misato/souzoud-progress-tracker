@@ -216,18 +216,32 @@ document.addEventListener('DOMContentLoaded', () => {
 
         projectList.innerHTML = html;
 
-        // Add click handlers for project items
-        projectList.querySelectorAll('.project-list__item').forEach(item => {
-            item.addEventListener('click', () => {
-                selectProject(item.dataset.id);
-            });
-        });
+        // Setup event delegation for project list (only once)
+        setupProjectListEventDelegation();
+    }
 
-        // Add click handlers for client group toggle
-        projectList.querySelectorAll('.project-list__group-header').forEach(header => {
-            header.addEventListener('click', () => {
-                const clientId = header.dataset.clientId;
-                const toggleIcon = header.querySelector('.project-list__group-toggle');
+    // Track if project list events are set up
+    let projectListEventsInitialized = false;
+
+    function setupProjectListEventDelegation() {
+        if (projectListEventsInitialized) return;
+        projectListEventsInitialized = true;
+
+        projectList.addEventListener('click', (e) => {
+            // Handle project item click
+            const projectItem = e.target.closest('.project-list__item');
+            if (projectItem) {
+                e.preventDefault();
+                selectProject(projectItem.dataset.id);
+                return;
+            }
+
+            // Handle client group toggle
+            const groupHeader = e.target.closest('.project-list__group-header');
+            if (groupHeader) {
+                e.preventDefault();
+                const clientId = groupHeader.dataset.clientId;
+                const toggleIcon = groupHeader.querySelector('.project-list__group-toggle');
                 const collapsedClients = JSON.parse(localStorage.getItem('collapsed_clients') || '{}');
 
                 // Toggle state
@@ -242,7 +256,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 projectList.querySelectorAll(`.project-list__item[data-client="${clientId}"]`).forEach(item => {
                     item.style.display = isNowCollapsed ? 'none' : '';
                 });
-            });
+            }
         });
     }
 
@@ -326,42 +340,64 @@ document.addEventListener('DOMContentLoaded', () => {
       `;
         }).join('');
 
-        // Add action handlers
-        stepEditor.querySelectorAll('.step-editor__item').forEach(item => {
-            const stepId = parseInt(item.dataset.stepId);
+        // Setup event delegation for step editor (only once)
+        setupStepEditorEventDelegation();
+    }
 
-            item.querySelector('[data-edit-step]')?.addEventListener('click', () => {
+    // Track if step editor events are set up
+    let stepEditorEventsInitialized = false;
+
+    function setupStepEditorEventDelegation() {
+        if (stepEditorEventsInitialized) return;
+        stepEditorEventsInitialized = true;
+
+        stepEditor.addEventListener('click', async (e) => {
+            const stepItem = e.target.closest('.step-editor__item');
+            if (!stepItem) return;
+
+            const stepId = parseInt(stepItem.dataset.stepId);
+            if (isNaN(stepId)) return;
+
+            // Handle edit step click
+            if (e.target.closest('[data-edit-step]')) {
                 openEditStepModal(stepId);
-            });
+                return;
+            }
 
-            item.querySelector('.action-move-up')?.addEventListener('click', async (e) => {
+            // Handle action buttons (stop propagation for all)
+            if (e.target.closest('.action-move-up')) {
                 e.stopPropagation();
                 await DataManager.reorderStep(currentProjectId, stepId, 'up');
                 await selectProject(currentProjectId);
                 showToast('工程を上に移動しました');
-            });
+                return;
+            }
 
-            item.querySelector('.action-move-down')?.addEventListener('click', async (e) => {
+            if (e.target.closest('.action-move-down')) {
                 e.stopPropagation();
                 await DataManager.reorderStep(currentProjectId, stepId, 'down');
                 await selectProject(currentProjectId);
                 showToast('工程を下に移動しました');
-            });
+                return;
+            }
 
-            item.querySelector('.action-complete')?.addEventListener('click', async (e) => {
+            if (e.target.closest('.action-complete')) {
                 e.stopPropagation();
                 await updateStepStatus(stepId, 'completed');
-            });
+                return;
+            }
 
-            item.querySelector('.action-current')?.addEventListener('click', async (e) => {
+            if (e.target.closest('.action-current')) {
                 e.stopPropagation();
                 await updateStepStatus(stepId, 'current');
-            });
+                return;
+            }
 
-            item.querySelector('.action-revert')?.addEventListener('click', async (e) => {
+            if (e.target.closest('.action-revert')) {
                 e.stopPropagation();
                 await updateStepStatus(stepId, 'current');
-            });
+                return;
+            }
         });
     }
 
@@ -826,18 +862,41 @@ document.addEventListener('DOMContentLoaded', () => {
             return `
                 <div class="admin-item" style="display: flex; justify-content: space-between; align-items: center; padding: var(--space-3); border-bottom: 1px solid var(--color-border); ${statusClass}">
                     <div>
-                        <div style="font-weight: 500;">${admin.name} ${isSelf ? '(自分)' : ''}</div>
-                        <div style="font-size: var(--font-size-sm); color: var(--color-text-muted);">${admin.email}</div>
+                        <div style="font-weight: 500;">${escapeHtml(admin.name)} ${isSelf ? '(自分)' : ''}</div>
+                        <div style="font-size: var(--font-size-sm); color: var(--color-text-muted);">${escapeHtml(admin.email)}</div>
                         <div style="font-size: var(--font-size-xs); color: var(--color-text-muted);">${roleLabel} ${!admin.isActive ? '(無効)' : ''}</div>
                     </div>
-                    <button class="btn btn--secondary btn--sm" onclick="editAdmin('${admin.id}')" ${isSelf ? 'disabled' : ''}>編集</button>
+                    <button class="btn btn--secondary btn--sm" data-edit-admin="${admin.id}" ${isSelf ? 'disabled' : ''}>編集</button>
                 </div>
             `;
         }).join('');
+
+        // Setup event delegation for admin list
+        setupAdminListEventDelegation();
     }
 
-    // Global function for edit button
-    window.editAdmin = async function (adminId) {
+    // Track if admin list events are set up
+    let adminListEventsInitialized = false;
+
+    function setupAdminListEventDelegation() {
+        if (adminListEventsInitialized) return;
+        adminListEventsInitialized = true;
+
+        const adminList = document.getElementById('admin-list');
+        if (!adminList) return;
+
+        adminList.addEventListener('click', async (e) => {
+            const editBtn = e.target.closest('[data-edit-admin]');
+            if (editBtn && !editBtn.disabled) {
+                e.preventDefault();
+                const adminId = editBtn.dataset.editAdmin;
+                await handleEditAdmin(adminId);
+            }
+        });
+    }
+
+    // Function for editing admin
+    async function handleEditAdmin(adminId) {
         const admins = await DataManager.getAllAdmins();
         const admin = admins.find(a => a.id === adminId);
         if (!admin) return;
@@ -854,7 +913,7 @@ document.addEventListener('DOMContentLoaded', () => {
         await updateProjectAssignmentVisibility(admin.role, adminId);
 
         adminEditModal.classList.add('active');
-    };
+    }
 
     // Update project assignment visibility based on role
     async function updateProjectAssignmentVisibility(role, adminId = null) {
@@ -1029,21 +1088,21 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div style="padding: var(--space-4); border: 1px solid var(--color-border); border-radius: var(--radius-md); margin-bottom: var(--space-3); background: #f8fafc;">
                         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--space-2);">
                             <div>
-                                <div style="font-weight: 600; font-size: var(--font-size-base);">${s.projectName || 'プロジェクト'}</div>
-                                <div style="color: var(--color-primary); font-weight: 500;">${s.stepName || '工程'}</div>
+                                <div style="font-weight: 600; font-size: var(--font-size-base);">${escapeHtml(s.projectName || 'プロジェクト')}</div>
+                                <div style="color: var(--color-primary); font-weight: 500;">${escapeHtml(s.stepName || '工程')}</div>
                             </div>
                             <span style="background: #fef3c7; color: #d97706; padding: 2px 8px; border-radius: 4px; font-size: var(--font-size-sm);">
                                 ${stageLabels[s.stage]} 提出
                             </span>
                         </div>
                         <div style="font-size: var(--font-size-sm); color: var(--color-text-muted); margin-bottom: var(--space-2);">
-                            👤 ${s.workerName || '作業者'} ・ 📅 ${new Date(s.submitted_at).toLocaleString('ja-JP')}
+                            ${escapeHtml(s.workerName || '作業者')} / ${new Date(s.submitted_at).toLocaleString('ja-JP')}
                         </div>
-                        ${s.comment ? `<div style="font-size: var(--font-size-sm); background: white; padding: var(--space-2); border-radius: var(--radius-sm); margin-bottom: var(--space-2);">💬 ${s.comment}</div>` : ''}
-                        ${s.url ? `<div style="margin-bottom: var(--space-3);"><a href="${s.url}" target="_blank" style="color: var(--color-primary); font-size: var(--font-size-sm);">🔗 成果物を確認</a></div>` : ''}
+                        ${s.comment ? `<div style="font-size: var(--font-size-sm); background: white; padding: var(--space-2); border-radius: var(--radius-sm); margin-bottom: var(--space-2);">${escapeHtml(s.comment)}</div>` : ''}
+                        ${s.url ? `<div style="margin-bottom: var(--space-3);"><a href="${escapeHtml(s.url)}" target="_blank" rel="noopener" style="color: var(--color-primary); font-size: var(--font-size-sm);">成果物を確認</a></div>` : ''}
                         <div style="display: flex; gap: var(--space-2);">
-                            <button class="btn btn--primary btn--sm" onclick="approveSubmission('${s.id}')">✓ 承認</button>
-                            <button class="btn btn--secondary btn--sm" onclick="rejectSubmission('${s.id}')">↩ 差戻し</button>
+                            <button class="btn btn--primary btn--sm" data-approve-submission="${s.id}">承認</button>
+                            <button class="btn btn--secondary btn--sm" data-reject-submission="${s.id}">差戻し</button>
                         </div>
                     </div>
                 `;
@@ -1057,13 +1116,45 @@ document.addEventListener('DOMContentLoaded', () => {
             overlay.innerHTML = `
                 <div class="modal" style="max-width: 600px;">
                     <div class="modal__header">
-                        <h2 class="modal__title">📋 承認待ち (${pendingSubmissions.length}件)</h2>
-                        <button class="modal__close" onclick="document.getElementById('approval-modal-overlay').remove();">&times;</button>
+                        <h2 class="modal__title">承認待ち (${pendingSubmissions.length}件)</h2>
+                        <button class="modal__close" data-close-approval-modal>&times;</button>
                     </div>
                     <div class="modal__body">${modalHtml}</div>
                 </div>
             `;
             document.body.appendChild(overlay);
+
+            // Setup event delegation for approval modal
+            overlay.addEventListener('click', async (e) => {
+                // Close button
+                if (e.target.closest('[data-close-approval-modal]')) {
+                    overlay.remove();
+                    return;
+                }
+
+                // Approve button
+                const approveBtn = e.target.closest('[data-approve-submission]');
+                if (approveBtn) {
+                    e.preventDefault();
+                    const submissionId = approveBtn.dataset.approveSubmission;
+                    await handleApproveSubmission(submissionId);
+                    return;
+                }
+
+                // Reject button
+                const rejectBtn = e.target.closest('[data-reject-submission]');
+                if (rejectBtn) {
+                    e.preventDefault();
+                    const submissionId = rejectBtn.dataset.rejectSubmission;
+                    handleRejectSubmission(submissionId);
+                    return;
+                }
+
+                // Close on overlay click
+                if (e.target === overlay) {
+                    overlay.remove();
+                }
+            });
 
         } catch (e) {
             console.error('Error opening approval modal:', e);
@@ -1071,8 +1162,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Global approval functions
-    window.approveSubmission = async function (submissionId) {
+    // Approval functions
+    async function handleApproveSubmission(submissionId) {
         try {
             await DataManager.approveSubmission(submissionId, window.adminSession?.id);
             showToast('承認しました');
@@ -1082,49 +1173,59 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (e) {
             showToast('承認に失敗しました');
         }
-    };
+    }
 
-    window.rejectSubmission = async function (submissionId) {
+    function handleRejectSubmission(submissionId) {
         // Create rejection modal
         const existing = document.getElementById('rejection-modal-overlay');
         if (existing) existing.remove();
 
-        const modalHtml = `
-            <div id="rejection-modal-overlay" class="modal-overlay active" style="z-index: 10001;">
-                <div class="modal" style="max-width: 450px;">
-                    <div class="modal__header">
-                        <h2 class="modal__title">↩️ 差し戻し理由</h2>
-                        <button class="modal__close" onclick="document.getElementById('rejection-modal-overlay').remove()">&times;</button>
+        const overlay = document.createElement('div');
+        overlay.id = 'rejection-modal-overlay';
+        overlay.className = 'modal-overlay active';
+        overlay.style.zIndex = '10001';
+        overlay.innerHTML = `
+            <div class="modal" style="max-width: 450px;">
+                <div class="modal__header">
+                    <h2 class="modal__title">差し戻し理由</h2>
+                    <button class="modal__close" data-close-rejection>&times;</button>
+                </div>
+                <div class="modal__body">
+                    <div class="input-group">
+                        <label for="rejection-comment">理由（作業者に通知されます）</label>
+                        <textarea id="rejection-comment" class="input" rows="3" placeholder="修正点や指摘事項を入力してください"></textarea>
                     </div>
-                    <div class="modal__body">
-                        <div class="input-group">
-                            <label for="rejection-comment">理由（作業者に通知されます）</label>
-                            <textarea id="rejection-comment" class="input" rows="3" placeholder="修正点や指摘事項を入力してください"></textarea>
-                        </div>
-                    </div>
-                    <div class="modal__footer">
-                        <button class="btn btn--ghost" onclick="document.getElementById('rejection-modal-overlay').remove()">キャンセル</button>
-                        <button class="btn btn--danger" id="confirm-rejection-btn">差し戻す</button>
-                    </div>
+                </div>
+                <div class="modal__footer">
+                    <button class="btn btn--ghost" data-close-rejection>キャンセル</button>
+                    <button class="btn btn--danger" data-confirm-rejection>差し戻す</button>
                 </div>
             </div>
         `;
 
-        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        document.body.appendChild(overlay);
 
-        document.getElementById('confirm-rejection-btn').addEventListener('click', async () => {
-            const comment = document.getElementById('rejection-comment').value.trim();
-            try {
-                await DataManager.rejectSubmission(submissionId, comment);
-                showToast('差し戻しました');
-                document.getElementById('rejection-modal-overlay').remove();
-                document.getElementById('approval-modal-overlay')?.remove();
-                openApprovalModal();
-            } catch (e) {
-                showToast('差し戻しに失敗しました');
+        // Event delegation for rejection modal
+        overlay.addEventListener('click', async (e) => {
+            if (e.target.closest('[data-close-rejection]') || e.target === overlay) {
+                overlay.remove();
+                return;
+            }
+
+            if (e.target.closest('[data-confirm-rejection]')) {
+                const comment = document.getElementById('rejection-comment').value.trim();
+                try {
+                    await DataManager.rejectSubmission(submissionId, comment);
+                    showToast('差し戻しました');
+                    overlay.remove();
+                    document.getElementById('approval-modal-overlay')?.remove();
+                    openApprovalModal();
+                } catch (err) {
+                    showToast('差し戻しに失敗しました');
+                }
             }
         });
-    };
+    }
 
     /**
      * Open worker management
@@ -1143,8 +1244,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     html += `
                         <div style="display: flex; justify-content: space-between; align-items: center; padding: var(--space-3); border-bottom: 1px solid var(--color-border);">
                             <div>
-                                <div style="font-weight: 500;">${w.name}</div>
-                                <div style="font-size: var(--font-size-sm); color: var(--color-text-muted);">${w.email}</div>
+                                <div style="font-weight: 500;">${escapeHtml(w.name)}</div>
+                                <div style="font-size: var(--font-size-sm); color: var(--color-text-muted);">${escapeHtml(w.email)}</div>
                             </div>
                             <span style="font-size: var(--font-size-sm); color: ${w.is_active ? 'var(--color-success)' : 'var(--color-text-muted)'};">
                                 ${w.is_active ? '有効' : '無効'}
@@ -1161,7 +1262,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <input type="text" id="new-worker-name" class="input" placeholder="名前" style="margin-bottom: var(--space-2);">
                     <input type="email" id="new-worker-email" class="input" placeholder="メールアドレス" style="margin-bottom: var(--space-2);">
                     <input type="password" id="new-worker-password" class="input" placeholder="パスワード" style="margin-bottom: var(--space-3);">
-                    <button class="btn btn--primary" onclick="addNewWorker()">追加</button>
+                    <button class="btn btn--primary" data-add-worker>追加</button>
                 </div>
             `;
 
@@ -1173,12 +1274,25 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="modal" style="max-width: 500px;">
                     <div class="modal__header">
                         <h2 class="modal__title">作業者管理</h2>
-                        <button class="modal__close" onclick="document.getElementById('worker-modal-overlay').remove();">&times;</button>
+                        <button class="modal__close" data-close-worker-modal>&times;</button>
                     </div>
                     <div class="modal__body">${html}</div>
                 </div>
             `;
             document.body.appendChild(overlay);
+
+            // Event delegation for worker modal
+            overlay.addEventListener('click', async (e) => {
+                if (e.target.closest('[data-close-worker-modal]') || e.target === overlay) {
+                    overlay.remove();
+                    return;
+                }
+
+                if (e.target.closest('[data-add-worker]')) {
+                    e.preventDefault();
+                    await handleAddNewWorker();
+                }
+            });
 
         } catch (e) {
             console.error('Error opening worker management:', e);
@@ -1186,8 +1300,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Global function to add new worker
-    window.addNewWorker = async function () {
+    // Function to add new worker
+    async function handleAddNewWorker() {
         const name = document.getElementById('new-worker-name').value.trim();
         const email = document.getElementById('new-worker-email').value.trim();
         const password = document.getElementById('new-worker-password').value;
@@ -1207,23 +1321,59 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('Error adding worker:', e);
             showToast('作業者の追加に失敗しました');
         }
-    };
+    }
 
     // ==================== CLIENT USER MANAGEMENT ====================
 
     let currentClientUsersClientId = null;
+    let clientUsersModalEventsInitialized = false;
 
-    window.openClientUsersModal = async function (clientId, clientName) {
+    function openClientUsersModal(clientId, clientName) {
         currentClientUsersClientId = clientId;
         document.getElementById('client-users-modal-name').textContent = clientName;
         document.getElementById('client-users-modal').classList.add('active');
-        await renderClientUsersList();
-    };
+        renderClientUsersList();
+        setupClientUsersModalEvents();
+    }
 
-    window.closeClientUsersModal = function () {
+    function closeClientUsersModal() {
         document.getElementById('client-users-modal').classList.remove('active');
         currentClientUsersClientId = null;
-    };
+    }
+
+    function setupClientUsersModalEvents() {
+        if (clientUsersModalEventsInitialized) return;
+        clientUsersModalEventsInitialized = true;
+
+        const modal = document.getElementById('client-users-modal');
+        if (!modal) return;
+
+        modal.addEventListener('click', async (e) => {
+            // Handle delete button
+            const deleteBtn = e.target.closest('[data-delete-client-user]');
+            if (deleteBtn) {
+                e.preventDefault();
+                const userId = deleteBtn.dataset.deleteClientUser;
+                if (confirm('このユーザーを削除しますか？')) {
+                    try {
+                        await DataManager.deleteClientUser(userId);
+                        showToast('ユーザーを削除しました');
+                        await renderClientUsersList();
+                    } catch (err) {
+                        console.error('Error deleting client user:', err);
+                        showToast('削除に失敗しました');
+                    }
+                }
+                return;
+            }
+
+            // Handle add button
+            if (e.target.closest('[data-add-client-user]')) {
+                e.preventDefault();
+                await handleAddClientUser();
+            }
+        });
+    }
 
     async function renderClientUsersList() {
         const listEl = document.getElementById('client-users-list');
@@ -1239,15 +1389,15 @@ document.addEventListener('DOMContentLoaded', () => {
         listEl.innerHTML = users.map(u => `
             <div style="display: flex; justify-content: space-between; align-items: center; padding: var(--space-3); border-bottom: 1px solid var(--color-border);">
                 <div>
-                    <div style="font-weight: 500;">${u.name}</div>
-                    <div style="font-size: var(--font-size-sm); color: var(--color-text-muted);">${u.email}</div>
+                    <div style="font-weight: 500;">${escapeHtml(u.name)}</div>
+                    <div style="font-size: var(--font-size-sm); color: var(--color-text-muted);">${escapeHtml(u.email)}</div>
                 </div>
-                <button class="btn btn--ghost btn--sm" onclick="deleteClientUserFromAdmin('${u.id}')" style="color: #ef4444;">削除</button>
+                <button class="btn btn--ghost btn--sm" data-delete-client-user="${u.id}" style="color: #ef4444;">削除</button>
             </div>
         `).join('');
     }
 
-    window.addClientUserFromAdmin = async function () {
+    async function handleAddClientUser() {
         const name = document.getElementById('new-client-user-name').value.trim();
         const email = document.getElementById('new-client-user-email').value.trim();
         const password = document.getElementById('new-client-user-password').value;
@@ -1287,20 +1437,7 @@ document.addEventListener('DOMContentLoaded', () => {
             errorEl.textContent = 'このメールアドレスは既に使用されています';
             errorEl.style.display = 'block';
         }
-    };
-
-    window.deleteClientUserFromAdmin = async function (userId) {
-        if (!confirm('このユーザーを削除しますか？')) return;
-
-        try {
-            await DataManager.deleteClientUser(userId);
-            showToast('ユーザーを削除しました');
-            await renderClientUsersList();
-        } catch (e) {
-            console.error('Error deleting client user:', e);
-            showToast('削除に失敗しました');
-        }
-    };
+    }
 
     // ==================== ADMIN DASHBOARD ====================
 
@@ -1415,7 +1552,7 @@ document.addEventListener('DOMContentLoaded', () => {
             pendingList.innerHTML = '<div class="empty-state"><div class="empty-state__icon">🎉</div><div>承認待ちはありません</div></div>';
         } else {
             pendingList.innerHTML = submissions.slice(0, 5).map(sub => `
-                <div class="task-item" onclick="goToProject('${sub.projectId}')">
+                <div class="task-item" data-project-id="${sub.projectId}">
                     <div class="task-item__priority task-item__priority--medium"></div>
                     <div class="task-item__content">
                         <div class="task-item__title">${escapeHtml(sub.projectName || 'プロジェクト')} - ${escapeHtml(sub.stepName || '工程')}</div>
@@ -1435,7 +1572,7 @@ document.addEventListener('DOMContentLoaded', () => {
             overdueList.innerHTML = '<div class="empty-state"><div class="empty-state__icon">🎉</div><div>遅延タスクはありません</div></div>';
         } else {
             overdueList.innerHTML = overdueTasks.slice(0, 5).map(task => `
-                <div class="task-item" onclick="goToProject('${task.projectId}')">
+                <div class="task-item" data-project-id="${task.projectId}">
                     <div class="task-item__priority task-item__priority--high"></div>
                     <div class="task-item__content">
                         <div class="task-item__title">${escapeHtml(task.projectName)} - ${escapeHtml(task.stepName)}</div>
@@ -1459,7 +1596,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const badgeClass = task.daysUntil <= 1 ? 'danger' : task.daysUntil <= 3 ? 'warning' : 'success';
                 const daysLabel = task.daysUntil === 0 ? '今日' : task.daysUntil === 1 ? '明日' : `${task.daysUntil}日後`;
                 return `
-                    <div class="task-item" onclick="goToProject('${task.projectId}')">
+                    <div class="task-item" data-project-id="${task.projectId}">
                         <div class="task-item__priority task-item__priority--${priorityClass}"></div>
                         <div class="task-item__content">
                             <div class="task-item__title">${escapeHtml(task.projectName)} - ${escapeHtml(task.stepName)}</div>
@@ -1500,12 +1637,12 @@ document.addEventListener('DOMContentLoaded', () => {
             activityList.innerHTML = recentActivity.slice(0, 5).map(activity => {
                 const timeLabel = activity.hoursAgo === 0 ? '今' : activity.hoursAgo < 24 ? `${activity.hoursAgo}時間前` : `${Math.floor(activity.hoursAgo / 24)}日前`;
                 return `
-                    <div class="task-item" onclick="goToProject('${activity.projectId}')">
+                    <div class="task-item" data-project-id="${activity.projectId}">
                         <div class="task-item__priority task-item__priority--low"></div>
                         <div class="task-item__content">
-                            <div class="task-item__title">📝 ${escapeHtml(activity.projectName)}が更新されました</div>
+                            <div class="task-item__title">${escapeHtml(activity.projectName)}が更新されました</div>
                             <div class="task-item__meta">
-                                <span>🕐 ${timeLabel}</span>
+                                <span>${timeLabel}</span>
                             </div>
                         </div>
                     </div>
@@ -1563,6 +1700,17 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!dashboard) return;
 
         dashboard.addEventListener('click', (e) => {
+            // Handle task-item clicks (pending, overdue, deadlines, activity lists)
+            const taskItem = e.target.closest('.task-item[data-project-id]');
+            if (taskItem) {
+                e.preventDefault();
+                const projectId = taskItem.dataset.projectId;
+                if (projectId) {
+                    selectProject(projectId);
+                }
+                return;
+            }
+
             const target = e.target.closest('[id]');
             if (!target) return;
 
@@ -1617,8 +1765,8 @@ document.addEventListener('DOMContentLoaded', () => {
         overlay.innerHTML = `
             <div class="modal" style="max-width: 700px;">
                 <div class="modal__header">
-                    <h2 class="modal__title">📊 レポート</h2>
-                    <button class="modal__close" onclick="document.getElementById('reports-modal-overlay').remove();">&times;</button>
+                    <h2 class="modal__title">レポート</h2>
+                    <button class="modal__close" data-close-reports>&times;</button>
                 </div>
                 <div class="modal__body" style="max-height: 500px; overflow-y: auto;">
                     <div id="reports-content">
@@ -1628,6 +1776,13 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
         `;
         document.body.appendChild(overlay);
+
+        // Event delegation for reports modal
+        overlay.addEventListener('click', (e) => {
+            if (e.target.closest('[data-close-reports]') || e.target === overlay) {
+                overlay.remove();
+            }
+        });
 
         // Generate report
         generateReport();
@@ -1726,15 +1881,6 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         return String(str).replace(/[&<>"'/]/g, char => escapeMap[char]);
     }
-
-    window.goToProject = async function (projectId) {
-        if (projectId) {
-            const project = await DataManager.getProject(projectId);
-            if (project) {
-                selectProject(projectId);
-            }
-        }
-    };
 
     function showDashboard() {
         adminDashboard.style.display = 'block';
