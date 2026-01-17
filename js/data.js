@@ -921,6 +921,52 @@ const DataManager = {
     }
   },
 
+  async getAllPendingSubmissions() {
+    try {
+      // Get all submissions with status 'submitted'
+      const submissions = await SupabaseClient.select('submissions', `status=eq.submitted&order=submitted_at.desc`);
+
+      const enrichedSubmissions = [];
+      for (const s of submissions) {
+        // Get assignment info
+        const assignments = await SupabaseClient.select('task_assignments', `id=eq.${s.assignment_id}`);
+        const assignment = assignments[0];
+
+        if (assignment) {
+          // Get project info
+          let projectName = '';
+          let stepName = '';
+          if (assignment.project_id) {
+            const projects = await SupabaseClient.select('projects', `id=eq.${assignment.project_id}`);
+            if (projects[0]) projectName = projects[0].name;
+
+            // Get step info
+            const steps = await SupabaseClient.select('steps', `project_id=eq.${assignment.project_id}&step_order=eq.${assignment.step_id}`);
+            if (steps[0]) stepName = steps[0].name;
+          }
+
+          // Get worker name
+          let workerName = '';
+          if (assignment.worker_id) {
+            const workers = await SupabaseClient.select('workers', `id=eq.${assignment.worker_id}`);
+            if (workers[0]) workerName = workers[0].name;
+          }
+
+          enrichedSubmissions.push({
+            ...s,
+            projectName,
+            stepName,
+            workerName
+          });
+        }
+      }
+      return enrichedSubmissions;
+    } catch (e) {
+      console.error('Error fetching all pending submissions:', e);
+      return [];
+    }
+  },
+
   async createSubmission(submissionData) {
     try {
       const result = await SupabaseClient.insert('submissions', {

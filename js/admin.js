@@ -53,8 +53,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
 
-            // Show approval button for directors
-            if (window.adminSession.role === 'director' || window.adminSession.role === 'master') {
+            // Show approval button for directors, master, and admin
+            if (window.adminSession.role === 'director' || window.adminSession.role === 'master' || window.adminSession.role === 'admin') {
                 const approvalBtn = document.getElementById('approval-btn');
                 if (approvalBtn) {
                     approvalBtn.style.display = 'inline-block';
@@ -988,30 +988,40 @@ document.addEventListener('DOMContentLoaded', () => {
      * Open approval modal (show pending submissions)
      */
     async function openApprovalModal() {
-        const directorId = window.adminSession?.id;
-        if (!directorId) return;
-
         try {
-            const pendingSubmissions = await DataManager.getPendingSubmissionsForDirector(directorId);
+            // Get all pending submissions (for master/admin, get all; for director, get assigned projects)
+            const pendingSubmissions = await DataManager.getAllPendingSubmissions();
 
             if (pendingSubmissions.length === 0) {
                 showToast('承認待ちの提出物はありません');
                 return;
             }
 
-            // Create and show approval modal
-            let modalHtml = `<div style="max-height: 400px; overflow-y: auto;">`;
+            // Build modal content
             const stageLabels = { draft: '初稿', revision: '修正稿', final: '最終稿' };
+
+            let modalHtml = `
+                <div style="max-height: 60vh; overflow-y: auto;">
+            `;
 
             for (const s of pendingSubmissions) {
                 modalHtml += `
-                    <div style="padding: var(--space-3); border: 1px solid var(--color-border); border-radius: var(--radius-md); margin-bottom: var(--space-3);">
-                        <div style="font-weight: 500;">${stageLabels[s.stage]} 提出</div>
-                        <div style="font-size: var(--font-size-sm); color: var(--color-text-muted);">
-                            提出日: ${new Date(s.submitted_at).toLocaleString('ja-JP')}
+                    <div style="padding: var(--space-4); border: 1px solid var(--color-border); border-radius: var(--radius-md); margin-bottom: var(--space-3); background: #f8fafc;">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--space-2);">
+                            <div>
+                                <div style="font-weight: 600; font-size: var(--font-size-base);">${s.projectName || 'プロジェクト'}</div>
+                                <div style="color: var(--color-primary); font-weight: 500;">${s.stepName || '工程'}</div>
+                            </div>
+                            <span style="background: #fef3c7; color: #d97706; padding: 2px 8px; border-radius: 4px; font-size: var(--font-size-sm);">
+                                ${stageLabels[s.stage]} 提出
+                            </span>
                         </div>
-                        ${s.url ? `<div style="margin-top: var(--space-2);"><a href="${s.url}" target="_blank">🔗 成果物を確認</a></div>` : ''}
-                        <div style="margin-top: var(--space-3); display: flex; gap: var(--space-2);">
+                        <div style="font-size: var(--font-size-sm); color: var(--color-text-muted); margin-bottom: var(--space-2);">
+                            👤 ${s.workerName || '作業者'} ・ 📅 ${new Date(s.submitted_at).toLocaleString('ja-JP')}
+                        </div>
+                        ${s.comment ? `<div style="font-size: var(--font-size-sm); background: white; padding: var(--space-2); border-radius: var(--radius-sm); margin-bottom: var(--space-2);">💬 ${s.comment}</div>` : ''}
+                        ${s.url ? `<div style="margin-bottom: var(--space-3);"><a href="${s.url}" target="_blank" style="color: var(--color-primary); font-size: var(--font-size-sm);">🔗 成果物を確認</a></div>` : ''}
+                        <div style="display: flex; gap: var(--space-2);">
                             <button class="btn btn--primary btn--sm" onclick="approveSubmission('${s.id}')">✓ 承認</button>
                             <button class="btn btn--secondary btn--sm" onclick="rejectSubmission('${s.id}')">↩ 差戻し</button>
                         </div>
@@ -1020,8 +1030,21 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             modalHtml += `</div>`;
 
-            // Use alert for simplicity (TODO: Create proper modal)
-            alert(`承認待ちの提出が ${pendingSubmissions.length} 件あります。\n管理画面の工程編集から確認・承認してください。`);
+            // Create and show modal
+            const overlay = document.createElement('div');
+            overlay.className = 'modal-overlay active';
+            overlay.id = 'approval-modal-overlay';
+            overlay.innerHTML = `
+                <div class="modal" style="max-width: 600px;">
+                    <div class="modal__header">
+                        <h2 class="modal__title">📋 承認待ち (${pendingSubmissions.length}件)</h2>
+                        <button class="modal__close" onclick="document.getElementById('approval-modal-overlay').remove();">&times;</button>
+                    </div>
+                    <div class="modal__body">${modalHtml}</div>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+
         } catch (e) {
             console.error('Error opening approval modal:', e);
             showToast('承認待ちの取得に失敗しました');
@@ -1033,6 +1056,9 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             await DataManager.approveSubmission(submissionId, window.adminSession?.id);
             showToast('承認しました');
+            // Refresh the modal
+            document.getElementById('approval-modal-overlay')?.remove();
+            openApprovalModal();
         } catch (e) {
             showToast('承認に失敗しました');
         }
@@ -1044,6 +1070,9 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             await DataManager.rejectSubmission(submissionId, comment);
             showToast('差戻しました');
+            // Refresh the modal
+            document.getElementById('approval-modal-overlay')?.remove();
+            openApprovalModal();
         } catch (e) {
             showToast('差戻しに失敗しました');
         }
