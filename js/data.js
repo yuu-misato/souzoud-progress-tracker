@@ -785,18 +785,19 @@ const DataManager = {
       const assignments = await SupabaseClient.select('task_assignments', `worker_id=eq.${workerId}&order=due_date.asc`);
       // Fetch related step and project data
       const enrichedAssignments = await Promise.all(assignments.map(async a => {
-        const steps = await SupabaseClient.select('steps', `id=eq.${a.step_id}`);
+        // steps table has composite key (project_id, id), use both for query
+        const steps = await SupabaseClient.select('steps', `project_id=eq.${a.project_id}&id=eq.${a.step_id}`);
         const step = steps[0];
         let project = null;
-        if (step) {
-          const projects = await SupabaseClient.select('projects', `id=eq.${step.project_id}`);
+        if (a.project_id) {
+          const projects = await SupabaseClient.select('projects', `id=eq.${a.project_id}`);
           project = projects[0];
         }
         return {
           id: a.id,
           stepId: a.step_id,
           stepName: step?.name || '',
-          projectId: step?.project_id || '',
+          projectId: a.project_id || '',
           projectName: project?.name || '',
           clientName: project?.client || '',
           workerId: a.worker_id,
