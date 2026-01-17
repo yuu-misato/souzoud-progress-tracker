@@ -135,6 +135,74 @@
             color: var(--color-text-muted);
         }
 
+        /* This Week Task List */
+        .week-task-item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            padding: var(--space-3) var(--space-4);
+            background: var(--color-bg-card);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-md);
+            margin-bottom: var(--space-2);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+        .week-task-item:hover {
+            border-color: var(--color-primary);
+            box-shadow: var(--shadow-sm);
+        }
+        .week-task-item__due {
+            min-width: 80px;
+            text-align: center;
+            padding: var(--space-2) var(--space-3);
+            border-radius: var(--radius-md);
+            font-size: var(--font-size-sm);
+            font-weight: 600;
+        }
+        .week-task-item__due--overdue {
+            background: #fef2f2;
+            color: #dc2626;
+        }
+        .week-task-item__due--today {
+            background: #fef3c7;
+            color: #d97706;
+        }
+        .week-task-item__due--tomorrow {
+            background: #fef9c3;
+            color: #ca8a04;
+        }
+        .week-task-item__due--soon {
+            background: #ecfdf5;
+            color: #059669;
+        }
+        .week-task-item__content {
+            flex: 1;
+            min-width: 0;
+        }
+        .week-task-item__project {
+            font-size: var(--font-size-xs);
+            color: var(--color-text-muted);
+            margin-bottom: var(--space-1);
+        }
+        .week-task-item__step {
+            font-size: var(--font-size-sm);
+            font-weight: 500;
+            color: var(--color-text);
+        }
+        .week-task-item__client {
+            font-size: var(--font-size-xs);
+            color: var(--color-text-secondary);
+            margin-top: var(--space-1);
+        }
+        .week-task-item__assignee {
+            font-size: var(--font-size-xs);
+            color: var(--color-text-muted);
+            background: var(--color-bg-secondary);
+            padding: var(--space-1) var(--space-2);
+            border-radius: var(--radius-sm);
+        }
+
         /* Action Bar */
         .action-bar {
             display: flex;
@@ -508,16 +576,16 @@
                         </div>
                     </div>
 
-                    <!-- My Tasks Section -->
-                    <div id="my-tasks-section" class="dashboard-section" style="margin-top: var(--space-6);">
+                    <!-- This Week Tasks Section -->
+                    <div id="this-week-tasks-section" class="dashboard-section" style="margin-top: var(--space-6);">
                         <h3 style="font-size: var(--font-size-lg); font-weight: 600; margin-bottom: var(--space-4); display: flex; align-items: center; gap: var(--space-2);">
-                            📋 自分の作業
-                            <span id="my-tasks-count" style="font-size: var(--font-size-sm); background: var(--color-primary); color: white; padding: var(--space-1) var(--space-2); border-radius: var(--radius-full);">0</span>
+                            📅 今週までのタスク
+                            <span id="this-week-tasks-count" style="font-size: var(--font-size-sm); background: var(--color-primary); color: white; padding: var(--space-1) var(--space-2); border-radius: var(--radius-full);">0</span>
                         </h3>
-                        <div id="my-tasks-list" class="task-list" style="background: var(--color-bg-secondary); border-radius: var(--radius-lg); padding: var(--space-4);">
+                        <div id="this-week-tasks-list" class="task-list">
                             <div class="empty-state">
                                 <div class="empty-state__icon">✅</div>
-                                <div>割り当てられた作業はありません</div>
+                                <div>今週までのタスクはありません</div>
                             </div>
                         </div>
                     </div>

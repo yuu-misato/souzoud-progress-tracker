@@ -1940,6 +1940,39 @@ document.addEventListener('DOMContentLoaded', () => {
         // Sort upcoming deadlines by due date
         upcomingDeadlines.sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
 
+        // Calculate end of this week (Sunday 23:59:59)
+        const endOfWeek = new Date(now);
+        const dayOfWeek = endOfWeek.getDay();
+        const daysUntilSunday = dayOfWeek === 0 ? 0 : 7 - dayOfWeek;
+        endOfWeek.setDate(endOfWeek.getDate() + daysUntilSunday);
+        endOfWeek.setHours(23, 59, 59, 999);
+
+        // Collect tasks due by end of this week (including overdue)
+        const thisWeekTasks = [];
+        for (const project of projects) {
+            const steps = project.steps || [];
+            for (const step of steps) {
+                if (step.dueDate && step.status !== 'completed') {
+                    const dueDate = new Date(step.dueDate);
+                    if (dueDate <= endOfWeek) {
+                        const daysUntil = Math.ceil((dueDate - now) / (1000 * 60 * 60 * 24));
+                        thisWeekTasks.push({
+                            projectId: project.id,
+                            projectName: project.name,
+                            clientName: project.client,
+                            stepName: step.name,
+                            stepStatus: step.status,
+                            assignedTo: step.assignedTo || null,
+                            dueDate: step.dueDate,
+                            daysUntil: daysUntil
+                        });
+                    }
+                }
+            }
+        }
+        // Sort by due date (earliest first)
+        thisWeekTasks.sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
+
         // Update stat cards (try both class names for compatibility)
         const updateStatValue = (selector, value) => {
             const el = document.querySelector(selector);
@@ -2081,8 +2114,87 @@ document.addEventListener('DOMContentLoaded', () => {
             }).join('');
         }
 
+        // Render this week's tasks
+        renderThisWeekTasks(thisWeekTasks);
+
         // Setup quick action handlers (using event delegation for faster response)
         setupQuickActions();
+    }
+
+    async function renderThisWeekTasks(tasks) {
+        const countEl = document.getElementById('this-week-tasks-count');
+        const listEl = document.getElementById('this-week-tasks-list');
+
+        if (!listEl) return;
+
+        if (countEl) {
+            countEl.textContent = tasks.length;
+        }
+
+        if (tasks.length === 0) {
+            listEl.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-state__icon">✅</div>
+                    <div>今週までのタスクはありません</div>
+                </div>
+            `;
+            return;
+        }
+
+        // Get workers for assignee names
+        const workers = await DataManager.getAllWorkers();
+        const workerMap = {};
+        workers.forEach(w => {
+            workerMap[w.id] = w.name || w.email;
+        });
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        listEl.innerHTML = tasks.map(task => {
+            const dueDate = new Date(task.dueDate);
+            const formattedDate = `${dueDate.getMonth() + 1}/${dueDate.getDate()}`;
+
+            // Determine due date styling
+            let dueClass = 'week-task-item__due--soon';
+            let dueLabel = formattedDate;
+
+            if (task.daysUntil < 0) {
+                dueClass = 'week-task-item__due--overdue';
+                dueLabel = `${Math.abs(task.daysUntil)}日超過`;
+            } else if (task.daysUntil === 0) {
+                dueClass = 'week-task-item__due--today';
+                dueLabel = '今日';
+            } else if (task.daysUntil === 1) {
+                dueClass = 'week-task-item__due--tomorrow';
+                dueLabel = '明日';
+            }
+
+            const assigneeName = task.assignedTo ? (workerMap[task.assignedTo] || '担当者') : '未割当';
+
+            return `
+                <div class="week-task-item" data-project-id="${task.projectId}">
+                    <div class="week-task-item__due ${dueClass}">
+                        ${escapeHtml(dueLabel)}
+                    </div>
+                    <div class="week-task-item__content">
+                        <div class="week-task-item__project">🏢 ${escapeHtml(task.clientName || '-')}</div>
+                        <div class="week-task-item__step">${escapeHtml(task.projectName)} - ${escapeHtml(task.stepName)}</div>
+                    </div>
+                    <div class="week-task-item__assignee">👤 ${escapeHtml(assigneeName)}</div>
+                </div>
+            `;
+        }).join('');
+
+        // Add click handlers for week-task-items
+        listEl.querySelectorAll('.week-task-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const projectId = item.dataset.projectId;
+                if (projectId) {
+                    selectProject(projectId);
+                }
+            });
+        });
     }
 
     function initDirectorHeader() {
