@@ -402,6 +402,9 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('display-updated').textContent =
             `更新: ${DataManager.formatDate(project.updatedAt || project.updated_at)}`;
 
+        // Project Due Date
+        updateProjectDueDate(project);
+
         // Director Contact
         await updateDirectorContact(project);
 
@@ -447,6 +450,27 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (e) {
             console.error('Error fetching director:', e);
             directorContactEl.style.display = 'none';
+        }
+    }
+
+    /**
+     * Update project due date display
+     */
+    function updateProjectDueDate(project) {
+        const dueDateEl = document.getElementById('project-due-date');
+        const dueDateValueEl = document.getElementById('project-due-date-value');
+
+        if (!dueDateEl || !dueDateValueEl) return;
+
+        if (project.dueDate) {
+            const date = new Date(project.dueDate);
+            const year = date.getFullYear();
+            const month = date.getMonth() + 1;
+            const day = date.getDate();
+            dueDateValueEl.textContent = `${year}年${month}月${day}日`;
+            dueDateEl.style.display = 'flex';
+        } else {
+            dueDateEl.style.display = 'none';
         }
     }
 

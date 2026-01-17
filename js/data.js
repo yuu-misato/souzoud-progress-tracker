@@ -170,6 +170,7 @@ const DataManager = {
       project.updatedAt = project.updated_at;
       project.folderUrl = project.folder_url || '';
       project.deliveryUrl = project.delivery_url || '';
+      project.dueDate = project.due_date || null;
       return project;
     } catch (e) {
       console.error('Error fetching project:', e);
@@ -253,6 +254,7 @@ const DataManager = {
       if (updates.description !== undefined) updateData.description = updates.description;
       if (updates.folderUrl !== undefined) updateData.folder_url = updates.folderUrl;
       if (updates.deliveryUrl !== undefined) updateData.delivery_url = updates.deliveryUrl;
+      if (updates.dueDate !== undefined) updateData.due_date = updates.dueDate || null;
 
       if (updates.client) {
         updateData.client = updates.client;

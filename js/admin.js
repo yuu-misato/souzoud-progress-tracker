@@ -630,15 +630,19 @@ document.addEventListener('DOMContentLoaded', () => {
         const folderUrlGroup = document.getElementById('folder-url-group');
         const deliveryUrlGroup = document.getElementById('delivery-url-group');
         const directorGroup = document.getElementById('director-group');
+        const projectDueDateGroup = document.getElementById('project-due-date-group');
         const folderUrlInput = document.getElementById('input-folder-url');
         const deliveryUrlInput = document.getElementById('input-delivery-url');
         const directorSelect = document.getElementById('input-director');
+        const projectDueDateInput = document.getElementById('input-project-due-date');
 
         if (folderUrlGroup) folderUrlGroup.style.display = isEditMode ? 'block' : 'none';
         if (deliveryUrlGroup) deliveryUrlGroup.style.display = isEditMode ? 'block' : 'none';
         if (directorGroup) directorGroup.style.display = isEditMode ? 'block' : 'none';
+        if (projectDueDateGroup) projectDueDateGroup.style.display = isEditMode ? 'block' : 'none';
         if (folderUrlInput) folderUrlInput.value = project?.folderUrl || '';
         if (deliveryUrlInput) deliveryUrlInput.value = project?.deliveryUrl || '';
+        if (projectDueDateInput) projectDueDateInput.value = project?.dueDate || '';
 
         // Populate director dropdown
         if (directorSelect && isEditMode) {
@@ -713,7 +717,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const folderUrl = document.getElementById('input-folder-url')?.value.trim() || '';
             const deliveryUrl = document.getElementById('input-delivery-url')?.value.trim() || '';
             const directorId = document.getElementById('input-director')?.value || null;
-            await DataManager.updateProject(currentProjectId, { name, client, description, folderUrl, deliveryUrl });
+            const dueDate = document.getElementById('input-project-due-date')?.value || null;
+            await DataManager.updateProject(currentProjectId, { name, client, description, folderUrl, deliveryUrl, dueDate });
             // Update director separately
             if (directorId !== null) {
                 await DataManager.updateProjectDirector(currentProjectId, directorId || null);

@@ -104,6 +104,13 @@
         <span id="display-progress" class="progress-overview-simple__text">0%</span>
       </div>
 
+      <!-- Project Due Date -->
+      <div id="project-due-date" class="project-due-date" style="display: none;">
+        <span class="project-due-date__icon">📅</span>
+        <span class="project-due-date__label">納品予定日:</span>
+        <span id="project-due-date-value" class="project-due-date__value">-</span>
+      </div>
+
       <!-- Director Contact -->
       <div id="director-contact" class="director-contact" style="display: none;">
         <div class="director-contact__header">
@@ -571,6 +578,33 @@
 
     .timeline-simple__link:hover {
       text-decoration: underline;
+    }
+
+    /* Project Due Date */
+    .project-due-date {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      padding: var(--space-3) var(--space-4);
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(147, 51, 234, 0.1) 100%);
+      border: 1px solid rgba(59, 130, 246, 0.2);
+      border-radius: var(--radius-lg);
+      margin-bottom: var(--space-4);
+    }
+
+    .project-due-date__icon {
+      font-size: var(--font-size-lg);
+    }
+
+    .project-due-date__label {
+      font-size: var(--font-size-sm);
+      color: var(--color-text-muted);
+    }
+
+    .project-due-date__value {
+      font-size: var(--font-size-base);
+      font-weight: 600;
+      color: var(--color-primary);
     }
 
     /* Director Contact */
