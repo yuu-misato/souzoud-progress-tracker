@@ -54,17 +54,31 @@
     <section id="client-section" style="display: none;">
       <!-- Back Button -->
       <button id="back-btn" class="btn btn--ghost" style="margin-bottom: var(--space-6);">
-        ← 検索に戻る
+        ← ログアウト
       </button>
 
       <!-- Client Info -->
       <div class="card" style="margin-bottom: var(--space-6);">
-        <div style="display: flex; align-items: center; gap: var(--space-4); margin-bottom: var(--space-4);">
-          <div class="status-card__icon" style="width: 60px; height: 60px; font-size: 28px; margin: 0;">🏢</div>
-          <div>
-            <h2 id="display-client-name" style="margin-bottom: var(--space-1);">-</h2>
-            <p style="color: var(--color-text-muted);">クライアントID: <span id="display-client-id">-</span></p>
+        <div style="display: flex; align-items: center; justify-content: space-between;">
+          <div style="display: flex; align-items: center; gap: var(--space-4);">
+            <div class="status-card__icon" style="width: 60px; height: 60px; font-size: 28px; margin: 0;">🏢</div>
+            <div>
+              <h2 id="display-client-name" style="margin-bottom: var(--space-1);">-</h2>
+              <p style="color: var(--color-text-muted);">クライアントID: <span id="display-client-id">-</span></p>
+            </div>
           </div>
+          <button id="team-btn" class="btn btn--secondary">👥 担当者管理</button>
+        </div>
+      </div>
+
+      <!-- Team Members Section (Hidden by default) -->
+      <div id="team-section" class="card" style="margin-bottom: var(--space-6); display: none;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-4);">
+          <h3>👥 担当者一覧</h3>
+          <button id="add-team-btn" class="btn btn--primary btn--sm">+ 担当者を追加</button>
+        </div>
+        <div id="team-list">
+          <!-- Team members will be rendered here -->
         </div>
       </div>
 

@@ -203,7 +203,130 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         });
+
+        // Team management button
+        document.getElementById('team-btn')?.addEventListener('click', toggleTeamSection);
+        document.getElementById('add-team-btn')?.addEventListener('click', showAddTeamMemberForm);
     }
+
+    // ==================== TEAM MANAGEMENT ====================
+
+    function toggleTeamSection() {
+        const teamSection = document.getElementById('team-section');
+        if (teamSection.style.display === 'none') {
+            teamSection.style.display = 'block';
+            renderTeamMembers();
+        } else {
+            teamSection.style.display = 'none';
+        }
+    }
+
+    async function renderTeamMembers() {
+        const teamList = document.getElementById('team-list');
+        if (!currentClientId) return;
+
+        const members = await DataManager.getClientUsers(currentClientId);
+
+        if (members.length === 0) {
+            teamList.innerHTML = '<p style="color: var(--color-text-muted); text-align: center;">担当者がいません</p>';
+            return;
+        }
+
+        teamList.innerHTML = members.map(m => `
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: var(--space-3); border-bottom: 1px solid var(--color-border);">
+                <div>
+                    <div style="font-weight: 500;">${m.name}</div>
+                    <div style="font-size: var(--font-size-sm); color: var(--color-text-muted);">${m.email}</div>
+                </div>
+                ${m.id !== currentUser?.id ? `<button class="btn btn--ghost btn--sm" onclick="deleteTeamMember('${m.id}')">削除</button>` : '<span style="color: var(--color-text-muted); font-size: var(--font-size-sm);">(あなた)</span>'}
+            </div>
+        `).join('');
+    }
+
+    function showAddTeamMemberForm() {
+        const teamList = document.getElementById('team-list');
+        const formHtml = `
+            <div id="add-team-form" style="background: #f8fafc; padding: var(--space-4); border-radius: var(--radius-md); margin-bottom: var(--space-4);">
+                <h4 style="margin-bottom: var(--space-3);">新しい担当者を追加</h4>
+                <div style="margin-bottom: var(--space-3);">
+                    <input type="text" id="new-member-name" class="input" placeholder="担当者名" style="width: 100%;">
+                </div>
+                <div style="margin-bottom: var(--space-3);">
+                    <input type="email" id="new-member-email" class="input" placeholder="メールアドレス" style="width: 100%;">
+                </div>
+                <div style="margin-bottom: var(--space-3);">
+                    <input type="password" id="new-member-password" class="input" placeholder="パスワード" style="width: 100%;">
+                </div>
+                <div id="add-member-error" style="color: #ef4444; font-size: var(--font-size-sm); margin-bottom: var(--space-2); display: none;"></div>
+                <div style="display: flex; gap: var(--space-2);">
+                    <button class="btn btn--primary btn--sm" onclick="addTeamMember()">追加</button>
+                    <button class="btn btn--ghost btn--sm" onclick="cancelAddTeamMember()">キャンセル</button>
+                </div>
+            </div>
+        `;
+        teamList.insertAdjacentHTML('afterbegin', formHtml);
+        document.getElementById('add-team-btn').style.display = 'none';
+    }
+
+    window.cancelAddTeamMember = function () {
+        document.getElementById('add-team-form')?.remove();
+        document.getElementById('add-team-btn').style.display = 'inline-flex';
+    };
+
+    window.addTeamMember = async function () {
+        const name = document.getElementById('new-member-name')?.value.trim();
+        const email = document.getElementById('new-member-email')?.value.trim();
+        const password = document.getElementById('new-member-password')?.value;
+        const errorEl = document.getElementById('add-member-error');
+
+        if (!name || !email || !password) {
+            errorEl.textContent = 'すべての項目を入力してください';
+            errorEl.style.display = 'block';
+            return;
+        }
+
+        if (password.length < 4) {
+            errorEl.textContent = 'パスワードは4文字以上にしてください';
+            errorEl.style.display = 'block';
+            return;
+        }
+
+        try {
+            // Hash password
+            const encoder = new TextEncoder();
+            const data = encoder.encode(password);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            const passwordHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+            await DataManager.createClientUser({
+                clientId: currentClientId,
+                email,
+                name,
+                passwordHash
+            });
+
+            document.getElementById('add-team-form')?.remove();
+            document.getElementById('add-team-btn').style.display = 'inline-flex';
+            renderTeamMembers();
+        } catch (e) {
+            console.error('Error adding team member:', e);
+            errorEl.textContent = 'このメールアドレスは既に使用されています';
+            errorEl.style.display = 'block';
+        }
+    };
+
+    window.deleteTeamMember = async function (userId) {
+        if (!confirm('この担当者を削除しますか？')) return;
+
+        try {
+            await DataManager.deleteClientUser(userId);
+            renderTeamMembers();
+        } catch (e) {
+            console.error('Error deleting team member:', e);
+            alert('削除に失敗しました');
+        }
+    };
 
     /**
      * Display project details
