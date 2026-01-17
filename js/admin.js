@@ -1756,11 +1756,20 @@ document.addEventListener('DOMContentLoaded', () => {
         // Sort upcoming deadlines by due date
         upcomingDeadlines.sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
 
-        // Update stat cards
-        document.querySelector('#stat-pending-approvals .director-stat__value').textContent = submissions.length;
-        document.querySelector('#stat-overdue-tasks .director-stat__value').textContent = overdueTasks.length;
-        document.querySelector('#stat-completed-today .director-stat__value').textContent = completedToday;
-        document.querySelector('#stat-active-projects .director-stat__value').textContent = activeProjects.length;
+        // Update stat cards (try both class names for compatibility)
+        const updateStatValue = (selector, value) => {
+            const el = document.querySelector(selector);
+            if (el) el.textContent = value;
+        };
+
+        updateStatValue('#stat-pending-approvals .director-stat__value', submissions.length);
+        updateStatValue('#stat-pending-approvals .stat-card-simple__value', submissions.length);
+        updateStatValue('#stat-overdue-tasks .director-stat__value', overdueTasks.length);
+        updateStatValue('#stat-overdue-tasks .stat-card-simple__value', overdueTasks.length);
+        updateStatValue('#stat-completed-today .director-stat__value', completedToday);
+        updateStatValue('#stat-completed-today .stat-card-simple__value', completedToday);
+        updateStatValue('#stat-active-projects .director-stat__value', activeProjects.length);
+        updateStatValue('#stat-active-projects .stat-card-simple__value', activeProjects.length);
 
         // Update overall progress bar
         const totalSteps = totalCompleted + totalInProgress + totalPending;
