@@ -34,7 +34,9 @@ CREATE TABLE IF NOT EXISTS task_assignments (
 CREATE TABLE IF NOT EXISTS submissions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     assignment_id UUID NOT NULL REFERENCES task_assignments(id) ON DELETE CASCADE,
-    stage TEXT NOT NULL CHECK (stage IN ('draft', 'revision', 'final')),
+    stage TEXT NOT NULL CHECK (
+        stage IN ('draft', 'revision', 'final', 'submission')
+    ),
     submitted_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     approved_at TIMESTAMP WITH TIME ZONE,
     approved_by UUID REFERENCES admins(id),
@@ -42,6 +44,12 @@ CREATE TABLE IF NOT EXISTS submissions (
     comment TEXT DEFAULT '',
     url TEXT DEFAULT ''
 );
+-- 3.5. stage制約の更新（既存テーブル用）
+ALTER TABLE submissions DROP CONSTRAINT IF EXISTS submissions_stage_check;
+ALTER TABLE submissions
+ADD CONSTRAINT submissions_stage_check CHECK (
+        stage IN ('draft', 'revision', 'final', 'submission')
+    );
 -- 4. プロジェクトに担当ディレクター列を追加
 ALTER TABLE projects
 ADD COLUMN IF NOT EXISTS director_id UUID REFERENCES admins(id);
