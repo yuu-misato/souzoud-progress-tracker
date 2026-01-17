@@ -180,12 +180,28 @@ document.addEventListener('DOMContentLoaded', () => {
             const isCompleted = project.steps.every(s => s.status === 'completed');
             const statusText = isCompleted ? '完了' : escapeHtml(currentStep?.name) || '-';
 
+            // Resource icons
+            const hasFolderUrl = project.folderUrl && project.folderUrl.trim();
+            const hasDeliveryUrl = project.deliveryUrl && project.deliveryUrl.trim();
+            let resourceIcons = '';
+            if (hasFolderUrl || hasDeliveryUrl) {
+                resourceIcons = '<div class="project-item__icons">';
+                if (hasFolderUrl) {
+                    resourceIcons += `<a href="${escapeHtml(project.folderUrl)}" target="_blank" rel="noopener noreferrer" class="project-item__icon" title="専用フォルダ" onclick="event.stopPropagation();">📁</a>`;
+                }
+                if (hasDeliveryUrl) {
+                    resourceIcons += `<a href="${escapeHtml(project.deliveryUrl)}" target="_blank" rel="noopener noreferrer" class="project-item__icon" title="最終納品物" onclick="event.stopPropagation();">📦</a>`;
+                }
+                resourceIcons += '</div>';
+            }
+
             return `
         <div class="project-item" data-project-id="${escapeHtml(project.id)}">
           <div class="project-item__info">
             <div class="project-item__name">${escapeHtml(project.name)}</div>
             <div class="project-item__step">${statusText}</div>
           </div>
+          ${resourceIcons}
           <div class="project-item__progress">
             <div class="project-item__progress-bar">
               <div class="project-item__progress-fill" style="width: ${progress}%;"></div>

@@ -362,6 +362,30 @@
       font-size: var(--font-size-lg);
     }
 
+    .project-item__icons {
+      display: flex;
+      gap: var(--space-2);
+      flex-shrink: 0;
+    }
+
+    .project-item__icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-md);
+      background: var(--color-bg-secondary);
+      text-decoration: none;
+      font-size: 16px;
+      transition: background var(--transition-fast), transform var(--transition-fast);
+    }
+
+    .project-item__icon:hover {
+      background: var(--color-bg-hover);
+      transform: scale(1.1);
+    }
+
     /* Project Section */
     .project-section {
       padding: var(--space-6) 0;
