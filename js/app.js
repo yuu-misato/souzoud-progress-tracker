@@ -352,13 +352,20 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('display-updated').textContent =
             DataManager.formatDate(project.updatedAt || project.updated_at);
 
-        // Current Step Status
-        const currentStep = DataManager.getCurrentStep(project);
-        const isCompleted = project.steps.every(s => s.status === 'completed');
 
-        updateStatusCard(currentStep, isCompleted);
-        renderProgressSteps(project);
-        renderTimeline(project);
+        // Current Step Status
+        const steps = project.steps || [];
+        const currentStep = DataManager.getCurrentStep(project);
+        const isCompleted = steps.length > 0 && steps.every(s => s.status === 'completed');
+
+        if (steps.length === 0) {
+            document.getElementById('progress-steps').innerHTML = '<p style="color: var(--color-text-muted);">工程データを読み込み中...</p>';
+            document.getElementById('timeline').innerHTML = '';
+        } else {
+            updateStatusCard(currentStep, isCompleted);
+            renderProgressSteps(project);
+            renderTimeline(project);
+        }
     }
 
     /**
