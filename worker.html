@@ -397,7 +397,7 @@
             display: block;
         }
 
-        /* レスポンシブ */
+        /* レスポンシブ - タブレット */
         @media (max-width: 768px) {
             .worker-container {
                 padding: var(--space-4);
@@ -414,6 +414,104 @@
 
             .task-due {
                 margin-top: var(--space-2);
+            }
+        }
+
+        /* レスポンシブ - スマートフォン (iPhone SE等) */
+        @media (max-width: 480px) {
+            .worker-container {
+                padding: var(--space-3);
+            }
+
+            .dashboard-header__avatar {
+                width: 44px;
+                height: 44px;
+                font-size: 18px;
+            }
+
+            .dashboard-header__greeting {
+                font-size: var(--font-size-lg);
+            }
+
+            .dashboard-header__date {
+                font-size: var(--font-size-xs);
+            }
+
+            .task-card {
+                padding: var(--space-3);
+                margin-bottom: var(--space-3);
+                border-radius: var(--radius-lg);
+            }
+
+            .task-name {
+                font-size: var(--font-size-base);
+            }
+
+            .task-project {
+                font-size: var(--font-size-xs);
+            }
+
+            .task-status {
+                padding: 4px 10px;
+                font-size: 11px;
+            }
+
+            .task-meta {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: var(--space-1);
+            }
+
+            .task-meta span {
+                font-size: var(--font-size-xs);
+            }
+
+            .section__title {
+                font-size: var(--font-size-base);
+            }
+
+            .section__badge {
+                padding: 2px 8px;
+                font-size: 11px;
+            }
+
+            /* ビュー切り替えボタン */
+            .view-toggle {
+                gap: var(--space-1);
+            }
+
+            .view-toggle button {
+                padding: var(--space-1) var(--space-2);
+                font-size: 11px;
+            }
+        }
+
+        /* 超小型端末 (iPhone SE 1st gen等 320px) */
+        @media (max-width: 360px) {
+            .worker-container {
+                padding: var(--space-2);
+            }
+
+            .dashboard-header__welcome {
+                gap: var(--space-2);
+            }
+
+            .dashboard-header__avatar {
+                width: 36px;
+                height: 36px;
+                font-size: 14px;
+            }
+
+            .dashboard-header__greeting {
+                font-size: var(--font-size-base);
+            }
+
+            .task-card {
+                padding: var(--space-2) var(--space-3);
+            }
+
+            .task-name {
+                font-size: var(--font-size-sm);
             }
         }
     </style>
@@ -449,6 +547,51 @@
             border-radius: var(--radius-sm);
             margin-left: var(--space-2);
             color: var(--color-text-muted);
+        }
+
+        /* ヘッダーモバイル対応 */
+        @media (max-width: 480px) {
+            .header--minimal {
+                padding: var(--space-2) 0;
+            }
+            .header--minimal .container {
+                padding: 0 var(--space-3);
+            }
+            .header__inner {
+                flex-wrap: wrap;
+                gap: var(--space-2);
+            }
+            .header__logo-text {
+                font-size: var(--font-size-lg);
+            }
+            .header__logo-badge {
+                font-size: 10px;
+                padding: 2px 6px;
+            }
+            .header__nav {
+                gap: var(--space-2);
+            }
+            #worker-name {
+                display: none !important;
+            }
+            #switch-to-admin-btn {
+                padding: var(--space-1) var(--space-2) !important;
+                font-size: 11px !important;
+            }
+            #logout-btn {
+                padding: var(--space-1) var(--space-2);
+                font-size: 11px;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .header__logo-text {
+                font-size: var(--font-size-base);
+            }
+            #switch-to-admin-btn {
+                font-size: 10px !important;
+                padding: 4px 8px !important;
+            }
         }
     </style>
 
@@ -507,6 +650,39 @@
                 font-weight: 500;
                 color: var(--color-text-secondary);
             }
+
+            /* ログインカードモバイル対応 */
+            @media (max-width: 480px) {
+                .login-card-simple {
+                    margin: var(--space-6) auto;
+                    padding: var(--space-5);
+                    border-radius: var(--radius-lg);
+                }
+                .login-card-simple__logo {
+                    font-size: var(--font-size-lg);
+                }
+                .login-card-simple__subtitle {
+                    font-size: var(--font-size-xs);
+                }
+                .form-field {
+                    margin-bottom: var(--space-3);
+                }
+                .form-field label {
+                    font-size: var(--font-size-xs);
+                    margin-bottom: var(--space-1);
+                }
+                .form-field .input {
+                    padding: var(--space-2) var(--space-3);
+                    font-size: var(--font-size-sm);
+                }
+            }
+
+            @media (max-width: 360px) {
+                .login-card-simple {
+                    margin: var(--space-4) var(--space-2);
+                    padding: var(--space-4);
+                }
+            }
         </style>
 
         <!-- Tasks Section -->
@@ -529,6 +705,25 @@
                 .worker-welcome__date {
                     font-size: var(--font-size-sm);
                     color: var(--color-text-muted);
+                }
+
+                /* ウェルカムセクションモバイル対応 */
+                @media (max-width: 480px) {
+                    .worker-welcome {
+                        margin-bottom: var(--space-4);
+                    }
+                    .worker-welcome__title {
+                        font-size: var(--font-size-lg);
+                    }
+                    .worker-welcome__date {
+                        font-size: var(--font-size-xs);
+                    }
+                }
+
+                @media (max-width: 360px) {
+                    .worker-welcome__title {
+                        font-size: var(--font-size-base);
+                    }
                 }
             </style>
 
