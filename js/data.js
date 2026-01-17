@@ -1292,6 +1292,111 @@ const DataManager = {
     }
   },
 
+  // Generate random invite token
+  generateInviteToken() {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let token = '';
+    for (let i = 0; i < 48; i++) {
+      token += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return token;
+  },
+
+  // Create client user with invite (no password)
+  async inviteClientUser(userData) {
+    try {
+      const inviteToken = this.generateInviteToken();
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + 7); // 7 days validity
+
+      const result = await SupabaseClient.insert('client_users', {
+        client_id: userData.clientId,
+        email: userData.email,
+        name: userData.name,
+        invite_token: inviteToken,
+        invite_expires_at: expiresAt.toISOString(),
+        password_set: false
+      });
+
+      return { ...result[0], inviteToken };
+    } catch (e) {
+      console.error('Error inviting client user:', e);
+      throw e;
+    }
+  },
+
+  // Verify invite token and get user info
+  async verifyInviteToken(token) {
+    try {
+      const users = await SupabaseClient.select('client_users', `invite_token=eq.${token}&is_active=eq.true`);
+      if (users.length === 0) return null;
+
+      const user = users[0];
+
+      // Check if token is expired
+      if (user.invite_expires_at && new Date(user.invite_expires_at) < new Date()) {
+        return { error: 'expired' };
+      }
+
+      // Check if password already set
+      if (user.password_set) {
+        return { error: 'already_set' };
+      }
+
+      return user;
+    } catch (e) {
+      console.error('Error verifying invite token:', e);
+      return null;
+    }
+  },
+
+  // Set password for invited user
+  async setInvitePassword(token, password) {
+    try {
+      // Hash password
+      const encoder = new TextEncoder();
+      const data = encoder.encode(password);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const passwordHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+      // Update user with password
+      await SupabaseClient.update('client_users', `invite_token=eq.${token}`, {
+        password_hash: passwordHash,
+        password_set: true,
+        invite_token: null,
+        invite_expires_at: null
+      });
+
+      return true;
+    } catch (e) {
+      console.error('Error setting invite password:', e);
+      throw e;
+    }
+  },
+
+  // Resend invite (regenerate token)
+  async resendInvite(userId) {
+    try {
+      const inviteToken = this.generateInviteToken();
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + 7);
+
+      await SupabaseClient.update('client_users', `id=eq.${userId}`, {
+        invite_token: inviteToken,
+        invite_expires_at: expiresAt.toISOString(),
+        password_set: false
+      });
+
+      // Get user info for email
+      const users = await SupabaseClient.select('client_users', `id=eq.${userId}`);
+      return { ...users[0], inviteToken };
+    } catch (e) {
+      console.error('Error resending invite:', e);
+      throw e;
+    }
+  },
+
   async updateClientUser(userId, updates) {
     try {
       const data = {};

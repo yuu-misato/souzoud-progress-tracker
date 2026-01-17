@@ -1437,6 +1437,39 @@ document.addEventListener('DOMContentLoaded', () => {
                 e.preventDefault();
                 await handleAddClientUser();
             }
+
+            // Handle resend invite
+            const resendBtn = e.target.closest('[data-resend-invite]');
+            if (resendBtn) {
+                e.preventDefault();
+                const userId = resendBtn.dataset.resendInvite;
+                resendBtn.disabled = true;
+                resendBtn.textContent = '送信中...';
+
+                try {
+                    const result = await DataManager.resendInvite(userId);
+
+                    // Get base URL for invite link
+                    const baseUrl = window.location.origin + window.location.pathname.replace(/\/[^\/]*$/, '');
+                    const inviteUrl = `${baseUrl}/invite.html?token=${result.inviteToken}`;
+
+                    // Send invite email
+                    if (window.NotificationService) {
+                        await NotificationService.send('clientInvite', result.email, {
+                            name: result.name,
+                            inviteUrl: inviteUrl
+                        });
+                    }
+
+                    showToast('招待メールを再送信しました');
+                } catch (err) {
+                    console.error('Error resending invite:', err);
+                    showToast('再送信に失敗しました');
+                } finally {
+                    resendBtn.disabled = false;
+                    resendBtn.textContent = '再送信';
+                }
+            }
         });
     }
 
@@ -1451,56 +1484,95 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        listEl.innerHTML = users.map(u => `
+        listEl.innerHTML = users.map(u => {
+            const isPending = !u.password_set && u.invite_token;
+            const statusBadge = isPending
+                ? '<span style="font-size: var(--font-size-xs); background: #fef3c7; color: #92400e; padding: 2px 8px; border-radius: var(--radius-full); margin-left: var(--space-2);">招待中</span>'
+                : '<span style="font-size: var(--font-size-xs); background: #d1fae5; color: #065f46; padding: 2px 8px; border-radius: var(--radius-full); margin-left: var(--space-2);">登録済</span>';
+
+            const resendBtn = isPending
+                ? `<button class="btn btn--ghost btn--sm" data-resend-invite="${u.id}" style="color: var(--color-primary);">再送信</button>`
+                : '';
+
+            return `
             <div style="display: flex; justify-content: space-between; align-items: center; padding: var(--space-3); border-bottom: 1px solid var(--color-border);">
                 <div>
-                    <div style="font-weight: 500;">${escapeHtml(u.name)}</div>
+                    <div style="font-weight: 500;">${escapeHtml(u.name)}${statusBadge}</div>
                     <div style="font-size: var(--font-size-sm); color: var(--color-text-muted);">${escapeHtml(u.email)}</div>
                 </div>
-                <button class="btn btn--ghost btn--sm" data-delete-client-user="${u.id}" style="color: #ef4444;">削除</button>
+                <div style="display: flex; gap: var(--space-2);">
+                    ${resendBtn}
+                    <button class="btn btn--ghost btn--sm" data-delete-client-user="${u.id}" style="color: #ef4444;">削除</button>
+                </div>
             </div>
-        `).join('');
+        `;
+        }).join('');
     }
 
     async function handleAddClientUser() {
         const name = document.getElementById('new-client-user-name').value.trim();
         const email = document.getElementById('new-client-user-email').value.trim();
-        const password = document.getElementById('new-client-user-password').value;
         const errorEl = document.getElementById('client-user-error');
+        const successEl = document.getElementById('client-user-success');
 
-        if (!name || !email || !password) {
-            errorEl.textContent = 'すべての項目を入力してください';
+        // Hide previous messages
+        errorEl.style.display = 'none';
+        successEl.style.display = 'none';
+
+        if (!name || !email) {
+            errorEl.textContent = '担当者名とメールアドレスを入力してください';
             errorEl.style.display = 'block';
             return;
         }
 
-        if (password.length < 4) {
-            errorEl.textContent = 'パスワードは4文字以上にしてください';
+        // Basic email validation
+        if (!email.includes('@') || !email.includes('.')) {
+            errorEl.textContent = '有効なメールアドレスを入力してください';
             errorEl.style.display = 'block';
             return;
         }
+
+        const btn = document.querySelector('[data-add-client-user]');
+        const originalText = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = '送信中...';
 
         try {
-            const passwordHash = await hashPassword(password);
-            await DataManager.createClientUser({
+            // Create user with invite token
+            const result = await DataManager.inviteClientUser({
                 clientId: currentClientUsersClientId,
                 email,
-                name,
-                passwordHash
+                name
             });
+
+            // Get base URL for invite link
+            const baseUrl = window.location.origin + window.location.pathname.replace(/\/[^\/]*$/, '');
+            const inviteUrl = `${baseUrl}/invite.html?token=${result.inviteToken}`;
+
+            // Send invite email
+            if (window.NotificationService) {
+                await NotificationService.send('clientInvite', email, {
+                    name: name,
+                    inviteUrl: inviteUrl
+                });
+            }
 
             // Clear form
             document.getElementById('new-client-user-name').value = '';
             document.getElementById('new-client-user-email').value = '';
-            document.getElementById('new-client-user-password').value = '';
-            errorEl.style.display = 'none';
 
-            showToast('ユーザーを追加しました');
+            successEl.textContent = '招待メールを送信しました';
+            successEl.style.display = 'block';
+
+            showToast('招待メールを送信しました');
             await renderClientUsersList();
         } catch (e) {
-            console.error('Error adding client user:', e);
+            console.error('Error inviting client user:', e);
             errorEl.textContent = 'このメールアドレスは既に使用されています';
             errorEl.style.display = 'block';
+        } finally {
+            btn.disabled = false;
+            btn.textContent = originalText;
         }
     }
 

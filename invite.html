@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>トドケ - パスワード設定</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/index.css">
+    <style>
+        .invite-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: var(--space-4);
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+        }
+
+        .invite-card {
+            width: 100%;
+            max-width: 400px;
+            background: white;
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-lg);
+            padding: var(--space-8);
+        }
+
+        .invite-header {
+            text-align: center;
+            margin-bottom: var(--space-6);
+        }
+
+        .invite-logo {
+            font-size: var(--font-size-2xl);
+            font-weight: 700;
+            color: var(--color-primary);
+            margin-bottom: var(--space-2);
+        }
+
+        .invite-title {
+            font-size: var(--font-size-lg);
+            color: var(--color-text-secondary);
+        }
+
+        .invite-welcome {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
+            border-radius: var(--radius-lg);
+            padding: var(--space-4);
+            margin-bottom: var(--space-6);
+            text-align: center;
+        }
+
+        .invite-welcome__name {
+            font-size: var(--font-size-lg);
+            font-weight: 600;
+            color: var(--color-text);
+            margin-bottom: var(--space-1);
+        }
+
+        .invite-welcome__email {
+            font-size: var(--font-size-sm);
+            color: var(--color-text-muted);
+        }
+
+        .invite-form {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-4);
+        }
+
+        .form-field {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-2);
+        }
+
+        .form-label {
+            font-size: var(--font-size-sm);
+            font-weight: 500;
+            color: var(--color-text-secondary);
+        }
+
+        .invite-error {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-radius: var(--radius-md);
+            padding: var(--space-3);
+            color: #dc2626;
+            font-size: var(--font-size-sm);
+            display: none;
+        }
+
+        .invite-error.show {
+            display: block;
+        }
+
+        .invite-success {
+            text-align: center;
+            padding: var(--space-8) 0;
+        }
+
+        .invite-success__icon {
+            font-size: 48px;
+            margin-bottom: var(--space-4);
+        }
+
+        .invite-success__title {
+            font-size: var(--font-size-xl);
+            font-weight: 600;
+            color: var(--color-text);
+            margin-bottom: var(--space-2);
+        }
+
+        .invite-success__message {
+            color: var(--color-text-muted);
+            margin-bottom: var(--space-6);
+        }
+
+        .password-requirements {
+            font-size: var(--font-size-xs);
+            color: var(--color-text-muted);
+            margin-top: var(--space-2);
+        }
+
+        .password-requirements li {
+            margin-bottom: var(--space-1);
+        }
+
+        .invite-expired {
+            text-align: center;
+            padding: var(--space-8) 0;
+        }
+
+        .invite-expired__icon {
+            font-size: 48px;
+            margin-bottom: var(--space-4);
+        }
+
+        .invite-expired__title {
+            font-size: var(--font-size-xl);
+            font-weight: 600;
+            color: var(--color-text);
+            margin-bottom: var(--space-2);
+        }
+
+        .invite-expired__message {
+            color: var(--color-text-muted);
+        }
+
+        .btn--full {
+            width: 100%;
+        }
+
+        .loading-state {
+            text-align: center;
+            padding: var(--space-8) 0;
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--color-border);
+            border-top-color: var(--color-primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto var(--space-4);
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="invite-container">
+        <div class="invite-card">
+            <div class="invite-header">
+                <div class="invite-logo">トドケ</div>
+                <p class="invite-title">パスワード設定</p>
+            </div>
+
+            <!-- Loading State -->
+            <div id="loading-state" class="loading-state">
+                <div class="loading-spinner"></div>
+                <p>読み込み中...</p>
+            </div>
+
+            <!-- Invite Form -->
+            <div id="invite-form-section" style="display: none;">
+                <div class="invite-welcome">
+                    <div class="invite-welcome__name" id="user-name">-</div>
+                    <div class="invite-welcome__email" id="user-email">-</div>
+                </div>
+
+                <div id="invite-error" class="invite-error"></div>
+
+                <form id="invite-form" class="invite-form">
+                    <div class="form-field">
+                        <label for="password" class="form-label">新しいパスワード</label>
+                        <input type="password" id="password" class="input" placeholder="パスワードを入力" required>
+                        <ul class="password-requirements">
+                            <li>8文字以上</li>
+                            <li>大文字・小文字・数字を含む</li>
+                        </ul>
+                    </div>
+                    <div class="form-field">
+                        <label for="password-confirm" class="form-label">パスワード確認</label>
+                        <input type="password" id="password-confirm" class="input" placeholder="もう一度入力" required>
+                    </div>
+                    <button type="submit" class="btn btn--primary btn--full">パスワードを設定</button>
+                </form>
+            </div>
+
+            <!-- Success State -->
+            <div id="success-state" class="invite-success" style="display: none;">
+                <div class="invite-success__icon">&#127881;</div>
+                <h2 class="invite-success__title">設定完了</h2>
+                <p class="invite-success__message">パスワードが設定されました。<br>ログインしてご利用ください。</p>
+                <a href="index.html" class="btn btn--primary btn--full">ログインページへ</a>
+            </div>
+
+            <!-- Expired State -->
+            <div id="expired-state" class="invite-expired" style="display: none;">
+                <div class="invite-expired__icon">&#9888;&#65039;</div>
+                <h2 class="invite-expired__title">リンクが無効です</h2>
+                <p class="invite-expired__message" id="expired-message">招待リンクの有効期限が切れているか、既にパスワードが設定されています。</p>
+            </div>
+
+            <!-- Invalid State -->
+            <div id="invalid-state" class="invite-expired" style="display: none;">
+                <div class="invite-expired__icon">&#10060;</div>
+                <h2 class="invite-expired__title">無効なリンク</h2>
+                <p class="invite-expired__message">この招待リンクは無効です。管理者にお問い合わせください。</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/security.js"></script>
+    <script src="js/data.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const loadingState = document.getElementById('loading-state');
+            const formSection = document.getElementById('invite-form-section');
+            const successState = document.getElementById('success-state');
+            const expiredState = document.getElementById('expired-state');
+            const invalidState = document.getElementById('invalid-state');
+            const inviteForm = document.getElementById('invite-form');
+            const errorDiv = document.getElementById('invite-error');
+
+            // Get token from URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const token = urlParams.get('token');
+
+            if (!token) {
+                loadingState.style.display = 'none';
+                invalidState.style.display = 'block';
+                return;
+            }
+
+            // Verify token
+            const result = await DataManager.verifyInviteToken(token);
+
+            loadingState.style.display = 'none';
+
+            if (!result) {
+                invalidState.style.display = 'block';
+                return;
+            }
+
+            if (result.error === 'expired') {
+                expiredState.style.display = 'block';
+                document.getElementById('expired-message').textContent =
+                    '招待リンクの有効期限が切れています。管理者に再送信を依頼してください。';
+                return;
+            }
+
+            if (result.error === 'already_set') {
+                expiredState.style.display = 'block';
+                document.getElementById('expired-message').textContent =
+                    'パスワードは既に設定されています。ログインページからログインしてください。';
+                return;
+            }
+
+            // Show form
+            formSection.style.display = 'block';
+            document.getElementById('user-name').textContent = result.name;
+            document.getElementById('user-email').textContent = result.email;
+
+            // Form submit
+            inviteForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                const password = document.getElementById('password').value;
+                const passwordConfirm = document.getElementById('password-confirm').value;
+
+                // Validate passwords match
+                if (password !== passwordConfirm) {
+                    errorDiv.textContent = 'パスワードが一致しません';
+                    errorDiv.classList.add('show');
+                    return;
+                }
+
+                // Validate password strength
+                if (typeof SecurityUtils !== 'undefined') {
+                    const check = SecurityUtils.checkPasswordStrength(password);
+                    if (!check.isValid) {
+                        errorDiv.textContent = check.message;
+                        errorDiv.classList.add('show');
+                        return;
+                    }
+                } else if (password.length < 8) {
+                    errorDiv.textContent = 'パスワードは8文字以上にしてください';
+                    errorDiv.classList.add('show');
+                    return;
+                }
+
+                // Hide error
+                errorDiv.classList.remove('show');
+
+                // Disable button
+                const submitBtn = inviteForm.querySelector('button[type="submit"]');
+                submitBtn.disabled = true;
+                submitBtn.textContent = '設定中...';
+
+                try {
+                    await DataManager.setInvitePassword(token, password);
+                    formSection.style.display = 'none';
+                    successState.style.display = 'block';
+                } catch (err) {
+                    console.error('Error setting password:', err);
+                    errorDiv.textContent = 'エラーが発生しました。もう一度お試しください。';
+                    errorDiv.classList.add('show');
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'パスワードを設定';
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

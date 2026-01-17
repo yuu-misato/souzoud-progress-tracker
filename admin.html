@@ -927,14 +927,18 @@
                 </div>
                 <div
                     style="margin-top: var(--space-4); padding-top: var(--space-4); border-top: 1px solid var(--color-border);">
-                    <h4 style="margin-bottom: var(--space-3);">新規ユーザーを追加</h4>
+                    <h4 style="margin-bottom: var(--space-3);">新規ユーザーを招待</h4>
+                    <p style="font-size: var(--font-size-sm); color: var(--color-text-muted); margin-bottom: var(--space-3);">
+                        招待メールが送信され、ユーザー自身がパスワードを設定します
+                    </p>
                     <div style="display: grid; gap: var(--space-3);">
                         <input type="text" id="new-client-user-name" class="input" placeholder="担当者名">
                         <input type="email" id="new-client-user-email" class="input" placeholder="メールアドレス">
-                        <input type="password" id="new-client-user-password" class="input" placeholder="パスワード">
                         <div id="client-user-error"
                             style="color: #ef4444; font-size: var(--font-size-sm); display: none;"></div>
-                        <button class="btn btn--primary" data-add-client-user>追加</button>
+                        <div id="client-user-success"
+                            style="color: #16a34a; font-size: var(--font-size-sm); display: none;"></div>
+                        <button class="btn btn--primary" data-add-client-user>招待メールを送信</button>
                     </div>
                 </div>
             </div>
