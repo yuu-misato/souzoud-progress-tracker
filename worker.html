@@ -10,150 +10,200 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/index.css">
     <style>
-        .worker-container {
-            max-width: 1200px;
+        /* =============================================
+           Simplified Worker Portal Styles (matching client)
+           ============================================= */
+
+        /* Minimal Header */
+        .header--minimal {
+            padding: var(--space-4) 0;
+            border-bottom: 1px solid var(--color-border);
+            margin-bottom: 0;
+        }
+
+        .header__logo-badge {
+            font-size: var(--font-size-xs);
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            padding: var(--space-1) var(--space-2);
+            border-radius: var(--radius-sm);
+            margin-left: var(--space-2);
+            color: white;
+            font-weight: 500;
+        }
+
+        /* Container */
+        .container--narrow {
+            max-width: 720px;
             margin: 0 auto;
-            padding: var(--space-6);
+            padding: 0 var(--space-4);
         }
 
-        /* ダッシュボードヘッダー */
-        .dashboard-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: var(--space-6);
-            flex-wrap: wrap;
-            gap: var(--space-4);
-        }
-
-        .dashboard-header__welcome {
-            display: flex;
-            align-items: center;
-            gap: var(--space-4);
-        }
-
-        .dashboard-header__avatar {
-            width: 56px;
-            height: 56px;
-            border-radius: 50%;
-            background: var(--gradient-primary);
+        /* Login Section */
+        .login-section {
+            min-height: calc(100vh - 200px);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 24px;
-            font-weight: 700;
-            color: white;
+            padding: var(--space-8) 0;
         }
 
-        .dashboard-header__greeting {
-            font-size: var(--font-size-2xl);
-            font-weight: 700;
+        .login-section.hide {
+            display: none;
         }
 
-        .dashboard-header__date {
-            color: var(--color-text-muted);
-            font-size: var(--font-size-sm);
-        }
-
-        /* タスクカード改善 */
-        .task-card {
+        .login-card {
+            width: 100%;
+            max-width: 360px;
             background: var(--color-bg-card);
-            border-radius: var(--radius-xl);
-            padding: var(--space-5);
-            margin-bottom: var(--space-4);
             border: 1px solid var(--color-border);
-            box-shadow: var(--shadow-sm);
-            transition: all 0.2s ease;
+            border-radius: var(--radius-xl);
+            padding: var(--space-8);
         }
 
-        .task-card:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-md);
-            border-color: var(--color-primary);
+        .login-card__title {
+            font-size: var(--font-size-2xl);
+            margin-bottom: var(--space-2);
+            text-align: center;
         }
 
-        .task-card--overdue {
-            border-left: 4px solid #ef4444;
-        }
-
-        .task-card--submitted {
-            border-left: 4px solid #f59e0b;
-        }
-
-        .task-card--approved {
-            border-left: 4px solid #10b981;
-            opacity: 0.8;
-        }
-
-        .task-card--urgent {
-            animation: pulse-urgent 2s infinite;
-        }
-
-        @keyframes pulse-urgent {
-            0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
-            50% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
-        }
-
-        .task-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: var(--space-3);
-            gap: var(--space-3);
-        }
-
-        .task-title {
-            font-size: var(--font-size-lg);
-            font-weight: 600;
-            color: var(--color-text);
-        }
-
-        .task-project {
+        .login-card__subtitle {
             font-size: var(--font-size-sm);
             color: var(--color-text-muted);
-            margin-top: var(--space-1);
+            text-align: center;
+            margin-bottom: var(--space-6);
         }
 
-        .task-due {
+        .login-form {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-4);
+        }
+
+        .form-field {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-2);
+        }
+
+        .form-label {
             font-size: var(--font-size-sm);
             font-weight: 500;
-            padding: var(--space-1) var(--space-3);
-            border-radius: var(--radius-full);
-            background: #f3f4f6;
-            white-space: nowrap;
-        }
-
-        .task-due--overdue {
-            background: #fee2e2;
-            color: #dc2626;
-        }
-
-        .task-due--soon {
-            background: #fef3c7;
-            color: #d97706;
-        }
-
-        .task-due--ok {
-            background: #d1fae5;
-            color: #059669;
-        }
-
-        .task-notes {
-            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-            border-left: 3px solid var(--color-primary);
-            padding: var(--space-3) var(--space-4);
-            border-radius: var(--radius-md);
-            margin: var(--space-3) 0;
-            font-size: var(--font-size-sm);
             color: var(--color-text-secondary);
         }
 
-        .task-status {
+        .form-error {
+            font-size: var(--font-size-sm);
+            color: #ef4444;
+            display: none;
+        }
+
+        .form-error:not(:empty) {
+            display: block;
+        }
+
+        .btn--full {
+            width: 100%;
+        }
+
+        /* Tasks Section */
+        .tasks-section {
+            padding: var(--space-6) 0;
+            display: none;
+        }
+
+        .tasks-section.show {
+            display: block;
+        }
+
+        .welcome-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-8);
+        }
+
+        .welcome-header__title {
+            font-size: var(--font-size-2xl);
+            font-weight: 600;
+        }
+
+        .welcome-header__date {
+            font-size: var(--font-size-sm);
+            color: var(--color-text-muted);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-4);
+        }
+
+        .section-title {
+            font-size: var(--font-size-lg);
+            font-weight: 600;
+        }
+
+        /* Task List Simple */
+        .task-list-simple {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-3);
+        }
+
+        .task-item {
             display: flex;
             align-items: center;
-            gap: var(--space-2);
+            gap: var(--space-4);
+            padding: var(--space-4);
+            background: var(--color-bg-card);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-lg);
+            cursor: pointer;
+            transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+        }
+
+        .task-item:hover {
+            border-color: var(--color-primary);
+            box-shadow: var(--shadow-md);
+        }
+
+        .task-item--overdue {
+            border-left: 4px solid #ef4444;
+        }
+
+        .task-item--submitted {
+            border-left: 4px solid #f59e0b;
+        }
+
+        .task-item--approved {
+            border-left: 4px solid #10b981;
+            opacity: 0.7;
+        }
+
+        .task-item__info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .task-item__name {
+            font-weight: 500;
+            margin-bottom: var(--space-1);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .task-item__project {
             font-size: var(--font-size-sm);
-            margin-bottom: var(--space-3);
+            color: var(--color-text-muted);
+        }
+
+        .task-item__status {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            flex-shrink: 0;
         }
 
         .status-badge {
@@ -183,39 +233,155 @@
             color: #059669;
         }
 
-        /* 提出セクション */
-        .submit-section {
-            border-top: 1px solid var(--color-border);
-            padding-top: var(--space-4);
+        .task-item__due {
+            font-size: var(--font-size-sm);
+            color: var(--color-text-muted);
+        }
+
+        .task-item__due--overdue {
+            color: #ef4444;
+            font-weight: 500;
+        }
+
+        .task-item__due--soon {
+            color: #d97706;
+        }
+
+        .task-item__arrow {
+            color: var(--color-text-muted);
+            font-size: var(--font-size-lg);
+        }
+
+        /* Task Detail Section */
+        .task-detail-section {
+            padding: var(--space-6) 0;
+            display: none;
+        }
+
+        .task-detail-section.show {
+            display: block;
+        }
+
+        .task-header {
+            margin-bottom: var(--space-6);
+        }
+
+        .task-header__info {
             margin-top: var(--space-4);
         }
 
-        .submit-buttons {
+        .task-header__title {
+            font-size: var(--font-size-2xl);
+            font-weight: 600;
+            margin-bottom: var(--space-2);
+        }
+
+        .task-header__meta {
             display: flex;
+            align-items: center;
             gap: var(--space-2);
-            flex-wrap: wrap;
+            font-size: var(--font-size-sm);
+            color: var(--color-text-muted);
         }
 
-        /* 提出履歴 */
+        .task-header__separator {
+            opacity: 0.5;
+        }
+
+        .back-arrow {
+            margin-right: var(--space-1);
+        }
+
+        /* Task Info Cards */
+        .task-info-card {
+            display: flex;
+            align-items: center;
+            gap: var(--space-4);
+            padding: var(--space-4);
+            background: var(--color-bg-card);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-lg);
+            margin-bottom: var(--space-4);
+        }
+
+        .task-info-card__icon {
+            font-size: var(--font-size-xl);
+        }
+
+        .task-info-card__content {
+            flex: 1;
+        }
+
+        .task-info-card__label {
+            font-size: var(--font-size-sm);
+            color: var(--color-text-muted);
+        }
+
+        .task-info-card__value {
+            font-weight: 600;
+            color: var(--color-text);
+        }
+
+        /* Notes */
+        .task-notes {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border-left: 3px solid var(--color-primary);
+            padding: var(--space-4);
+            border-radius: var(--radius-md);
+            margin-bottom: var(--space-4);
+            font-size: var(--font-size-sm);
+            color: var(--color-text-secondary);
+            line-height: 1.6;
+        }
+
+        /* Submit Card */
+        .submit-card {
+            background: var(--color-bg-card);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-6);
+            margin-bottom: var(--space-4);
+        }
+
+        .submit-card__title {
+            font-size: var(--font-size-lg);
+            font-weight: 600;
+            margin-bottom: var(--space-4);
+        }
+
+        .submit-form {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-4);
+        }
+
+        /* Submission History */
         .submission-history {
-            margin-top: var(--space-4);
+            background: var(--color-bg-card);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-4);
         }
 
         .submission-history__title {
-            font-size: var(--font-size-sm);
-            color: var(--color-text-muted);
-            margin-bottom: var(--space-2);
+            font-size: var(--font-size-base);
+            font-weight: 500;
+            margin-bottom: var(--space-3);
         }
 
         .submission-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: var(--space-2) var(--space-3);
-            background: #f8fafc;
+            padding: var(--space-3);
+            background: var(--color-bg-secondary);
             border-radius: var(--radius-md);
             margin-bottom: var(--space-2);
             font-size: var(--font-size-sm);
+        }
+
+        .submission-item:last-child {
+            margin-bottom: 0;
         }
 
         .submission-item--approved {
@@ -226,200 +392,82 @@
             background: #fee2e2;
         }
 
-        /* 工程プログレス */
-        .project-progress {
-            margin-top: var(--space-4);
-            padding-top: var(--space-4);
-            border-top: 1px dashed var(--color-border);
-        }
-
-        .project-progress__header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: var(--space-3);
-            cursor: pointer;
-        }
-
-        .project-progress__title {
-            font-size: var(--font-size-sm);
-            font-weight: 500;
-            color: var(--color-text-muted);
-            display: flex;
-            align-items: center;
-            gap: var(--space-2);
-        }
-
-        .project-progress__bar {
-            height: 6px;
-            background: var(--color-bg-secondary);
-            border-radius: var(--radius-full);
-            overflow: hidden;
-            margin-bottom: var(--space-3);
-        }
-
-        .project-progress__fill {
-            height: 100%;
-            background: var(--gradient-primary);
-            border-radius: var(--radius-full);
-            transition: width 0.5s ease;
-        }
-
-        .project-steps {
-            display: none;
-        }
-
-        .project-steps.show {
+        .submission-item__info {
             display: flex;
             flex-direction: column;
-            gap: var(--space-2);
+            gap: var(--space-1);
         }
 
-        .project-step {
-            display: flex;
-            align-items: center;
-            gap: var(--space-3);
-            padding: var(--space-2) var(--space-3);
-            background: #f8fafc;
-            border-radius: var(--radius-sm);
-            font-size: var(--font-size-sm);
-        }
-
-        .project-step--current {
-            background: #e0e7ff;
+        .submission-item__stage {
             font-weight: 500;
         }
 
-        .project-step--completed {
-            background: #d1fae5;
-        }
-
-        .project-step--assigned {
-            background: #fef3c7;
-            border: 2px solid #f59e0b;
-        }
-
-        .project-step__number {
-            width: 24px;
-            height: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 50%;
-            font-size: var(--font-size-xs);
-            font-weight: 600;
-            background: var(--color-bg-secondary);
-        }
-
-        .project-step--completed .project-step__number {
-            background: #10b981;
-            color: white;
-        }
-
-        .project-step--current .project-step__number {
-            background: var(--color-primary);
-            color: white;
-        }
-
-        .project-step__name {
-            flex: 1;
-        }
-
-        /* 空状態 */
-        .empty-state {
-            text-align: center;
-            padding: var(--space-10);
+        .submission-item__date {
             color: var(--color-text-muted);
+            font-size: var(--font-size-xs);
         }
 
-        .empty-state__icon {
+        .submission-item__status {
+            font-weight: 500;
+        }
+
+        /* Empty State */
+        .empty-state-simple {
+            text-align: center;
+            padding: var(--space-16) 0;
+        }
+
+        .empty-state-simple__icon {
             font-size: 64px;
             margin-bottom: var(--space-4);
         }
 
-        .empty-state__title {
-            font-size: var(--font-size-xl);
-            font-weight: 600;
-            margin-bottom: var(--space-2);
-        }
-
-        /* セクション */
-        .section {
-            margin-bottom: var(--space-8);
-        }
-
-        .section__header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+        .empty-state-simple__text {
+            font-size: var(--font-size-lg);
+            color: var(--color-text-muted);
             margin-bottom: var(--space-4);
         }
 
-        .section__title {
-            display: flex;
-            align-items: center;
-            gap: var(--space-2);
-            font-size: var(--font-size-lg);
-            font-weight: 600;
-        }
-
-        .section__badge {
-            background: #ef4444;
-            color: white;
-            padding: 2px 10px;
-            border-radius: var(--radius-full);
+        /* Footer Minimal */
+        .footer-minimal {
+            text-align: center;
+            padding: var(--space-8) 0;
+            color: var(--color-text-muted);
             font-size: var(--font-size-sm);
-            font-weight: 600;
         }
 
-        .section__badge--success {
-            background: #10b981;
-        }
-
-        .section__badge--warning {
-            background: #f59e0b;
-        }
-
-        /* ログインセクション */
-        .login-section {
-            display: none;
-        }
-
-        .login-section.show {
-            display: block;
-        }
-
-        .tasks-section {
-            display: none;
-        }
-
-        .tasks-section.show {
-            display: block;
-        }
-
-        /* レスポンシブ */
-        @media (max-width: 768px) {
-            .worker-container {
-                padding: var(--space-4);
+        /* Responsive */
+        @media (max-width: 640px) {
+            .login-card {
+                padding: var(--space-6);
             }
 
-            .dashboard-header {
+            .task-item {
+                flex-direction: column;
+                align-items: stretch;
+                gap: var(--space-3);
+            }
+
+            .task-item__status {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .task-item__arrow {
+                display: none;
+            }
+
+            .welcome-header {
                 flex-direction: column;
                 align-items: flex-start;
-            }
-
-            .task-header {
-                flex-direction: column;
-            }
-
-            .task-due {
-                margin-top: var(--space-2);
+                gap: var(--space-2);
             }
         }
     </style>
 </head>
 
 <body>
+    <!-- Header -->
     <header class="header header--minimal">
         <div class="container">
             <div class="header__inner">
@@ -427,184 +475,150 @@
                     <span class="header__logo-text">MiERU</span>
                     <span class="header__logo-badge">作業者</span>
                 </a>
-                <nav class="header__nav" id="user-nav" style="display: none;">
-                    <span id="worker-name" style="font-size: var(--font-size-sm); color: var(--color-text-muted); margin-right: var(--space-3);"></span>
-                    <button id="logout-btn" class="btn btn--ghost btn--sm">ログアウト</button>
+                <nav class="header__nav" id="header-nav">
+                    <!-- Dynamic nav items -->
                 </nav>
             </div>
         </div>
     </header>
 
-    <style>
-        .header--minimal {
-            padding: var(--space-4) 0;
-            border-bottom: 1px solid var(--color-border);
-            margin-bottom: 0;
-        }
-        .header__logo-badge {
-            font-size: var(--font-size-xs);
-            background: var(--color-bg-secondary);
-            padding: var(--space-1) var(--space-2);
-            border-radius: var(--radius-sm);
-            margin-left: var(--space-2);
-            color: var(--color-text-muted);
-        }
-    </style>
-
-    <main class="worker-container">
+    <main class="container container--narrow">
         <!-- Login Section -->
-        <section id="login-section" class="login-section show">
-            <div class="login-card-simple">
-                <div class="login-card-simple__header">
-                    <div class="login-card-simple__logo">MiERU</div>
-                    <div class="login-card-simple__subtitle">作業者ログイン</div>
-                </div>
-                <div id="login-error" class="login-error" style="display: none;"></div>
-                <form id="login-form">
+        <section id="login-section" class="login-section">
+            <div class="login-card">
+                <h1 class="login-card__title">作業者ログイン</h1>
+                <p class="login-card__subtitle">担当タスクの確認・提出ができます</p>
+                <form class="login-form" id="login-form">
                     <div class="form-field">
-                        <label for="email">メールアドレス</label>
-                        <input type="email" id="email" class="input" placeholder="email@example.com" required>
+                        <label for="email" class="form-label">メールアドレス</label>
+                        <input type="email" id="email" class="input" placeholder="email@example.com" autocomplete="email" required>
                     </div>
                     <div class="form-field">
-                        <label for="password">パスワード</label>
-                        <input type="password" id="password" class="input" placeholder="パスワードを入力" required>
+                        <label for="password" class="form-label">パスワード</label>
+                        <input type="password" id="password" class="input" placeholder="パスワードを入力" autocomplete="current-password" required>
                     </div>
-                    <button type="submit" class="btn btn--primary" style="width: 100%;">ログイン</button>
+                    <div id="login-error" class="form-error"></div>
+                    <button type="submit" class="btn btn--primary btn--full">ログイン</button>
                 </form>
             </div>
         </section>
 
-        <style>
-            .login-card-simple {
-                max-width: 360px;
-                margin: var(--space-10) auto;
-                background: var(--color-bg-card);
-                border: 1px solid var(--color-border);
-                border-radius: var(--radius-xl);
-                padding: var(--space-8);
-            }
-            .login-card-simple__header {
-                text-align: center;
-                margin-bottom: var(--space-6);
-            }
-            .login-card-simple__logo {
-                font-size: var(--font-size-xl);
-                font-weight: 700;
-                margin-bottom: var(--space-2);
-            }
-            .login-card-simple__subtitle {
-                font-size: var(--font-size-sm);
-                color: var(--color-text-muted);
-            }
-            .form-field {
-                margin-bottom: var(--space-4);
-            }
-            .form-field label {
-                display: block;
-                margin-bottom: var(--space-2);
-                font-size: var(--font-size-sm);
-                font-weight: 500;
-                color: var(--color-text-secondary);
-            }
-        </style>
-
-        <!-- Tasks Section -->
+        <!-- Tasks List Section (Hidden by default) -->
         <section id="tasks-section" class="tasks-section">
-            <!-- Simple Header -->
-            <div class="worker-welcome">
-                <h1 class="worker-welcome__title" id="greeting">タスク一覧</h1>
-                <p class="worker-welcome__date" id="today-date"></p>
+            <!-- Welcome Header -->
+            <div class="welcome-header">
+                <div>
+                    <h1 id="display-worker-name" class="welcome-header__title">-</h1>
+                    <p id="today-date" class="welcome-header__date">-</p>
+                </div>
+                <button id="logout-btn" class="btn btn--ghost btn--sm">ログアウト</button>
             </div>
 
-            <style>
-                .worker-welcome {
-                    margin-bottom: var(--space-6);
-                }
-                .worker-welcome__title {
-                    font-size: var(--font-size-2xl);
-                    font-weight: 600;
-                    margin-bottom: var(--space-1);
-                }
-                .worker-welcome__date {
-                    font-size: var(--font-size-sm);
-                    color: var(--color-text-muted);
-                }
-            </style>
-
-            <!-- Hidden elements for compatibility -->
-            <div id="worker-avatar" style="display: none;"></div>
-            <div id="view-toggle" style="display: none;"></div>
-            <div id="status-grid" style="display: none;"></div>
-            <div id="quick-actions" style="display: none;"></div>
-
             <!-- Task List -->
-            <div id="task-view">
-                <div id="task-list">
-                    <!-- Tasks will be rendered here -->
+            <div class="section-header">
+                <h2 class="section-title">担当タスク</h2>
+            </div>
+
+            <div id="task-list" class="task-list-simple">
+                <!-- Tasks will be rendered here -->
+            </div>
+        </section>
+
+        <!-- Task Detail Section (Hidden by default) -->
+        <section id="task-detail-section" class="task-detail-section">
+            <!-- Task Header -->
+            <div class="task-header">
+                <button id="back-to-list-btn" class="btn btn--ghost btn--sm">
+                    <span class="back-arrow">←</span> 戻る
+                </button>
+                <div class="task-header__info">
+                    <h1 id="display-task-name" class="task-header__title">-</h1>
+                    <div class="task-header__meta">
+                        <span id="display-task-project" class="task-header__project">-</span>
+                        <span class="task-header__separator">•</span>
+                        <span id="display-task-client" class="task-header__client">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Task Status & Due -->
+            <div class="task-info-card">
+                <span class="task-info-card__icon">📊</span>
+                <div class="task-info-card__content">
+                    <div class="task-info-card__label">ステータス</div>
+                    <div id="display-task-status" class="task-info-card__value">-</div>
+                </div>
+                <span id="display-task-status-badge"></span>
+            </div>
+
+            <div id="task-due-card" class="task-info-card" style="display: none;">
+                <span class="task-info-card__icon">📅</span>
+                <div class="task-info-card__content">
+                    <div class="task-info-card__label">期日</div>
+                    <div id="display-task-due" class="task-info-card__value">-</div>
+                </div>
+            </div>
+
+            <!-- Notes -->
+            <div id="task-notes-section" style="display: none;">
+                <div class="task-notes" id="display-task-notes"></div>
+            </div>
+
+            <!-- Submit Section (for non-approved tasks) -->
+            <div id="submit-section" class="submit-card" style="display: none;">
+                <h3 class="submit-card__title">成果物を提出</h3>
+                <form id="submit-form" class="submit-form">
+                    <div class="form-field">
+                        <label for="submit-url" class="form-label">成果物URL (Google Drive等)</label>
+                        <input type="url" id="submit-url" class="input" placeholder="https://drive.google.com/...">
+                    </div>
+                    <div class="form-field">
+                        <label for="submit-comment" class="form-label">コメント (任意)</label>
+                        <textarea id="submit-comment" class="input" rows="3" placeholder="備考や確認してほしい点があれば入力"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn--primary btn--full">提出する</button>
+                </form>
+            </div>
+
+            <!-- Approved Message -->
+            <div id="approved-message" class="task-info-card" style="display: none; background: #d1fae5; border-color: #10b981;">
+                <span class="task-info-card__icon">✅</span>
+                <div class="task-info-card__content">
+                    <div class="task-info-card__value" style="color: #059669;">このタスクは完了しています</div>
+                </div>
+            </div>
+
+            <!-- Submission History -->
+            <div id="submission-history" class="submission-history" style="display: none;">
+                <h3 class="submission-history__title">提出履歴</h3>
+                <div id="submission-list">
+                    <!-- Submissions will be rendered here -->
                 </div>
             </div>
         </section>
     </main>
 
-    <!-- Submit Modal -->
-    <div class="modal-overlay" id="submit-modal">
-        <div class="modal" style="max-width: 500px;">
-            <div class="modal__header">
-                <h2 class="modal__title">📤 成果物を提出</h2>
-                <button class="modal__close" id="submit-modal-close">&times;</button>
-            </div>
-            <div class="modal__body">
-                <input type="hidden" id="submit-assignment-id">
-                <div id="submit-task-info" style="background: #f8fafc; padding: var(--space-3); border-radius: var(--radius-md); margin-bottom: var(--space-4);">
-                    <!-- Task info will be shown here -->
-                </div>
-                <div class="input-group" style="margin-bottom: var(--space-4);">
-                    <label for="submit-url">成果物URL <span style="color: var(--color-text-muted);">(Google Drive等)</span></label>
-                    <input type="url" id="submit-url" class="input" placeholder="https://drive.google.com/...">
-                </div>
-                <div class="input-group">
-                    <label for="submit-comment">コメント <span style="color: var(--color-text-muted);">(任意)</span></label>
-                    <textarea id="submit-comment" class="input" rows="3" placeholder="備考や確認してほしい点があれば入力"></textarea>
-                </div>
-            </div>
-            <div class="modal__footer">
-                <button class="btn btn--secondary" id="submit-modal-cancel">キャンセル</button>
-                <button class="btn btn--primary" id="submit-modal-save">📤 提出する</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Task Detail Modal -->
-    <div class="modal-overlay" id="task-detail-modal">
-        <div class="modal" style="max-width: 600px;">
-            <div class="modal__header">
-                <h2 class="modal__title" id="detail-task-name">タスク詳細</h2>
-                <button class="modal__close" onclick="closeTaskDetailModal()">&times;</button>
-            </div>
-            <div class="modal__body" id="task-detail-content">
-                <!-- Task details will be rendered here -->
-            </div>
-        </div>
-    </div>
+    <!-- Footer -->
+    <footer class="footer-minimal">
+        <p>© 2026 SOUZOUD Inc.</p>
+    </footer>
 
     <script src="/js/security.js"></script>
     <script src="/js/data.js"></script>
-    <script src="/js/notifications.js"></script>
-    <script src="/js/workflow-ui.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            // DOM Elements
             const loginSection = document.getElementById('login-section');
             const tasksSection = document.getElementById('tasks-section');
-            const userNav = document.getElementById('user-nav');
-            const workerNameEl = document.getElementById('worker-name');
+            const taskDetailSection = document.getElementById('task-detail-section');
+            const headerNav = document.getElementById('header-nav');
             const taskList = document.getElementById('task-list');
-            const submitModal = document.getElementById('submit-modal');
 
             let currentWorker = null;
             let allAssignments = [];
-            let currentView = 'list';
+            let currentTask = null;
 
-            // セキュリティ: HTMLエスケープ
+            // Security: HTML escape
             const escapeHtml = (str) => {
                 if (typeof SecurityUtils !== 'undefined') {
                     return SecurityUtils.escapeHtml(str);
@@ -638,7 +652,7 @@
             document.getElementById('login-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
 
-                // レート制限チェック
+                // Rate limit check
                 if (typeof SecurityUtils !== 'undefined' && !SecurityUtils.checkRateLimit('worker_login', 5, 60000)) {
                     showError('ログイン試行回数が多すぎます。1分後に再度お試しください。');
                     return;
@@ -679,493 +693,237 @@
             document.getElementById('logout-btn').addEventListener('click', () => {
                 localStorage.removeItem('worker_session');
                 currentWorker = null;
-                loginSection.classList.add('show');
+                loginSection.style.display = 'flex';
                 tasksSection.classList.remove('show');
-                userNav.style.display = 'none';
+                taskDetailSection.classList.remove('show');
+                headerNav.innerHTML = '';
+            });
+
+            // Back to list
+            document.getElementById('back-to-list-btn').addEventListener('click', () => {
+                taskDetailSection.classList.remove('show');
+                tasksSection.classList.add('show');
             });
 
             // Show tasks section
             async function showTasksSection() {
-                loginSection.classList.remove('show');
+                loginSection.style.display = 'none';
                 tasksSection.classList.add('show');
-                userNav.style.display = 'flex';
-                workerNameEl.textContent = currentWorker.name;
+                taskDetailSection.classList.remove('show');
+
+                // Update header nav
+                headerNav.innerHTML = `
+                    <span style="font-size: var(--font-size-sm); color: var(--color-text-muted); margin-right: var(--space-3);">${escapeHtml(currentWorker.name)}</span>
+                `;
 
                 // Set greeting and date
                 const hour = new Date().getHours();
                 let greeting = 'こんにちは';
                 if (hour < 12) greeting = 'おはようございます';
                 else if (hour >= 18) greeting = 'お疲れ様です';
-                document.getElementById('greeting').textContent = `${greeting}、${escapeHtml(currentWorker.name)}さん`;
+                document.getElementById('display-worker-name').textContent = `${greeting}、${currentWorker.name}さん`;
                 document.getElementById('today-date').textContent = new Date().toLocaleDateString('ja-JP', {
                     year: 'numeric', month: 'long', day: 'numeric', weekday: 'long'
                 });
 
-                // Set avatar initials
-                const initials = currentWorker.name.substring(0, 2).toUpperCase();
-                document.getElementById('worker-avatar').textContent = initials;
-
-                // Initialize view toggle
-                WorkflowUI.renderViewToggle('view-toggle', currentView);
-                WorkflowUI.setOnViewChange((view) => {
-                    currentView = view;
-                    renderTasks();
-                });
-
-                await renderTasks();
+                await renderTaskList();
             }
 
-            // Render tasks
-            async function renderTasks() {
+            // Render task list (only assigned tasks - no other project steps visible)
+            async function renderTaskList() {
                 allAssignments = await DataManager.getAssignmentsForWorker(currentWorker.id);
 
-                // Fetch project steps and submissions for each assignment
-                for (const assignment of allAssignments) {
-                    assignment._submissions = await DataManager.getSubmissionsForAssignment(assignment.id);
-                    if (assignment.projectId) {
-                        const project = await DataManager.getProject(assignment.projectId);
-                        assignment._projectSteps = project?.steps || [];
-                        assignment._projectProgress = DataManager.getProgressPercentage(project);
-                    }
-                }
-
-                // Calculate stats
-                const now = new Date();
-                const stats = {
-                    pending: 0,
-                    inProgress: 0,
-                    submitted: 0,
-                    overdue: 0,
-                    today: 0
-                };
-
-                allAssignments.forEach(a => {
-                    if (a.status === 'pending') stats.pending++;
-                    if (a.status === 'in_progress') stats.inProgress++;
-                    if (a.status === 'submitted') stats.submitted++;
-
-                    const dueDate = a.dueDate ? new Date(a.dueDate) : null;
-                    if (dueDate && dueDate < now && a.status !== 'approved') {
-                        stats.overdue++;
-                    }
-                    if (dueDate && dueDate.toDateString() === now.toDateString()) {
-                        stats.today++;
-                    }
-                });
-
-                // Render status grid
-                WorkflowUI.renderStatusGrid('status-grid', stats);
-
-                // Render quick actions
-                WorkflowUI.renderQuickActions('quick-actions', stats);
-                WorkflowUI.setOnFilterChange(filterTasks);
-
-                // Render based on view
-                if (currentView === 'kanban') {
-                    renderKanbanView();
-                } else {
-                    renderListView();
-                }
-            }
-
-            function renderKanbanView() {
-                WorkflowUI.renderKanbanBoard('task-list', allAssignments, {});
-                WorkflowUI.setOnStatusChange(async (taskId, newStatus) => {
-                    try {
-                        await DataManager.updateAssignmentStatus(taskId, newStatus);
-                        WorkflowUI.showToast('ステータス更新', 'タスクのステータスを更新しました', '✓');
-                        await renderTasks();
-                    } catch (e) {
-                        WorkflowUI.showToast('エラー', '更新に失敗しました', '❌');
-                    }
-                });
-                WorkflowUI.setOnTaskClick(openTaskDetail);
-            }
-
-            function renderListView() {
                 if (allAssignments.length === 0) {
                     taskList.innerHTML = `
-                        <div class="empty-state">
-                            <div class="empty-state__icon">📭</div>
-                            <div class="empty-state__title">タスクがありません</div>
-                            <p>現在担当しているタスクはありません</p>
+                        <div class="empty-state-simple">
+                            <div class="empty-state-simple__icon">📭</div>
+                            <p class="empty-state-simple__text">担当タスクがありません</p>
                         </div>
                     `;
                     return;
                 }
 
                 const now = new Date();
-
-                // Split into sections
-                const pendingTasks = allAssignments.filter(a => a.status === 'pending' || a.status === 'in_progress');
-                const submittedTasks = allAssignments.filter(a => a.status === 'submitted');
-                const completedTasks = allAssignments.filter(a => a.status === 'approved');
+                const statusLabels = {
+                    pending: '未着手',
+                    in_progress: '作業中',
+                    submitted: '確認待ち',
+                    approved: '完了'
+                };
 
                 let html = '';
+                for (const task of allAssignments) {
+                    const dueDate = task.dueDate ? new Date(task.dueDate) : null;
+                    const isOverdue = dueDate && dueDate < now && task.status !== 'approved';
+                    const isSoon = dueDate && !isOverdue && (dueDate - now) < (2 * 24 * 60 * 60 * 1000);
 
-                // Pending Section
-                if (pendingTasks.length > 0) {
+                    let itemClass = 'task-item';
+                    if (task.status === 'approved') itemClass += ' task-item--approved';
+                    else if (task.status === 'submitted') itemClass += ' task-item--submitted';
+                    else if (isOverdue) itemClass += ' task-item--overdue';
+
+                    let dueClass = '';
+                    if (isOverdue) dueClass = 'task-item__due--overdue';
+                    else if (isSoon) dueClass = 'task-item__due--soon';
+
                     html += `
-                        <div class="section">
-                            <div class="section__header">
-                                <h2 class="section__title">
-                                    📋 未提出タスク
-                                    <span class="section__badge">${pendingTasks.length}件</span>
-                                </h2>
+                        <div class="${itemClass}" data-task-id="${task.id}">
+                            <div class="task-item__info">
+                                <div class="task-item__name">${escapeHtml(task.stepName)}</div>
+                                <div class="task-item__project">${escapeHtml(task.clientName)} / ${escapeHtml(task.projectName)}</div>
                             </div>
-                            ${pendingTasks.map(a => renderTaskCard(a, now, true)).join('')}
-                        </div>
-                    `;
-                }
-
-                // Submitted Section
-                if (submittedTasks.length > 0) {
-                    html += `
-                        <div class="section">
-                            <div class="section__header">
-                                <h2 class="section__title">
-                                    👀 レビュー待ち
-                                    <span class="section__badge section__badge--warning">${submittedTasks.length}件</span>
-                                </h2>
+                            <div class="task-item__status">
+                                <span class="status-badge status-badge--${task.status}">${statusLabels[task.status]}</span>
+                                ${dueDate ? `<span class="task-item__due ${dueClass}">${isOverdue ? '⚠️ ' : ''}${formatDate(dueDate)}</span>` : ''}
                             </div>
-                            ${submittedTasks.map(a => renderTaskCard(a, now, false)).join('')}
-                        </div>
-                    `;
-                }
-
-                // Completed Section
-                if (completedTasks.length > 0) {
-                    html += `
-                        <div class="section">
-                            <div class="section__header">
-                                <h2 class="section__title">
-                                    ✅ 完了
-                                    <span class="section__badge section__badge--success">${completedTasks.length}件</span>
-                                </h2>
-                            </div>
-                            ${completedTasks.map(a => renderTaskCard(a, now, false)).join('')}
-                        </div>
-                    `;
-                }
-
-                if (html === '') {
-                    html = `
-                        <div class="card" style="text-align: center; padding: var(--space-6); color: var(--color-text-muted);">
-                            🎉 すべてのタスクが完了しました！
+                            <span class="task-item__arrow">→</span>
                         </div>
                     `;
                 }
 
                 taskList.innerHTML = html;
 
-                // Setup event delegation for task list (faster than inline onclick)
-                setupTaskListEventDelegation();
-            }
-
-            // Track if task list events are set up (defined before function for proper hoisting)
-            let taskListEventsAttached = false;
-
-            function setupTaskListEventDelegation() {
-                // Prevent duplicate event listeners
-                if (taskListEventsAttached) return;
-                if (!taskList) return;
-                taskListEventsAttached = true;
-
+                // Event delegation for task clicks
                 taskList.addEventListener('click', (e) => {
-                    // Handle workflow toggle
-                    const toggleHeader = e.target.closest('[data-toggle-workflow]');
-                    if (toggleHeader) {
-                        const workflowId = toggleHeader.dataset.toggleWorkflow;
-                        const el = document.getElementById(workflowId);
-                        if (el) {
-                            el.classList.toggle('show');
-                        }
-                        return;
-                    }
-
-                    // Handle start working button
-                    const startBtn = e.target.closest('[data-action="start-working"]');
-                    if (startBtn) {
-                        e.preventDefault();
-                        const id = startBtn.dataset.id;
-                        if (id) {
-                            handleStartWorking(id);
-                        }
-                        return;
-                    }
-
-                    // Handle open submit button
-                    const submitBtn = e.target.closest('[data-action="open-submit"]');
-                    if (submitBtn) {
-                        e.preventDefault();
-                        const card = submitBtn.closest('.task-card');
-                        if (card) {
-                            const id = card.dataset.assignmentId;
-                            const stepName = card.dataset.stepName;
-                            const projectName = card.dataset.projectName;
-                            handleOpenSubmitModal(id, stepName, projectName);
-                        }
-                        return;
+                    const taskItem = e.target.closest('.task-item');
+                    if (taskItem) {
+                        const taskId = taskItem.dataset.taskId;
+                        openTaskDetail(taskId);
                     }
                 });
             }
 
-            // Fast action handlers
-            async function handleStartWorking(assignmentId) {
-                try {
-                    await DataManager.updateAssignment(assignmentId, { status: 'in_progress' });
-                    WorkflowUI.showToast('作業開始', 'タスクを作業中に変更しました');
-                    await renderTasks();
-                } catch (e) {
-                    console.error('Error starting work:', e);
-                    WorkflowUI.showToast('エラー', '更新に失敗しました');
-                }
-            }
-
-            function handleOpenSubmitModal(assignmentId, stepName, projectName) {
-                document.getElementById('submit-assignment-id').value = assignmentId;
-                document.getElementById('submit-url').value = '';
-                document.getElementById('submit-comment').value = '';
-                document.getElementById('submit-task-info').innerHTML = `
-                    <div style="font-weight: 500;">${escapeHtml(stepName)}</div>
-                    <div style="font-size: var(--font-size-sm); color: var(--color-text-muted);">${escapeHtml(projectName)}</div>
-                `;
-                submitModal.classList.add('active');
-            }
-
-            function renderTaskCard(assignment, now, showSubmitButton) {
-                const submissions = assignment._submissions || [];
-                const dueDate = assignment.dueDate ? new Date(assignment.dueDate) : null;
-                const isOverdue = dueDate && dueDate < now && assignment.status !== 'approved';
-                const isSoon = dueDate && !isOverdue && (dueDate - now) < (2 * 24 * 60 * 60 * 1000);
-                const isOk = dueDate && !isOverdue && !isSoon;
-
-                const statusLabels = {
-                    pending: '未着手',
-                    in_progress: '作業中',
-                    submitted: '確認待ち',
-                    approved: '完了'
-                };
-
-                let cardClass = 'task-card';
-                if (assignment.status === 'approved') cardClass += ' task-card--approved';
-                else if (assignment.status === 'submitted') cardClass += ' task-card--submitted';
-                else if (isOverdue) cardClass += ' task-card--overdue task-card--urgent';
-
-                let dueClass = '';
-                let dueIcon = '📅';
-                if (isOverdue) { dueClass = 'task-due--overdue'; dueIcon = '⚠️'; }
-                else if (isSoon) { dueClass = 'task-due--soon'; dueIcon = '⏰'; }
-                else if (isOk) { dueClass = 'task-due--ok'; dueIcon = '✓'; }
-
-                const progress = assignment._projectProgress || 0;
-
-                return `
-                    <div class="${cardClass}" data-assignment-id="${assignment.id}" data-step-name="${escapeHtml(assignment.stepName)}" data-project-name="${escapeHtml(assignment.projectName)}">
-                        <div class="task-header">
-                            <div>
-                                <div class="task-title">${escapeHtml(assignment.stepName)}</div>
-                                <div class="task-project">🏢 ${escapeHtml(assignment.clientName)} / 📁 ${escapeHtml(assignment.projectName)}</div>
-                            </div>
-                            ${dueDate ? `
-                                <div class="task-due ${dueClass}">
-                                    ${dueIcon} ${formatDate(dueDate)}${isOverdue ? ' (遅延)' : ''}
-                                </div>
-                            ` : ''}
-                        </div>
-
-                        <div class="task-status">
-                            <span class="status-badge status-badge--${assignment.status}">${statusLabels[assignment.status]}</span>
-                            ${submissions.length > 0 ? `<span style="color: var(--color-text-muted);">・提出 ${submissions.length}回</span>` : ''}
-                        </div>
-
-                        ${assignment.notes ? `<div class="task-notes">📝 ${escapeHtml(assignment.notes)}</div>` : ''}
-
-                        ${renderSubmissions(submissions)}
-
-                        <!-- Project Progress -->
-                        <div class="project-progress">
-                            <div class="project-progress__header" data-toggle-workflow="workflow-${assignment.id}">
-                                <div class="project-progress__title">
-                                    📊 プロジェクト進捗 ${progress}%
-                                    <span style="color: var(--color-text-muted);">▼</span>
-                                </div>
-                            </div>
-                            <div class="project-progress__bar">
-                                <div class="project-progress__fill" style="width: ${progress}%;"></div>
-                            </div>
-                            <div id="workflow-${assignment.id}" class="project-steps">
-                                ${assignment._projectSteps ? assignment._projectSteps.map((step, idx) => `
-                                    <div class="project-step ${step.status === 'completed' ? 'project-step--completed' : ''} ${step.name === assignment.stepName ? 'project-step--assigned' : ''}">
-                                        <span class="project-step__number">${step.status === 'completed' ? '✓' : idx + 1}</span>
-                                        <span class="project-step__name">${escapeHtml(step.name)}</span>
-                                        <span style="font-size: 12px;">${step.status === 'completed' ? '✅' : step.name === assignment.stepName ? '👈 担当' : '⚪'}</span>
-                                    </div>
-                                `).join('') : '<div style="color: var(--color-text-muted);">工程データなし</div>'}
-                            </div>
-                        </div>
-
-                        ${showSubmitButton ? `
-                            <div class="submit-section">
-                                <div class="submit-buttons">
-                                    ${assignment.status === 'pending' ? `
-                                        <button class="btn btn--secondary btn--sm" data-action="start-working" data-id="${assignment.id}">
-                                            🚀 作業開始
-                                        </button>
-                                    ` : ''}
-                                    <button class="btn btn--primary" data-action="open-submit" data-id="${assignment.id}">
-                                        📤 提出する
-                                    </button>
-                                </div>
-                            </div>
-                        ` : ''}
-                    </div>
-                `;
-            }
-
-            function renderSubmissions(submissions) {
-                if (submissions.length === 0) return '';
-
-                const stageLabels = { draft: '初稿', revision: '修正稿', final: '最終稿', submission: '提出' };
-                const statusLabels = { submitted: '確認中', approved: '承認', rejected: '差戻し' };
-
-                let html = '<div class="submission-history"><div class="submission-history__title">📋 提出履歴</div>';
-                for (const s of submissions) {
-                    let itemClass = 'submission-item';
-                    if (s.status === 'approved') itemClass += ' submission-item--approved';
-                    if (s.status === 'rejected') itemClass += ' submission-item--rejected';
-
-                    html += `
-                        <div class="${itemClass}">
-                            <span>${stageLabels[s.stage] || '提出'} - ${formatDateTime(s.submittedAt)}</span>
-                            <span>${statusLabels[s.status]}${s.status === 'rejected' && s.comment ? ': ' + escapeHtml(s.comment) : ''}</span>
-                        </div>
-                    `;
-                }
-                html += '</div>';
-                return html;
-            }
-
-            // Filter tasks
-            function filterTasks(filterType) {
-                const now = new Date();
-                let filtered = allAssignments;
-
-                switch (filterType) {
-                    case 'pending':
-                        filtered = allAssignments.filter(a => a.status === 'pending');
-                        break;
-                    case 'in_progress':
-                        filtered = allAssignments.filter(a => a.status === 'in_progress');
-                        break;
-                    case 'submitted':
-                        filtered = allAssignments.filter(a => a.status === 'submitted');
-                        break;
-                    case 'overdue':
-                        filtered = allAssignments.filter(a => {
-                            const dueDate = a.dueDate ? new Date(a.dueDate) : null;
-                            return dueDate && dueDate < now && a.status !== 'approved';
-                        });
-                        break;
-                    case 'today':
-                        filtered = allAssignments.filter(a => {
-                            const dueDate = a.dueDate ? new Date(a.dueDate) : null;
-                            return dueDate && dueDate.toDateString() === now.toDateString();
-                        });
-                        break;
-                }
-
-                if (currentView === 'kanban') {
-                    WorkflowUI.renderKanbanBoard('task-list', filtered, {});
-                } else {
-                    // For list view, just highlight/scroll
-                    document.querySelectorAll('.task-card').forEach(card => {
-                        const id = card.dataset.assignmentId;
-                        const task = filtered.find(t => t.id === id);
-                        card.style.opacity = task ? '1' : '0.3';
-                    });
-                }
-            }
-
-            // Legacy window functions for backwards compatibility with task detail modal
-            window.openSubmitModal = handleOpenSubmitModal;
-
-            // Open task detail
-            function openTaskDetail(taskId) {
+            // Open task detail (shows only this task - not other project steps)
+            async function openTaskDetail(taskId) {
                 const task = allAssignments.find(a => a.id === taskId);
                 if (!task) return;
 
-                const modal = document.getElementById('task-detail-modal');
-                document.getElementById('detail-task-name').textContent = task.stepName;
+                currentTask = task;
 
+                // Fetch submissions for this task
+                const submissions = await DataManager.getSubmissionsForAssignment(taskId);
+
+                tasksSection.classList.remove('show');
+                taskDetailSection.classList.add('show');
+
+                // Update header
+                document.getElementById('display-task-name').textContent = task.stepName;
+                document.getElementById('display-task-project').textContent = task.projectName;
+                document.getElementById('display-task-client').textContent = task.clientName;
+
+                // Status
                 const statusLabels = {
                     pending: '未着手',
                     in_progress: '作業中',
                     submitted: '確認待ち',
                     approved: '完了'
                 };
-
-                const content = document.getElementById('task-detail-content');
-                content.innerHTML = `
-                    <div style="margin-bottom: var(--space-4);">
-                        <span class="status-badge status-badge--${task.status}">${statusLabels[task.status]}</span>
-                    </div>
-                    <div style="margin-bottom: var(--space-4);">
-                        <div style="color: var(--color-text-muted); font-size: var(--font-size-sm);">プロジェクト</div>
-                        <div>${escapeHtml(task.clientName)} / ${escapeHtml(task.projectName)}</div>
-                    </div>
-                    ${task.dueDate ? `
-                        <div style="margin-bottom: var(--space-4);">
-                            <div style="color: var(--color-text-muted); font-size: var(--font-size-sm);">期日</div>
-                            <div>📅 ${formatDate(new Date(task.dueDate))}</div>
-                        </div>
-                    ` : ''}
-                    ${task.notes ? `
-                        <div style="margin-bottom: var(--space-4);">
-                            <div style="color: var(--color-text-muted); font-size: var(--font-size-sm);">注意事項</div>
-                            <div class="task-notes">${escapeHtml(task.notes)}</div>
-                        </div>
-                    ` : ''}
-                    <div style="margin-top: var(--space-6); padding-top: var(--space-4); border-top: 1px solid var(--color-border);">
-                        ${task.status !== 'approved' ? `
-                            <button class="btn btn--primary" onclick="openSubmitModal('${task.id}', '${escapeHtml(task.stepName)}', '${escapeHtml(task.projectName)}'); closeTaskDetailModal();">
-                                📤 提出する
-                            </button>
-                        ` : '<div style="color: var(--color-text-muted);">このタスクは完了しています</div>'}
-                    </div>
+                document.getElementById('display-task-status').textContent = statusLabels[task.status];
+                document.getElementById('display-task-status-badge').innerHTML = `
+                    <span class="status-badge status-badge--${task.status}">${statusLabels[task.status]}</span>
                 `;
 
-                modal.classList.add('active');
+                // Due date
+                const dueCard = document.getElementById('task-due-card');
+                if (task.dueDate) {
+                    dueCard.style.display = 'flex';
+                    const dueDate = new Date(task.dueDate);
+                    const now = new Date();
+                    const isOverdue = dueDate < now && task.status !== 'approved';
+                    document.getElementById('display-task-due').textContent =
+                        `${formatDateLong(dueDate)}${isOverdue ? ' (遅延)' : ''}`;
+                    document.getElementById('display-task-due').style.color = isOverdue ? '#ef4444' : '';
+                } else {
+                    dueCard.style.display = 'none';
+                }
+
+                // Notes
+                const notesSection = document.getElementById('task-notes-section');
+                if (task.notes) {
+                    notesSection.style.display = 'block';
+                    document.getElementById('display-task-notes').textContent = task.notes;
+                } else {
+                    notesSection.style.display = 'none';
+                }
+
+                // Submit section (only for non-approved tasks)
+                const submitSection = document.getElementById('submit-section');
+                const approvedMessage = document.getElementById('approved-message');
+                if (task.status === 'approved') {
+                    submitSection.style.display = 'none';
+                    approvedMessage.style.display = 'flex';
+                } else {
+                    submitSection.style.display = 'block';
+                    approvedMessage.style.display = 'none';
+                }
+
+                // Submission history
+                const historySection = document.getElementById('submission-history');
+                const submissionList = document.getElementById('submission-list');
+                if (submissions.length > 0) {
+                    historySection.style.display = 'block';
+                    const stageLabels = { draft: '初稿', revision: '修正稿', final: '最終稿', submission: '提出' };
+                    const statusLabels2 = { submitted: '確認中', approved: '承認', rejected: '差戻し' };
+
+                    submissionList.innerHTML = submissions.map(s => {
+                        let itemClass = 'submission-item';
+                        if (s.status === 'approved') itemClass += ' submission-item--approved';
+                        if (s.status === 'rejected') itemClass += ' submission-item--rejected';
+
+                        return `
+                            <div class="${itemClass}">
+                                <div class="submission-item__info">
+                                    <span class="submission-item__stage">${stageLabels[s.stage] || '提出'}</span>
+                                    <span class="submission-item__date">${formatDateTime(s.submittedAt)}</span>
+                                </div>
+                                <span class="submission-item__status">${statusLabels2[s.status]}${s.status === 'rejected' && s.comment ? ': ' + escapeHtml(s.comment) : ''}</span>
+                            </div>
+                        `;
+                    }).join('');
+                } else {
+                    historySection.style.display = 'none';
+                }
             }
 
-            window.closeTaskDetailModal = function() {
-                document.getElementById('task-detail-modal').classList.remove('active');
-            };
+            // Submit form
+            document.getElementById('submit-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
 
-            // Close submit modal
-            document.getElementById('submit-modal-close').addEventListener('click', () => submitModal.classList.remove('active'));
-            document.getElementById('submit-modal-cancel').addEventListener('click', () => submitModal.classList.remove('active'));
-            submitModal.addEventListener('click', (e) => { if (e.target === submitModal) submitModal.classList.remove('active'); });
-            document.getElementById('task-detail-modal').addEventListener('click', (e) => { if (e.target.id === 'task-detail-modal') closeTaskDetailModal(); });
+                if (!currentTask) return;
 
-            // Submit
-            document.getElementById('submit-modal-save').addEventListener('click', async () => {
-                const assignmentId = document.getElementById('submit-assignment-id').value;
                 const url = document.getElementById('submit-url').value;
                 const comment = document.getElementById('submit-comment').value;
 
+                const submitBtn = e.target.querySelector('button[type="submit"]');
+                submitBtn.disabled = true;
+                submitBtn.textContent = '提出中...';
+
                 try {
                     await DataManager.createSubmission({
-                        assignmentId,
+                        assignmentId: currentTask.id,
                         stage: 'submission',
                         url,
                         comment
                     });
-                    submitModal.classList.remove('active');
-                    WorkflowUI.showToast('提出完了', '成果物を提出しました。確認をお待ちください。', '✓');
-                    await renderTasks();
-                } catch (e) {
-                    WorkflowUI.showToast('エラー', '提出に失敗しました', '❌');
+
+                    // Refresh task list
+                    allAssignments = await DataManager.getAssignmentsForWorker(currentWorker.id);
+
+                    // Show success and go back
+                    alert('成果物を提出しました。確認をお待ちください。');
+
+                    // Clear form
+                    document.getElementById('submit-url').value = '';
+                    document.getElementById('submit-comment').value = '';
+
+                    // Refresh detail view
+                    openTaskDetail(currentTask.id);
+                } catch (error) {
+                    console.error('Submit error:', error);
+                    alert('提出に失敗しました');
+                } finally {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = '提出する';
                 }
             });
 
@@ -1173,11 +931,14 @@
             function showError(msg) {
                 const errorEl = document.getElementById('login-error');
                 errorEl.textContent = msg;
-                errorEl.style.display = 'block';
             }
 
             function formatDate(date) {
                 return date.toLocaleDateString('ja-JP', { month: 'short', day: 'numeric' });
+            }
+
+            function formatDateLong(date) {
+                return date.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' });
             }
 
             function formatDateTime(dateStr) {
