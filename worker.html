@@ -11,18 +11,65 @@
     <link rel="stylesheet" href="css/index.css">
     <style>
         .worker-container {
-            max-width: 900px;
+            max-width: 1200px;
             margin: 0 auto;
             padding: var(--space-6);
         }
 
+        /* ダッシュボードヘッダー */
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-6);
+            flex-wrap: wrap;
+            gap: var(--space-4);
+        }
+
+        .dashboard-header__welcome {
+            display: flex;
+            align-items: center;
+            gap: var(--space-4);
+        }
+
+        .dashboard-header__avatar {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: var(--gradient-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: 700;
+            color: white;
+        }
+
+        .dashboard-header__greeting {
+            font-size: var(--font-size-2xl);
+            font-weight: 700;
+        }
+
+        .dashboard-header__date {
+            color: var(--color-text-muted);
+            font-size: var(--font-size-sm);
+        }
+
+        /* タスクカード改善 */
         .task-card {
             background: var(--color-bg-card);
-            border-radius: var(--radius-lg);
+            border-radius: var(--radius-xl);
             padding: var(--space-5);
             margin-bottom: var(--space-4);
             border: 1px solid var(--color-border);
             box-shadow: var(--shadow-sm);
+            transition: all 0.2s ease;
+        }
+
+        .task-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+            border-color: var(--color-primary);
         }
 
         .task-card--overdue {
@@ -35,7 +82,16 @@
 
         .task-card--approved {
             border-left: 4px solid #10b981;
-            opacity: 0.7;
+            opacity: 0.8;
+        }
+
+        .task-card--urgent {
+            animation: pulse-urgent 2s infinite;
+        }
+
+        @keyframes pulse-urgent {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+            50% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
         }
 
         .task-header {
@@ -43,6 +99,7 @@
             justify-content: space-between;
             align-items: flex-start;
             margin-bottom: var(--space-3);
+            gap: var(--space-3);
         }
 
         .task-title {
@@ -60,9 +117,10 @@
         .task-due {
             font-size: var(--font-size-sm);
             font-weight: 500;
-            padding: var(--space-1) var(--space-2);
-            border-radius: var(--radius-sm);
+            padding: var(--space-1) var(--space-3);
+            border-radius: var(--radius-full);
             background: #f3f4f6;
+            white-space: nowrap;
         }
 
         .task-due--overdue {
@@ -75,10 +133,15 @@
             color: #d97706;
         }
 
+        .task-due--ok {
+            background: #d1fae5;
+            color: #059669;
+        }
+
         .task-notes {
-            background: #f8fafc;
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
             border-left: 3px solid var(--color-primary);
-            padding: var(--space-3);
+            padding: var(--space-3) var(--space-4);
             border-radius: var(--radius-md);
             margin: var(--space-3) 0;
             font-size: var(--font-size-sm);
@@ -94,9 +157,10 @@
         }
 
         .status-badge {
-            padding: var(--space-1) var(--space-2);
-            border-radius: var(--radius-sm);
-            font-weight: 500;
+            padding: var(--space-1) var(--space-3);
+            border-radius: var(--radius-full);
+            font-weight: 600;
+            font-size: var(--font-size-xs);
         }
 
         .status-badge--pending {
@@ -119,16 +183,11 @@
             color: #059669;
         }
 
+        /* 提出セクション */
         .submit-section {
             border-top: 1px solid var(--color-border);
             padding-top: var(--space-4);
             margin-top: var(--space-4);
-        }
-
-        .submit-title {
-            font-size: var(--font-size-sm);
-            font-weight: 500;
-            margin-bottom: var(--space-3);
         }
 
         .submit-buttons {
@@ -137,17 +196,24 @@
             flex-wrap: wrap;
         }
 
+        /* 提出履歴 */
         .submission-history {
             margin-top: var(--space-4);
+        }
+
+        .submission-history__title {
+            font-size: var(--font-size-sm);
+            color: var(--color-text-muted);
+            margin-bottom: var(--space-2);
         }
 
         .submission-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: var(--space-2);
+            padding: var(--space-2) var(--space-3);
             background: #f8fafc;
-            border-radius: var(--radius-sm);
+            border-radius: var(--radius-md);
             margin-bottom: var(--space-2);
             font-size: var(--font-size-sm);
         }
@@ -160,42 +226,50 @@
             background: #fee2e2;
         }
 
-        .empty-state {
-            text-align: center;
-            padding: var(--space-10);
-            color: var(--color-text-muted);
-        }
-
-        .login-section {
-            display: none;
-        }
-
-        .login-section.show {
-            display: block;
-        }
-
-        .tasks-section {
-            display: none;
-        }
-
-        .tasks-section.show {
-            display: block;
-        }
-
-        .project-timeline {
+        /* 工程プログレス */
+        .project-progress {
             margin-top: var(--space-4);
             padding-top: var(--space-4);
             border-top: 1px dashed var(--color-border);
         }
 
-        .project-timeline__title {
+        .project-progress__header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-3);
+            cursor: pointer;
+        }
+
+        .project-progress__title {
             font-size: var(--font-size-sm);
             font-weight: 500;
             color: var(--color-text-muted);
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .project-progress__bar {
+            height: 6px;
+            background: var(--color-bg-secondary);
+            border-radius: var(--radius-full);
+            overflow: hidden;
             margin-bottom: var(--space-3);
         }
 
-        .project-timeline__steps {
+        .project-progress__fill {
+            height: 100%;
+            background: var(--gradient-primary);
+            border-radius: var(--radius-full);
+            transition: width 0.5s ease;
+        }
+
+        .project-steps {
+            display: none;
+        }
+
+        .project-steps.show {
             display: flex;
             flex-direction: column;
             gap: var(--space-2);
@@ -251,9 +325,96 @@
             flex: 1;
         }
 
-        .project-step__status {
-            font-size: var(--font-size-xs);
+        /* 空状態 */
+        .empty-state {
+            text-align: center;
+            padding: var(--space-10);
             color: var(--color-text-muted);
+        }
+
+        .empty-state__icon {
+            font-size: 64px;
+            margin-bottom: var(--space-4);
+        }
+
+        .empty-state__title {
+            font-size: var(--font-size-xl);
+            font-weight: 600;
+            margin-bottom: var(--space-2);
+        }
+
+        /* セクション */
+        .section {
+            margin-bottom: var(--space-8);
+        }
+
+        .section__header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: var(--space-4);
+        }
+
+        .section__title {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            font-size: var(--font-size-lg);
+            font-weight: 600;
+        }
+
+        .section__badge {
+            background: #ef4444;
+            color: white;
+            padding: 2px 10px;
+            border-radius: var(--radius-full);
+            font-size: var(--font-size-sm);
+            font-weight: 600;
+        }
+
+        .section__badge--success {
+            background: #10b981;
+        }
+
+        .section__badge--warning {
+            background: #f59e0b;
+        }
+
+        /* ログインセクション */
+        .login-section {
+            display: none;
+        }
+
+        .login-section.show {
+            display: block;
+        }
+
+        .tasks-section {
+            display: none;
+        }
+
+        .tasks-section.show {
+            display: block;
+        }
+
+        /* レスポンシブ */
+        @media (max-width: 768px) {
+            .worker-container {
+                padding: var(--space-4);
+            }
+
+            .dashboard-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .task-header {
+                flex-direction: column;
+            }
+
+            .task-due {
+                margin-top: var(--space-2);
+            }
         }
     </style>
 </head>
@@ -279,7 +440,7 @@
         <section id="login-section" class="login-section show">
             <div class="card" style="max-width: 400px; margin: var(--space-10) auto;">
                 <h2 style="margin-bottom: var(--space-4);">作業者ログイン</h2>
-                <div id="login-error" class="login-error"></div>
+                <div id="login-error" class="login-error" style="display: none;"></div>
                 <form id="login-form">
                     <div class="input-group" style="margin-bottom: var(--space-4);">
                         <label for="email">メールアドレス</label>
@@ -296,9 +457,29 @@
 
         <!-- Tasks Section -->
         <section id="tasks-section" class="tasks-section">
-            <h1 style="margin-bottom: var(--space-6);">📋 担当タスク</h1>
-            <div id="task-list">
-                <!-- Tasks will be rendered here -->
+            <!-- Dashboard Header -->
+            <div class="dashboard-header">
+                <div class="dashboard-header__welcome">
+                    <div class="dashboard-header__avatar" id="worker-avatar">YS</div>
+                    <div>
+                        <div class="dashboard-header__greeting" id="greeting">おはようございます</div>
+                        <div class="dashboard-header__date" id="today-date"></div>
+                    </div>
+                </div>
+                <div id="view-toggle"></div>
+            </div>
+
+            <!-- Status Grid -->
+            <div id="status-grid"></div>
+
+            <!-- Quick Actions -->
+            <div id="quick-actions"></div>
+
+            <!-- Task List / Kanban View -->
+            <div id="task-view">
+                <div id="task-list">
+                    <!-- Tasks will be rendered here -->
+                </div>
             </div>
         </section>
     </main>
@@ -307,28 +488,46 @@
     <div class="modal-overlay" id="submit-modal">
         <div class="modal" style="max-width: 500px;">
             <div class="modal__header">
-                <h2 class="modal__title">成果物を提出</h2>
+                <h2 class="modal__title">📤 成果物を提出</h2>
                 <button class="modal__close" id="submit-modal-close">&times;</button>
             </div>
             <div class="modal__body">
                 <input type="hidden" id="submit-assignment-id">
+                <div id="submit-task-info" style="background: #f8fafc; padding: var(--space-3); border-radius: var(--radius-md); margin-bottom: var(--space-4);">
+                    <!-- Task info will be shown here -->
+                </div>
                 <div class="input-group" style="margin-bottom: var(--space-4);">
-                    <label for="submit-url">成果物URL</label>
+                    <label for="submit-url">成果物URL <span style="color: var(--color-text-muted);">(Google Drive等)</span></label>
                     <input type="url" id="submit-url" class="input" placeholder="https://drive.google.com/...">
                 </div>
                 <div class="input-group">
-                    <label for="submit-comment">コメント</label>
-                    <textarea id="submit-comment" class="input" rows="3" placeholder="備考があれば入力"></textarea>
+                    <label for="submit-comment">コメント <span style="color: var(--color-text-muted);">(任意)</span></label>
+                    <textarea id="submit-comment" class="input" rows="3" placeholder="備考や確認してほしい点があれば入力"></textarea>
                 </div>
             </div>
             <div class="modal__footer">
                 <button class="btn btn--secondary" id="submit-modal-cancel">キャンセル</button>
-                <button class="btn btn--primary" id="submit-modal-save">提出する</button>
+                <button class="btn btn--primary" id="submit-modal-save">📤 提出する</button>
             </div>
         </div>
     </div>
 
+    <!-- Task Detail Modal -->
+    <div class="modal-overlay" id="task-detail-modal">
+        <div class="modal" style="max-width: 600px;">
+            <div class="modal__header">
+                <h2 class="modal__title" id="detail-task-name">タスク詳細</h2>
+                <button class="modal__close" onclick="closeTaskDetailModal()">&times;</button>
+            </div>
+            <div class="modal__body" id="task-detail-content">
+                <!-- Task details will be rendered here -->
+            </div>
+        </div>
+    </div>
+
+    <script src="js/security.js"></script>
     <script src="js/data.js"></script>
+    <script src="js/workflow-ui.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const loginSection = document.getElementById('login-section');
@@ -339,6 +538,22 @@
             const submitModal = document.getElementById('submit-modal');
 
             let currentWorker = null;
+            let allAssignments = [];
+            let currentView = 'list';
+
+            // セキュリティ: HTMLエスケープ
+            const escapeHtml = (str) => {
+                if (typeof SecurityUtils !== 'undefined') {
+                    return SecurityUtils.escapeHtml(str);
+                }
+                if (str === null || str === undefined) return '';
+                return String(str)
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#x27;');
+            };
 
             // Check existing session
             const session = localStorage.getItem('worker_session');
@@ -359,6 +574,13 @@
             // Login form
             document.getElementById('login-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
+
+                // レート制限チェック
+                if (typeof SecurityUtils !== 'undefined' && !SecurityUtils.checkRateLimit('worker_login', 5, 60000)) {
+                    showError('ログイン試行回数が多すぎます。1分後に再度お試しください。');
+                    return;
+                }
+
                 const email = document.getElementById('email').value.trim();
                 const password = document.getElementById('password').value;
 
@@ -405,17 +627,105 @@
                 tasksSection.classList.add('show');
                 userNav.style.display = 'flex';
                 workerNameEl.textContent = currentWorker.name;
+
+                // Set greeting and date
+                const hour = new Date().getHours();
+                let greeting = 'こんにちは';
+                if (hour < 12) greeting = 'おはようございます';
+                else if (hour >= 18) greeting = 'お疲れ様です';
+                document.getElementById('greeting').textContent = `${greeting}、${escapeHtml(currentWorker.name)}さん`;
+                document.getElementById('today-date').textContent = new Date().toLocaleDateString('ja-JP', {
+                    year: 'numeric', month: 'long', day: 'numeric', weekday: 'long'
+                });
+
+                // Set avatar initials
+                const initials = currentWorker.name.substring(0, 2).toUpperCase();
+                document.getElementById('worker-avatar').textContent = initials;
+
+                // Initialize view toggle
+                WorkflowUI.renderViewToggle('view-toggle', currentView);
+                WorkflowUI.setOnViewChange((view) => {
+                    currentView = view;
+                    renderTasks();
+                });
+
                 await renderTasks();
             }
 
             // Render tasks
             async function renderTasks() {
-                const assignments = await DataManager.getAssignmentsForWorker(currentWorker.id);
+                allAssignments = await DataManager.getAssignmentsForWorker(currentWorker.id);
 
-                if (assignments.length === 0) {
+                // Fetch project steps and submissions for each assignment
+                for (const assignment of allAssignments) {
+                    assignment._submissions = await DataManager.getSubmissionsForAssignment(assignment.id);
+                    if (assignment.projectId) {
+                        const project = await DataManager.getProject(assignment.projectId);
+                        assignment._projectSteps = project?.steps || [];
+                        assignment._projectProgress = DataManager.getProgressPercentage(project);
+                    }
+                }
+
+                // Calculate stats
+                const now = new Date();
+                const stats = {
+                    pending: 0,
+                    inProgress: 0,
+                    submitted: 0,
+                    overdue: 0,
+                    today: 0
+                };
+
+                allAssignments.forEach(a => {
+                    if (a.status === 'pending') stats.pending++;
+                    if (a.status === 'in_progress') stats.inProgress++;
+                    if (a.status === 'submitted') stats.submitted++;
+
+                    const dueDate = a.dueDate ? new Date(a.dueDate) : null;
+                    if (dueDate && dueDate < now && a.status !== 'approved') {
+                        stats.overdue++;
+                    }
+                    if (dueDate && dueDate.toDateString() === now.toDateString()) {
+                        stats.today++;
+                    }
+                });
+
+                // Render status grid
+                WorkflowUI.renderStatusGrid('status-grid', stats);
+
+                // Render quick actions
+                WorkflowUI.renderQuickActions('quick-actions', stats);
+                WorkflowUI.setOnFilterChange(filterTasks);
+
+                // Render based on view
+                if (currentView === 'kanban') {
+                    renderKanbanView();
+                } else {
+                    renderListView();
+                }
+            }
+
+            function renderKanbanView() {
+                WorkflowUI.renderKanbanBoard('task-list', allAssignments, {});
+                WorkflowUI.setOnStatusChange(async (taskId, newStatus) => {
+                    try {
+                        await DataManager.updateAssignmentStatus(taskId, newStatus);
+                        WorkflowUI.showToast('ステータス更新', 'タスクのステータスを更新しました', '✓');
+                        await renderTasks();
+                    } catch (e) {
+                        WorkflowUI.showToast('エラー', '更新に失敗しました', '❌');
+                    }
+                });
+                WorkflowUI.setOnTaskClick(openTaskDetail);
+            }
+
+            function renderListView() {
+                if (allAssignments.length === 0) {
                     taskList.innerHTML = `
                         <div class="empty-state">
-                            <p>📭 現在担当しているタスクはありません</p>
+                            <div class="empty-state__icon">📭</div>
+                            <div class="empty-state__title">タスクがありません</div>
+                            <p>現在担当しているタスクはありません</p>
                         </div>
                     `;
                     return;
@@ -423,62 +733,65 @@
 
                 const now = new Date();
 
-                // Split assignments into pending (not submitted/approved) and submitted
-                const pendingTasks = [];
-                const submittedTasks = [];
-
-                for (const assignment of assignments) {
-                    const submissions = await DataManager.getSubmissionsForAssignment(assignment.id);
-                    assignment._submissions = submissions;
-
-                    // Fetch project steps for workflow display
-                    if (assignment.projectId) {
-                        const project = await DataManager.getProject(assignment.projectId);
-                        assignment._projectSteps = project?.steps || [];
-                    }
-
-                    if (assignment.status === 'pending' || assignment.status === 'in_progress') {
-                        pendingTasks.push(assignment);
-                    } else {
-                        submittedTasks.push(assignment);
-                    }
-                }
+                // Split into sections
+                const pendingTasks = allAssignments.filter(a => a.status === 'pending' || a.status === 'in_progress');
+                const submittedTasks = allAssignments.filter(a => a.status === 'submitted');
+                const completedTasks = allAssignments.filter(a => a.status === 'approved');
 
                 let html = '';
 
                 // Pending Section
-                html += `
-                    <div class="dashboard-section" style="margin-bottom: var(--space-6);">
-                        <h2 style="display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-4);">
-                            📋 未提出タスク <span style="background: #ef4444; color: white; padding: 2px 8px; border-radius: 99px; font-size: var(--font-size-sm);">${pendingTasks.length}件</span>
-                        </h2>
-                `;
-
-                if (pendingTasks.length === 0) {
-                    html += `<div class="card" style="text-align: center; padding: var(--space-6); color: var(--color-text-muted);">🎉 すべて提出済みです！</div>`;
-                } else {
-                    for (const assignment of pendingTasks) {
-                        html += renderTaskCard(assignment, now, true);
-                    }
+                if (pendingTasks.length > 0) {
+                    html += `
+                        <div class="section">
+                            <div class="section__header">
+                                <h2 class="section__title">
+                                    📋 未提出タスク
+                                    <span class="section__badge">${pendingTasks.length}件</span>
+                                </h2>
+                            </div>
+                            ${pendingTasks.map(a => renderTaskCard(a, now, true)).join('')}
+                        </div>
+                    `;
                 }
-                html += `</div>`;
 
                 // Submitted Section
-                html += `
-                    <div class="dashboard-section">
-                        <h2 style="display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-4);">
-                            ${submittedTasks.some(t => t.status === 'submitted') ? '⏳' : '✅'} 提出済み <span style="background: var(--color-text-muted); color: white; padding: 2px 8px; border-radius: 99px; font-size: var(--font-size-sm);">${submittedTasks.length}件</span>
-                        </h2>
-                `;
-
-                if (submittedTasks.length === 0) {
-                    html += `<div class="card" style="text-align: center; padding: var(--space-6); color: var(--color-text-muted);">まだ提出がありません</div>`;
-                } else {
-                    for (const assignment of submittedTasks) {
-                        html += renderTaskCard(assignment, now, false);
-                    }
+                if (submittedTasks.length > 0) {
+                    html += `
+                        <div class="section">
+                            <div class="section__header">
+                                <h2 class="section__title">
+                                    👀 レビュー待ち
+                                    <span class="section__badge section__badge--warning">${submittedTasks.length}件</span>
+                                </h2>
+                            </div>
+                            ${submittedTasks.map(a => renderTaskCard(a, now, false)).join('')}
+                        </div>
+                    `;
                 }
-                html += `</div>`;
+
+                // Completed Section
+                if (completedTasks.length > 0) {
+                    html += `
+                        <div class="section">
+                            <div class="section__header">
+                                <h2 class="section__title">
+                                    ✅ 完了
+                                    <span class="section__badge section__badge--success">${completedTasks.length}件</span>
+                                </h2>
+                            </div>
+                            ${completedTasks.map(a => renderTaskCard(a, now, false)).join('')}
+                        </div>
+                    `;
+                }
+
+                if (html === '') {
+                    html = `
+                        <div class="card" style="text-align: center; padding: var(--space-6); color: var(--color-text-muted);">
+                            🎉 すべてのタスクが完了しました！
+                        </div>
+                    `;
+                }
 
                 taskList.innerHTML = html;
             }
@@ -488,6 +801,7 @@
                 const dueDate = assignment.dueDate ? new Date(assignment.dueDate) : null;
                 const isOverdue = dueDate && dueDate < now && assignment.status !== 'approved';
                 const isSoon = dueDate && !isOverdue && (dueDate - now) < (2 * 24 * 60 * 60 * 1000);
+                const isOk = dueDate && !isOverdue && !isSoon;
 
                 const statusLabels = {
                     pending: '未着手',
@@ -499,49 +813,73 @@
                 let cardClass = 'task-card';
                 if (assignment.status === 'approved') cardClass += ' task-card--approved';
                 else if (assignment.status === 'submitted') cardClass += ' task-card--submitted';
-                else if (isOverdue) cardClass += ' task-card--overdue';
+                else if (isOverdue) cardClass += ' task-card--overdue task-card--urgent';
 
                 let dueClass = '';
-                if (isOverdue) dueClass = 'task-due--overdue';
-                else if (isSoon) dueClass = 'task-due--soon';
+                let dueIcon = '📅';
+                if (isOverdue) { dueClass = 'task-due--overdue'; dueIcon = '⚠️'; }
+                else if (isSoon) { dueClass = 'task-due--soon'; dueIcon = '⏰'; }
+                else if (isOk) { dueClass = 'task-due--ok'; dueIcon = '✓'; }
+
+                const progress = assignment._projectProgress || 0;
 
                 return `
-                    <div class="${cardClass}">
+                    <div class="${cardClass}" data-assignment-id="${assignment.id}">
                         <div class="task-header">
                             <div>
-                                <div class="task-title">${assignment.stepName}</div>
-                                <div class="task-project">${assignment.clientName} / ${assignment.projectName}</div>
+                                <div class="task-title">${escapeHtml(assignment.stepName)}</div>
+                                <div class="task-project">🏢 ${escapeHtml(assignment.clientName)} / 📁 ${escapeHtml(assignment.projectName)}</div>
                             </div>
-                            ${dueDate ? `<div class="task-due ${dueClass}">📅 ${formatDate(dueDate)}${isOverdue ? ' (期限超過)' : ''}</div>` : ''}
+                            ${dueDate ? `
+                                <div class="task-due ${dueClass}">
+                                    ${dueIcon} ${formatDate(dueDate)}${isOverdue ? ' (遅延)' : ''}
+                                </div>
+                            ` : ''}
                         </div>
-                        
+
                         <div class="task-status">
                             <span class="status-badge status-badge--${assignment.status}">${statusLabels[assignment.status]}</span>
+                            ${submissions.length > 0 ? `<span style="color: var(--color-text-muted);">・提出 ${submissions.length}回</span>` : ''}
                         </div>
-                        
-                        ${assignment.notes ? `<div class="task-notes">📝 ${assignment.notes}</div>` : ''}
-                        
+
+                        ${assignment.notes ? `<div class="task-notes">📝 ${escapeHtml(assignment.notes)}</div>` : ''}
+
                         ${renderSubmissions(submissions)}
-                        
-                        <!-- Project Workflow Steps -->
-                        <div class="project-timeline">
-                            <div class="project-timeline__title" onclick="toggleWorkflow('workflow-${assignment.id}')" style="cursor: pointer;">
-                                📋 全体工程を見る ▼
+
+                        <!-- Project Progress -->
+                        <div class="project-progress">
+                            <div class="project-progress__header" onclick="toggleWorkflow('workflow-${assignment.id}')">
+                                <div class="project-progress__title">
+                                    📊 プロジェクト進捗 ${progress}%
+                                    <span style="color: var(--color-text-muted);">▼</span>
+                                </div>
                             </div>
-                            <div id="workflow-${assignment.id}" class="project-timeline__steps" style="display: none;">
+                            <div class="project-progress__bar">
+                                <div class="project-progress__fill" style="width: ${progress}%;"></div>
+                            </div>
+                            <div id="workflow-${assignment.id}" class="project-steps">
                                 ${assignment._projectSteps ? assignment._projectSteps.map((step, idx) => `
-                                    <div class="project-step ${step.status === 'completed' ? 'project-step--completed' : ''} ${step.name === assignment.stepName ? 'project-step--current' : ''}">
-                                        <span class="project-step__number">${idx + 1}</span>
-                                        <span class="project-step__name">${step.name}</span>
-                                        <span class="project-step__status">${step.status === 'completed' ? '✅' : step.name === assignment.stepName ? '🔵' : '⚪'}</span>
+                                    <div class="project-step ${step.status === 'completed' ? 'project-step--completed' : ''} ${step.name === assignment.stepName ? 'project-step--assigned' : ''}">
+                                        <span class="project-step__number">${step.status === 'completed' ? '✓' : idx + 1}</span>
+                                        <span class="project-step__name">${escapeHtml(step.name)}</span>
+                                        <span style="font-size: 12px;">${step.status === 'completed' ? '✅' : step.name === assignment.stepName ? '👈 担当' : '⚪'}</span>
                                     </div>
                                 `).join('') : '<div style="color: var(--color-text-muted);">工程データなし</div>'}
                             </div>
                         </div>
-                        
+
                         ${showSubmitButton ? `
                             <div class="submit-section">
-                                <button class="btn btn--primary" onclick="openSubmitModal('${assignment.id}')">📤 提出する</button>
+                                <div class="submit-buttons">
+                                    ${assignment.status === 'pending' ? `
+                                        <button class="btn btn--secondary btn--sm" onclick="startWorking('${assignment.id}')">
+                                            🚀 作業開始
+                                        </button>
+                                    ` : ''}
+                                    <button class="btn btn--primary" onclick="openSubmitModal('${assignment.id}', '${escapeHtml(assignment.stepName)}', '${escapeHtml(assignment.projectName)}')">
+                                        📤 提出する
+                                    </button>
+                                </div>
                             </div>
                         ` : ''}
                     </div>
@@ -554,7 +892,7 @@
                 const stageLabels = { draft: '初稿', revision: '修正稿', final: '最終稿', submission: '提出' };
                 const statusLabels = { submitted: '確認中', approved: '承認', rejected: '差戻し' };
 
-                let html = '<div class="submission-history"><small style="color: var(--color-text-muted);">提出履歴:</small>';
+                let html = '<div class="submission-history"><div class="submission-history__title">📋 提出履歴</div>';
                 for (const s of submissions) {
                     let itemClass = 'submission-item';
                     if (s.status === 'approved') itemClass += ' submission-item--approved';
@@ -562,8 +900,8 @@
 
                     html += `
                         <div class="${itemClass}">
-                            <span>${stageLabels[s.stage]} - ${formatDateTime(s.submittedAt)}</span>
-                            <span>${statusLabels[s.status]}${s.status === 'rejected' && s.comment ? ': ' + s.comment : ''}</span>
+                            <span>${stageLabels[s.stage] || '提出'} - ${formatDateTime(s.submittedAt)}</span>
+                            <span>${statusLabels[s.status]}${s.status === 'rejected' && s.comment ? ': ' + escapeHtml(s.comment) : ''}</span>
                         </div>
                     `;
                 }
@@ -571,26 +909,135 @@
                 return html;
             }
 
+            // Filter tasks
+            function filterTasks(filterType) {
+                const now = new Date();
+                let filtered = allAssignments;
+
+                switch (filterType) {
+                    case 'pending':
+                        filtered = allAssignments.filter(a => a.status === 'pending');
+                        break;
+                    case 'in_progress':
+                        filtered = allAssignments.filter(a => a.status === 'in_progress');
+                        break;
+                    case 'submitted':
+                        filtered = allAssignments.filter(a => a.status === 'submitted');
+                        break;
+                    case 'overdue':
+                        filtered = allAssignments.filter(a => {
+                            const dueDate = a.dueDate ? new Date(a.dueDate) : null;
+                            return dueDate && dueDate < now && a.status !== 'approved';
+                        });
+                        break;
+                    case 'today':
+                        filtered = allAssignments.filter(a => {
+                            const dueDate = a.dueDate ? new Date(a.dueDate) : null;
+                            return dueDate && dueDate.toDateString() === now.toDateString();
+                        });
+                        break;
+                }
+
+                if (currentView === 'kanban') {
+                    WorkflowUI.renderKanbanBoard('task-list', filtered, {});
+                } else {
+                    // For list view, just highlight/scroll
+                    document.querySelectorAll('.task-card').forEach(card => {
+                        const id = card.dataset.assignmentId;
+                        const task = filtered.find(t => t.id === id);
+                        card.style.opacity = task ? '1' : '0.3';
+                    });
+                }
+            }
+
             // Toggle workflow display
-            window.toggleWorkflow = function (id) {
+            window.toggleWorkflow = function(id) {
                 const el = document.getElementById(id);
                 if (el) {
-                    el.style.display = el.style.display === 'none' ? 'flex' : 'none';
+                    el.classList.toggle('show');
+                }
+            };
+
+            // Start working
+            window.startWorking = async function(assignmentId) {
+                try {
+                    await DataManager.updateAssignmentStatus(assignmentId, 'in_progress');
+                    WorkflowUI.showToast('作業開始', 'タスクを作業中に変更しました', '🚀');
+                    await renderTasks();
+                } catch (e) {
+                    WorkflowUI.showToast('エラー', '更新に失敗しました', '❌');
                 }
             };
 
             // Open submit modal
-            window.openSubmitModal = function (assignmentId) {
+            window.openSubmitModal = function(assignmentId, stepName, projectName) {
                 document.getElementById('submit-assignment-id').value = assignmentId;
                 document.getElementById('submit-url').value = '';
                 document.getElementById('submit-comment').value = '';
+                document.getElementById('submit-task-info').innerHTML = `
+                    <div style="font-weight: 500;">${escapeHtml(stepName)}</div>
+                    <div style="font-size: var(--font-size-sm); color: var(--color-text-muted);">${escapeHtml(projectName)}</div>
+                `;
                 submitModal.classList.add('active');
+            };
+
+            // Open task detail
+            function openTaskDetail(taskId) {
+                const task = allAssignments.find(a => a.id === taskId);
+                if (!task) return;
+
+                const modal = document.getElementById('task-detail-modal');
+                document.getElementById('detail-task-name').textContent = task.stepName;
+
+                const statusLabels = {
+                    pending: '未着手',
+                    in_progress: '作業中',
+                    submitted: '確認待ち',
+                    approved: '完了'
+                };
+
+                const content = document.getElementById('task-detail-content');
+                content.innerHTML = `
+                    <div style="margin-bottom: var(--space-4);">
+                        <span class="status-badge status-badge--${task.status}">${statusLabels[task.status]}</span>
+                    </div>
+                    <div style="margin-bottom: var(--space-4);">
+                        <div style="color: var(--color-text-muted); font-size: var(--font-size-sm);">プロジェクト</div>
+                        <div>${escapeHtml(task.clientName)} / ${escapeHtml(task.projectName)}</div>
+                    </div>
+                    ${task.dueDate ? `
+                        <div style="margin-bottom: var(--space-4);">
+                            <div style="color: var(--color-text-muted); font-size: var(--font-size-sm);">期日</div>
+                            <div>📅 ${formatDate(new Date(task.dueDate))}</div>
+                        </div>
+                    ` : ''}
+                    ${task.notes ? `
+                        <div style="margin-bottom: var(--space-4);">
+                            <div style="color: var(--color-text-muted); font-size: var(--font-size-sm);">注意事項</div>
+                            <div class="task-notes">${escapeHtml(task.notes)}</div>
+                        </div>
+                    ` : ''}
+                    <div style="margin-top: var(--space-6); padding-top: var(--space-4); border-top: 1px solid var(--color-border);">
+                        ${task.status !== 'approved' ? `
+                            <button class="btn btn--primary" onclick="openSubmitModal('${task.id}', '${escapeHtml(task.stepName)}', '${escapeHtml(task.projectName)}'); closeTaskDetailModal();">
+                                📤 提出する
+                            </button>
+                        ` : '<div style="color: var(--color-text-muted);">このタスクは完了しています</div>'}
+                    </div>
+                `;
+
+                modal.classList.add('active');
+            }
+
+            window.closeTaskDetailModal = function() {
+                document.getElementById('task-detail-modal').classList.remove('active');
             };
 
             // Close submit modal
             document.getElementById('submit-modal-close').addEventListener('click', () => submitModal.classList.remove('active'));
             document.getElementById('submit-modal-cancel').addEventListener('click', () => submitModal.classList.remove('active'));
             submitModal.addEventListener('click', (e) => { if (e.target === submitModal) submitModal.classList.remove('active'); });
+            document.getElementById('task-detail-modal').addEventListener('click', (e) => { if (e.target.id === 'task-detail-modal') closeTaskDetailModal(); });
 
             // Submit
             document.getElementById('submit-modal-save').addEventListener('click', async () => {
@@ -606,9 +1053,10 @@
                         comment
                     });
                     submitModal.classList.remove('active');
+                    WorkflowUI.showToast('提出完了', '成果物を提出しました。確認をお待ちください。', '✓');
                     await renderTasks();
                 } catch (e) {
-                    alert('提出に失敗しました');
+                    WorkflowUI.showToast('エラー', '提出に失敗しました', '❌');
                 }
             });
 
@@ -620,7 +1068,7 @@
             }
 
             function formatDate(date) {
-                return date.toLocaleDateString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit' });
+                return date.toLocaleDateString('ja-JP', { month: 'short', day: 'numeric' });
             }
 
             function formatDateTime(dateStr) {

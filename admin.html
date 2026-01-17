@@ -10,6 +10,405 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/index.css">
+    <style>
+        /* Enhanced Director Dashboard Styles */
+        .director-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: var(--radius-xl);
+            padding: var(--space-6);
+            margin-bottom: var(--space-6);
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .director-header__info {
+            display: flex;
+            align-items: center;
+            gap: var(--space-4);
+        }
+
+        .director-header__avatar {
+            width: 64px;
+            height: 64px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            border: 3px solid rgba(255,255,255,0.3);
+        }
+
+        .director-header__name {
+            font-size: var(--font-size-2xl);
+            font-weight: 700;
+            margin-bottom: var(--space-1);
+        }
+
+        .director-header__role {
+            opacity: 0.9;
+            font-size: var(--font-size-sm);
+        }
+
+        .director-header__date {
+            text-align: right;
+            opacity: 0.9;
+        }
+
+        .director-header__date-day {
+            font-size: var(--font-size-3xl);
+            font-weight: 700;
+        }
+
+        /* Enhanced Stats Grid */
+        .director-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: var(--space-4);
+            margin-bottom: var(--space-6);
+        }
+
+        .director-stat {
+            background: var(--color-bg-card);
+            border-radius: var(--radius-lg);
+            padding: var(--space-5);
+            border: 1px solid var(--color-border);
+            transition: all 0.2s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .director-stat:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .director-stat::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+        }
+
+        .director-stat--warning::before { background: #f59e0b; }
+        .director-stat--danger::before { background: #ef4444; }
+        .director-stat--success::before { background: #10b981; }
+        .director-stat--info::before { background: #3b82f6; }
+
+        .director-stat__value {
+            font-size: var(--font-size-3xl);
+            font-weight: 700;
+            color: var(--color-text);
+            margin-bottom: var(--space-1);
+        }
+
+        .director-stat__label {
+            font-size: var(--font-size-sm);
+            color: var(--color-text-muted);
+        }
+
+        .director-stat__icon {
+            position: absolute;
+            right: var(--space-4);
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 48px;
+            opacity: 0.1;
+        }
+
+        /* Quick Actions */
+        .quick-actions {
+            display: flex;
+            gap: var(--space-3);
+            margin-bottom: var(--space-6);
+            flex-wrap: wrap;
+        }
+
+        .quick-action {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            padding: var(--space-3) var(--space-4);
+            background: var(--color-bg-card);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-lg);
+            font-size: var(--font-size-sm);
+            font-weight: 500;
+            color: var(--color-text);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .quick-action:hover {
+            background: var(--color-primary);
+            color: white;
+            border-color: var(--color-primary);
+        }
+
+        .quick-action--primary {
+            background: var(--color-primary);
+            color: white;
+            border-color: var(--color-primary);
+        }
+
+        .quick-action--primary:hover {
+            background: var(--color-primary-dark);
+        }
+
+        /* Dashboard Grid */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--space-6);
+            margin-bottom: var(--space-6);
+        }
+
+        .dashboard-panel {
+            background: var(--color-bg-card);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--color-border);
+            overflow: hidden;
+        }
+
+        .dashboard-panel__header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--space-4);
+            border-bottom: 1px solid var(--color-border);
+            background: var(--color-bg-secondary);
+        }
+
+        .dashboard-panel__title {
+            font-weight: 600;
+            font-size: var(--font-size-base);
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .dashboard-panel__body {
+            padding: var(--space-4);
+            max-height: 350px;
+            overflow-y: auto;
+        }
+
+        /* Task Items */
+        .task-item {
+            display: flex;
+            align-items: flex-start;
+            gap: var(--space-3);
+            padding: var(--space-3);
+            border-radius: var(--radius-md);
+            margin-bottom: var(--space-2);
+            background: var(--color-bg-secondary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .task-item:hover {
+            background: var(--color-bg-hover);
+        }
+
+        .task-item__priority {
+            width: 4px;
+            height: 100%;
+            min-height: 40px;
+            border-radius: 2px;
+            flex-shrink: 0;
+        }
+
+        .task-item__priority--high { background: #ef4444; }
+        .task-item__priority--medium { background: #f59e0b; }
+        .task-item__priority--low { background: #10b981; }
+
+        .task-item__content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .task-item__title {
+            font-weight: 500;
+            margin-bottom: var(--space-1);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .task-item__meta {
+            font-size: var(--font-size-xs);
+            color: var(--color-text-muted);
+            display: flex;
+            gap: var(--space-2);
+            flex-wrap: wrap;
+        }
+
+        .task-item__badge {
+            padding: 2px 8px;
+            border-radius: var(--radius-sm);
+            font-size: var(--font-size-xs);
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .task-item__badge--warning {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .task-item__badge--danger {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .task-item__badge--success {
+            background: #d1fae5;
+            color: #059669;
+        }
+
+        /* Progress Overview */
+        .progress-overview {
+            background: var(--color-bg-card);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--color-border);
+            padding: var(--space-5);
+            margin-bottom: var(--space-6);
+        }
+
+        .progress-overview__header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-4);
+        }
+
+        .progress-overview__title {
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .progress-bar-large {
+            height: 24px;
+            background: var(--color-bg-secondary);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            display: flex;
+        }
+
+        .progress-bar-large__segment {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: var(--font-size-xs);
+            font-weight: 600;
+            color: white;
+            transition: width 0.3s ease;
+        }
+
+        .progress-bar-large__segment--completed { background: #10b981; }
+        .progress-bar-large__segment--in-progress { background: #3b82f6; }
+        .progress-bar-large__segment--pending { background: #e5e7eb; color: #6b7280; }
+
+        .progress-legend {
+            display: flex;
+            gap: var(--space-6);
+            margin-top: var(--space-4);
+            justify-content: center;
+        }
+
+        .progress-legend__item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            font-size: var(--font-size-sm);
+            color: var(--color-text-secondary);
+        }
+
+        .progress-legend__color {
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: var(--space-6);
+            color: var(--color-text-muted);
+        }
+
+        .empty-state__icon {
+            font-size: 48px;
+            margin-bottom: var(--space-3);
+            opacity: 0.5;
+        }
+
+        /* View Toggle */
+        .view-toggle {
+            display: flex;
+            background: var(--color-bg-secondary);
+            border-radius: var(--radius-md);
+            padding: 4px;
+            gap: 4px;
+        }
+
+        .view-toggle__btn {
+            padding: var(--space-2) var(--space-3);
+            border-radius: var(--radius-sm);
+            border: none;
+            background: transparent;
+            font-size: var(--font-size-sm);
+            font-weight: 500;
+            color: var(--color-text-muted);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .view-toggle__btn--active {
+            background: white;
+            color: var(--color-text);
+            box-shadow: var(--shadow-sm);
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .director-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .director-stats {
+                grid-template-columns: 1fr;
+            }
+
+            .director-header {
+                flex-direction: column;
+                text-align: center;
+                gap: var(--space-4);
+            }
+
+            .director-header__info {
+                flex-direction: column;
+            }
+
+            .director-header__date {
+                text-align: center;
+            }
+        }
+    </style>
 </head>
 
 <body>
@@ -55,46 +454,144 @@
             <div class="main-content">
                 <!-- Dashboard (shown by default) -->
                 <div id="admin-dashboard">
-                    <h2 class="dashboard-title">📊 ダッシュボード</h2>
+                    <!-- Director Header -->
+                    <div class="director-header">
+                        <div class="director-header__info">
+                            <div class="director-header__avatar" id="director-avatar">👤</div>
+                            <div>
+                                <div class="director-header__name" id="director-name">ディレクター</div>
+                                <div class="director-header__role" id="director-role">プロジェクト管理者</div>
+                            </div>
+                        </div>
+                        <div class="director-header__date">
+                            <div class="director-header__date-day" id="current-date"></div>
+                            <div id="current-weekday"></div>
+                        </div>
+                    </div>
 
-                    <!-- Stats Cards -->
-                    <div class="dashboard-stats">
-                        <div class="stat-card stat-card--warning" id="stat-pending-approvals">
-                            <div class="stat-card__icon">📋</div>
-                            <div class="stat-card__content">
-                                <div class="stat-card__value">-</div>
-                                <div class="stat-card__label">承認待ち</div>
+                    <!-- Enhanced Stats Grid -->
+                    <div class="director-stats">
+                        <div class="director-stat director-stat--warning" id="stat-pending-approvals">
+                            <div class="director-stat__value">-</div>
+                            <div class="director-stat__label">承認待ち</div>
+                            <div class="director-stat__icon">📋</div>
+                        </div>
+                        <div class="director-stat director-stat--danger" id="stat-overdue-tasks">
+                            <div class="director-stat__value">-</div>
+                            <div class="director-stat__label">遅延タスク</div>
+                            <div class="director-stat__icon">⚠️</div>
+                        </div>
+                        <div class="director-stat director-stat--success" id="stat-completed-today">
+                            <div class="director-stat__value">-</div>
+                            <div class="director-stat__label">今日完了</div>
+                            <div class="director-stat__icon">✓</div>
+                        </div>
+                        <div class="director-stat director-stat--info" id="stat-active-projects">
+                            <div class="director-stat__value">-</div>
+                            <div class="director-stat__label">進行中PJ</div>
+                            <div class="director-stat__icon">📁</div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="quick-actions">
+                        <button class="quick-action quick-action--primary" id="quick-new-project">
+                            <span>+</span> 新規プロジェクト
+                        </button>
+                        <button class="quick-action" id="quick-approval">
+                            <span>📋</span> 承認作業
+                        </button>
+                        <button class="quick-action" id="quick-workers">
+                            <span>👥</span> 作業者確認
+                        </button>
+                        <button class="quick-action" id="quick-reports">
+                            <span>📊</span> レポート
+                        </button>
+                    </div>
+
+                    <!-- Progress Overview -->
+                    <div class="progress-overview">
+                        <div class="progress-overview__header">
+                            <div class="progress-overview__title">
+                                <span>📈</span> 全体進捗状況
+                            </div>
+                            <div class="view-toggle">
+                                <button class="view-toggle__btn view-toggle__btn--active" data-view="all">全体</button>
+                                <button class="view-toggle__btn" data-view="week">今週</button>
+                                <button class="view-toggle__btn" data-view="month">今月</button>
                             </div>
                         </div>
-                        <div class="stat-card stat-card--danger" id="stat-overdue-tasks">
-                            <div class="stat-card__icon">⚠️</div>
-                            <div class="stat-card__content">
-                                <div class="stat-card__value">-</div>
-                                <div class="stat-card__label">遅延タスク</div>
-                            </div>
+                        <div class="progress-bar-large" id="overall-progress-bar">
+                            <div class="progress-bar-large__segment progress-bar-large__segment--completed" style="width: 0%"></div>
+                            <div class="progress-bar-large__segment progress-bar-large__segment--in-progress" style="width: 0%"></div>
+                            <div class="progress-bar-large__segment progress-bar-large__segment--pending" style="width: 100%"></div>
                         </div>
-                        <div class="stat-card stat-card--info" id="stat-active-projects">
-                            <div class="stat-card__icon">📁</div>
-                            <div class="stat-card__content">
-                                <div class="stat-card__value">-</div>
-                                <div class="stat-card__label">進行中PJ</div>
+                        <div class="progress-legend">
+                            <div class="progress-legend__item">
+                                <div class="progress-legend__color" style="background: #10b981;"></div>
+                                <span>完了 (<span id="legend-completed">0</span>件)</span>
+                            </div>
+                            <div class="progress-legend__item">
+                                <div class="progress-legend__color" style="background: #3b82f6;"></div>
+                                <span>進行中 (<span id="legend-in-progress">0</span>件)</span>
+                            </div>
+                            <div class="progress-legend__item">
+                                <div class="progress-legend__color" style="background: #e5e7eb;"></div>
+                                <span>未着手 (<span id="legend-pending">0</span>件)</span>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Pending Approvals List -->
-                    <div class="dashboard-section">
-                        <h3 class="dashboard-section__title">📋 承認待ち一覧</h3>
-                        <div id="dashboard-pending-list" class="dashboard-list">
-                            <!-- Will be rendered by JS -->
+                    <!-- Dashboard Grid -->
+                    <div class="dashboard-grid">
+                        <!-- Pending Approvals Panel -->
+                        <div class="dashboard-panel">
+                            <div class="dashboard-panel__header">
+                                <div class="dashboard-panel__title">
+                                    <span>📋</span> 承認待ち一覧
+                                </div>
+                                <button class="btn btn--ghost btn--sm" id="view-all-approvals">すべて見る</button>
+                            </div>
+                            <div class="dashboard-panel__body" id="dashboard-pending-list">
+                                <!-- Will be rendered by JS -->
+                            </div>
                         </div>
-                    </div>
 
-                    <!-- Overdue Tasks List -->
-                    <div class="dashboard-section">
-                        <h3 class="dashboard-section__title">⚠️ 遅延タスク</h3>
-                        <div id="dashboard-overdue-list" class="dashboard-list">
-                            <!-- Will be rendered by JS -->
+                        <!-- Overdue Tasks Panel -->
+                        <div class="dashboard-panel">
+                            <div class="dashboard-panel__header">
+                                <div class="dashboard-panel__title">
+                                    <span>⚠️</span> 遅延タスク
+                                </div>
+                                <button class="btn btn--ghost btn--sm" id="view-all-overdue">すべて見る</button>
+                            </div>
+                            <div class="dashboard-panel__body" id="dashboard-overdue-list">
+                                <!-- Will be rendered by JS -->
+                            </div>
+                        </div>
+
+                        <!-- Recent Activity Panel -->
+                        <div class="dashboard-panel">
+                            <div class="dashboard-panel__header">
+                                <div class="dashboard-panel__title">
+                                    <span>🔔</span> 最近のアクティビティ
+                                </div>
+                            </div>
+                            <div class="dashboard-panel__body" id="dashboard-activity-list">
+                                <!-- Will be rendered by JS -->
+                            </div>
+                        </div>
+
+                        <!-- Upcoming Deadlines Panel -->
+                        <div class="dashboard-panel">
+                            <div class="dashboard-panel__header">
+                                <div class="dashboard-panel__title">
+                                    <span>📅</span> 今後の締切
+                                </div>
+                            </div>
+                            <div class="dashboard-panel__body" id="dashboard-deadlines-list">
+                                <!-- Will be rendered by JS -->
+                            </div>
                         </div>
                     </div>
                 </div>

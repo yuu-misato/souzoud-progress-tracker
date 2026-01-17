@@ -1305,6 +1305,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // ==================== ADMIN DASHBOARD ====================
 
     async function initDashboard() {
+        // Initialize director header
+        initDirectorHeader();
+
         // Fetch all data needed for dashboard
         const projects = await DataManager.getAllProjects();
         const submissions = await DataManager.getPendingSubmissions();
@@ -1318,43 +1321,110 @@ document.addEventListener('DOMContentLoaded', () => {
         // Find overdue tasks
         const now = new Date();
         const overdueTasks = [];
+        const upcomingDeadlines = [];
+        let completedToday = 0;
+        let totalCompleted = 0;
+        let totalInProgress = 0;
+        let totalPending = 0;
+
+        const todayStart = new Date();
+        todayStart.setHours(0, 0, 0, 0);
 
         for (const project of projects) {
             const steps = project.steps || [];
             for (const step of steps) {
+                // Count step statuses
+                if (step.status === 'completed') {
+                    totalCompleted++;
+                    // Check if completed today
+                    if (step.completedAt) {
+                        const completedDate = new Date(step.completedAt);
+                        if (completedDate >= todayStart) {
+                            completedToday++;
+                        }
+                    }
+                } else if (step.status === 'current') {
+                    totalInProgress++;
+                } else {
+                    totalPending++;
+                }
+
+                // Check for overdue and upcoming deadlines
                 if (step.dueDate && step.status !== 'completed') {
                     const dueDate = new Date(step.dueDate);
                     if (dueDate < now) {
                         overdueTasks.push({
                             projectId: project.id,
                             projectName: project.name,
-                            clientName: project.clientName,
+                            clientName: project.client,
                             stepName: step.name,
                             dueDate: step.dueDate,
                             daysOverdue: Math.floor((now - dueDate) / (1000 * 60 * 60 * 24))
                         });
+                    } else {
+                        // Upcoming deadline (within next 7 days)
+                        const daysUntil = Math.ceil((dueDate - now) / (1000 * 60 * 60 * 24));
+                        if (daysUntil <= 7) {
+                            upcomingDeadlines.push({
+                                projectId: project.id,
+                                projectName: project.name,
+                                stepName: step.name,
+                                dueDate: step.dueDate,
+                                daysUntil: daysUntil
+                            });
+                        }
                     }
                 }
             }
         }
 
+        // Sort upcoming deadlines by due date
+        upcomingDeadlines.sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
+
         // Update stat cards
-        document.querySelector('#stat-pending-approvals .stat-card__value').textContent = submissions.length;
-        document.querySelector('#stat-overdue-tasks .stat-card__value').textContent = overdueTasks.length;
-        document.querySelector('#stat-active-projects .stat-card__value').textContent = activeProjects.length;
+        document.querySelector('#stat-pending-approvals .director-stat__value').textContent = submissions.length;
+        document.querySelector('#stat-overdue-tasks .director-stat__value').textContent = overdueTasks.length;
+        document.querySelector('#stat-completed-today .director-stat__value').textContent = completedToday;
+        document.querySelector('#stat-active-projects .director-stat__value').textContent = activeProjects.length;
+
+        // Update overall progress bar
+        const totalSteps = totalCompleted + totalInProgress + totalPending;
+        if (totalSteps > 0) {
+            const completedPercent = (totalCompleted / totalSteps) * 100;
+            const inProgressPercent = (totalInProgress / totalSteps) * 100;
+            const pendingPercent = (totalPending / totalSteps) * 100;
+
+            const progressBar = document.getElementById('overall-progress-bar');
+            if (progressBar) {
+                progressBar.innerHTML = `
+                    <div class="progress-bar-large__segment progress-bar-large__segment--completed" style="width: ${completedPercent}%">${completedPercent >= 10 ? Math.round(completedPercent) + '%' : ''}</div>
+                    <div class="progress-bar-large__segment progress-bar-large__segment--in-progress" style="width: ${inProgressPercent}%">${inProgressPercent >= 10 ? Math.round(inProgressPercent) + '%' : ''}</div>
+                    <div class="progress-bar-large__segment progress-bar-large__segment--pending" style="width: ${pendingPercent}%">${pendingPercent >= 10 ? Math.round(pendingPercent) + '%' : ''}</div>
+                `;
+            }
+
+            // Update legend
+            document.getElementById('legend-completed').textContent = totalCompleted;
+            document.getElementById('legend-in-progress').textContent = totalInProgress;
+            document.getElementById('legend-pending').textContent = totalPending;
+        }
 
         // Render pending approvals list
         const pendingList = document.getElementById('dashboard-pending-list');
         if (submissions.length === 0) {
-            pendingList.innerHTML = '<div class="dashboard-empty">承認待ちはありません 🎉</div>';
+            pendingList.innerHTML = '<div class="empty-state"><div class="empty-state__icon">🎉</div><div>承認待ちはありません</div></div>';
         } else {
-            pendingList.innerHTML = submissions.map(sub => `
-                <div class="dashboard-item" onclick="goToProject('${sub.projectId}')">
-                    <div class="dashboard-item__info">
-                        <div class="dashboard-item__title">${sub.projectName || 'プロジェクト'} - ${sub.stepName || '工程'}</div>
-                        <div class="dashboard-item__meta">👤 ${sub.workerName || '作業者'} - ${sub.submitted_at ? new Date(sub.submitted_at).toLocaleDateString('ja-JP') : '-'}</div>
+            pendingList.innerHTML = submissions.slice(0, 5).map(sub => `
+                <div class="task-item" onclick="goToProject('${sub.projectId}')">
+                    <div class="task-item__priority task-item__priority--medium"></div>
+                    <div class="task-item__content">
+                        <div class="task-item__title">${escapeHtml(sub.projectName || 'プロジェクト')} - ${escapeHtml(sub.stepName || '工程')}</div>
+                        <div class="task-item__meta">
+                            <span>👤 ${escapeHtml(sub.workerName || '作業者')}</span>
+                            <span>📅 ${sub.submitted_at ? new Date(sub.submitted_at).toLocaleDateString('ja-JP') : '-'}</span>
+                        </div>
                     </div>
-                    <span class="dashboard-item__badge dashboard-item__badge--warning">承認待ち</span>
+                    <span class="task-item__badge task-item__badge--warning">承認待ち</span>
                 </div>
             `).join('');
         }
@@ -1362,28 +1432,291 @@ document.addEventListener('DOMContentLoaded', () => {
         // Render overdue tasks list
         const overdueList = document.getElementById('dashboard-overdue-list');
         if (overdueTasks.length === 0) {
-            overdueList.innerHTML = '<div class="dashboard-empty">遅延タスクはありません 🎉</div>';
+            overdueList.innerHTML = '<div class="empty-state"><div class="empty-state__icon">🎉</div><div>遅延タスクはありません</div></div>';
         } else {
-            overdueList.innerHTML = overdueTasks.map(task => `
-                <div class="dashboard-item" onclick="goToProject('${task.projectId}')">
-                    <div class="dashboard-item__info">
-                        <div class="dashboard-item__title">${task.projectName} - ${task.stepName}</div>
-                        <div class="dashboard-item__meta">🏢 ${task.clientName} - 期日: ${new Date(task.dueDate).toLocaleDateString('ja-JP')}</div>
+            overdueList.innerHTML = overdueTasks.slice(0, 5).map(task => `
+                <div class="task-item" onclick="goToProject('${task.projectId}')">
+                    <div class="task-item__priority task-item__priority--high"></div>
+                    <div class="task-item__content">
+                        <div class="task-item__title">${escapeHtml(task.projectName)} - ${escapeHtml(task.stepName)}</div>
+                        <div class="task-item__meta">
+                            <span>🏢 ${escapeHtml(task.clientName || '-')}</span>
+                            <span>📅 期日: ${new Date(task.dueDate).toLocaleDateString('ja-JP')}</span>
+                        </div>
                     </div>
-                    <span class="dashboard-item__badge dashboard-item__badge--danger">${task.daysOverdue}日遅延</span>
+                    <span class="task-item__badge task-item__badge--danger">${task.daysOverdue}日遅延</span>
                 </div>
             `).join('');
         }
 
+        // Render upcoming deadlines
+        const deadlinesList = document.getElementById('dashboard-deadlines-list');
+        if (upcomingDeadlines.length === 0) {
+            deadlinesList.innerHTML = '<div class="empty-state"><div class="empty-state__icon">📅</div><div>今後7日間の締切はありません</div></div>';
+        } else {
+            deadlinesList.innerHTML = upcomingDeadlines.slice(0, 5).map(task => {
+                const priorityClass = task.daysUntil <= 1 ? 'high' : task.daysUntil <= 3 ? 'medium' : 'low';
+                const badgeClass = task.daysUntil <= 1 ? 'danger' : task.daysUntil <= 3 ? 'warning' : 'success';
+                const daysLabel = task.daysUntil === 0 ? '今日' : task.daysUntil === 1 ? '明日' : `${task.daysUntil}日後`;
+                return `
+                    <div class="task-item" onclick="goToProject('${task.projectId}')">
+                        <div class="task-item__priority task-item__priority--${priorityClass}"></div>
+                        <div class="task-item__content">
+                            <div class="task-item__title">${escapeHtml(task.projectName)} - ${escapeHtml(task.stepName)}</div>
+                            <div class="task-item__meta">
+                                <span>📅 ${new Date(task.dueDate).toLocaleDateString('ja-JP')}</span>
+                            </div>
+                        </div>
+                        <span class="task-item__badge task-item__badge--${badgeClass}">${daysLabel}</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Render recent activity
+        const activityList = document.getElementById('dashboard-activity-list');
+        // Create mock activity for now (in production, this would come from an activity log)
+        const recentActivity = [];
+        for (const project of projects) {
+            if (project.updatedAt || project.updated_at) {
+                const updatedAt = new Date(project.updatedAt || project.updated_at);
+                const hoursAgo = Math.floor((now - updatedAt) / (1000 * 60 * 60));
+                if (hoursAgo < 48) {
+                    recentActivity.push({
+                        type: 'update',
+                        projectName: project.name,
+                        projectId: project.id,
+                        time: updatedAt,
+                        hoursAgo: hoursAgo
+                    });
+                }
+            }
+        }
+        recentActivity.sort((a, b) => b.time - a.time);
+
+        if (recentActivity.length === 0) {
+            activityList.innerHTML = '<div class="empty-state"><div class="empty-state__icon">🔔</div><div>最近のアクティビティはありません</div></div>';
+        } else {
+            activityList.innerHTML = recentActivity.slice(0, 5).map(activity => {
+                const timeLabel = activity.hoursAgo === 0 ? '今' : activity.hoursAgo < 24 ? `${activity.hoursAgo}時間前` : `${Math.floor(activity.hoursAgo / 24)}日前`;
+                return `
+                    <div class="task-item" onclick="goToProject('${activity.projectId}')">
+                        <div class="task-item__priority task-item__priority--low"></div>
+                        <div class="task-item__content">
+                            <div class="task-item__title">📝 ${escapeHtml(activity.projectName)}が更新されました</div>
+                            <div class="task-item__meta">
+                                <span>🕐 ${timeLabel}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
         // Click handlers for stat cards
         document.getElementById('stat-pending-approvals').onclick = () => openApprovalModal();
+
+        // Setup quick action handlers
+        setupQuickActions();
+    }
+
+    function initDirectorHeader() {
+        // Set director name and role
+        if (window.adminSession) {
+            const name = window.adminSession.name || window.adminSession.email;
+            document.getElementById('director-name').textContent = name;
+
+            const roleLabels = {
+                master: 'マスター管理者',
+                admin: '管理者',
+                director: 'ディレクター'
+            };
+            document.getElementById('director-role').textContent = roleLabels[window.adminSession.role] || 'プロジェクト管理者';
+
+            // Set avatar initial
+            const initial = name.charAt(0).toUpperCase();
+            document.getElementById('director-avatar').textContent = initial;
+        }
+
+        // Set current date
+        const now = new Date();
+        const dateEl = document.getElementById('current-date');
+        const weekdayEl = document.getElementById('current-weekday');
+
+        if (dateEl) {
+            dateEl.textContent = `${now.getMonth() + 1}/${now.getDate()}`;
+        }
+
+        if (weekdayEl) {
+            const weekdays = ['日曜日', '月曜日', '火曜日', '水曜日', '木曜日', '金曜日', '土曜日'];
+            weekdayEl.textContent = weekdays[now.getDay()];
+        }
+    }
+
+    function setupQuickActions() {
+        // New project
+        document.getElementById('quick-new-project')?.addEventListener('click', () => {
+            if (window.adminSession?.role !== 'director') {
+                document.getElementById('new-project-btn')?.click();
+            } else {
+                showToast('ディレクターはプロジェクト作成権限がありません');
+            }
+        });
+
+        // Approval
+        document.getElementById('quick-approval')?.addEventListener('click', () => {
+            openApprovalModal();
+        });
+
+        // Workers
+        document.getElementById('quick-workers')?.addEventListener('click', () => {
+            if (window.adminSession?.role === 'master' || window.adminSession?.role === 'admin') {
+                openWorkerManagement();
+            } else {
+                showToast('作業者管理は管理者のみ利用可能です');
+            }
+        });
+
+        // Reports (placeholder for future feature)
+        document.getElementById('quick-reports')?.addEventListener('click', () => {
+            showReportsModal();
+        });
+
+        // View all approvals
+        document.getElementById('view-all-approvals')?.addEventListener('click', () => {
+            openApprovalModal();
+        });
+
+        // View all overdue
+        document.getElementById('view-all-overdue')?.addEventListener('click', () => {
+            // Future: implement dedicated overdue view
+            showToast('遅延タスク一覧を表示');
+        });
+    }
+
+    function showReportsModal() {
+        // Create reports modal
+        const overlay = document.createElement('div');
+        overlay.className = 'modal-overlay active';
+        overlay.id = 'reports-modal-overlay';
+        overlay.innerHTML = `
+            <div class="modal" style="max-width: 700px;">
+                <div class="modal__header">
+                    <h2 class="modal__title">📊 レポート</h2>
+                    <button class="modal__close" onclick="document.getElementById('reports-modal-overlay').remove();">&times;</button>
+                </div>
+                <div class="modal__body" style="max-height: 500px; overflow-y: auto;">
+                    <div id="reports-content">
+                        <p style="text-align: center; color: var(--color-text-muted);">レポートを読み込み中...</p>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+
+        // Generate report
+        generateReport();
+    }
+
+    async function generateReport() {
+        const contentEl = document.getElementById('reports-content');
+        if (!contentEl) return;
+
+        const projects = await DataManager.getAllProjects();
+
+        let totalSteps = 0;
+        let completedSteps = 0;
+        let inProgressSteps = 0;
+        const projectStats = [];
+
+        for (const project of projects) {
+            const steps = project.steps || [];
+            const completed = steps.filter(s => s.status === 'completed').length;
+            const inProgress = steps.filter(s => s.status === 'current').length;
+            const pending = steps.filter(s => s.status !== 'completed' && s.status !== 'current').length;
+
+            totalSteps += steps.length;
+            completedSteps += completed;
+            inProgressSteps += inProgress;
+
+            const progress = steps.length > 0 ? Math.round((completed / steps.length) * 100) : 0;
+
+            projectStats.push({
+                name: project.name,
+                client: project.client,
+                total: steps.length,
+                completed,
+                inProgress,
+                pending,
+                progress
+            });
+        }
+
+        projectStats.sort((a, b) => b.progress - a.progress);
+
+        contentEl.innerHTML = `
+            <div style="margin-bottom: var(--space-6);">
+                <h3 style="margin-bottom: var(--space-4);">全体サマリー</h3>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-4);">
+                    <div style="background: var(--color-bg-secondary); padding: var(--space-4); border-radius: var(--radius-md); text-align: center;">
+                        <div style="font-size: var(--font-size-2xl); font-weight: 700; color: var(--color-success);">${completedSteps}</div>
+                        <div style="font-size: var(--font-size-sm); color: var(--color-text-muted);">完了タスク</div>
+                    </div>
+                    <div style="background: var(--color-bg-secondary); padding: var(--space-4); border-radius: var(--radius-md); text-align: center;">
+                        <div style="font-size: var(--font-size-2xl); font-weight: 700; color: var(--color-primary);">${inProgressSteps}</div>
+                        <div style="font-size: var(--font-size-sm); color: var(--color-text-muted);">進行中タスク</div>
+                    </div>
+                    <div style="background: var(--color-bg-secondary); padding: var(--space-4); border-radius: var(--radius-md); text-align: center;">
+                        <div style="font-size: var(--font-size-2xl); font-weight: 700; color: var(--color-text);">${projects.length}</div>
+                        <div style="font-size: var(--font-size-sm); color: var(--color-text-muted);">総プロジェクト</div>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <h3 style="margin-bottom: var(--space-4);">プロジェクト別進捗</h3>
+                ${projectStats.map(p => `
+                    <div style="margin-bottom: var(--space-3); padding: var(--space-3); background: var(--color-bg-secondary); border-radius: var(--radius-md);">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: var(--space-2);">
+                            <div>
+                                <div style="font-weight: 500;">${escapeHtml(p.name)}</div>
+                                <div style="font-size: var(--font-size-sm); color: var(--color-text-muted);">${escapeHtml(p.client)}</div>
+                            </div>
+                            <div style="font-weight: 600; color: ${p.progress === 100 ? 'var(--color-success)' : 'var(--color-text)'};">${p.progress}%</div>
+                        </div>
+                        <div style="height: 8px; background: var(--color-border); border-radius: 4px; overflow: hidden;">
+                            <div style="height: 100%; width: ${p.progress}%; background: ${p.progress === 100 ? 'var(--color-success)' : 'var(--color-primary)'}; transition: width 0.3s;"></div>
+                        </div>
+                        <div style="display: flex; gap: var(--space-4); margin-top: var(--space-2); font-size: var(--font-size-xs); color: var(--color-text-muted);">
+                            <span>完了: ${p.completed}</span>
+                            <span>進行中: ${p.inProgress}</span>
+                            <span>未着手: ${p.pending}</span>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    }
+
+    // XSS Protection helper
+    function escapeHtml(str) {
+        if (!str) return '';
+        const escapeMap = {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#x27;',
+            '/': '&#x2F;'
+        };
+        return String(str).replace(/[&<>"'/]/g, char => escapeMap[char]);
     }
 
     window.goToProject = async function (projectId) {
         if (projectId) {
             const project = await DataManager.getProject(projectId);
             if (project) {
-                selectProject(project);
+                selectProject(projectId);
             }
         }
     };
