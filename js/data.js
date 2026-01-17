@@ -841,7 +841,9 @@ const DataManager = {
         email: w.email,
         name: w.name,
         isActive: w.is_active,
-        createdAt: w.created_at
+        createdAt: w.created_at,
+        inviteToken: w.invite_token,
+        passwordSet: w.password_set
       }));
     } catch (e) {
       console.error('Error fetching workers:', e);
@@ -855,7 +857,8 @@ const DataManager = {
         email: workerData.email,
         password_hash: workerData.passwordHash,
         name: workerData.name,
-        is_active: true
+        is_active: true,
+        password_set: true
       });
 
       // Send welcome email to new worker
@@ -871,6 +874,99 @@ const DataManager = {
       return result[0];
     } catch (e) {
       console.error('Error creating worker:', e);
+      throw e;
+    }
+  },
+
+  // Invite a new worker (without password)
+  async inviteWorker(workerData) {
+    try {
+      const inviteToken = this.generateInviteToken();
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + 7); // 7 days validity
+
+      const result = await SupabaseClient.insert('workers', {
+        email: workerData.email,
+        name: workerData.name,
+        invite_token: inviteToken,
+        invite_expires_at: expiresAt.toISOString(),
+        password_set: false,
+        is_active: true
+      });
+
+      return { ...result[0], inviteToken };
+    } catch (e) {
+      console.error('Error inviting worker:', e);
+      throw e;
+    }
+  },
+
+  // Verify worker invite token and get user info
+  async verifyWorkerInviteToken(token) {
+    try {
+      const workers = await SupabaseClient.select('workers', `invite_token=eq.${token}&is_active=eq.true`);
+      if (workers.length === 0) return null;
+
+      const worker = workers[0];
+
+      // Check if token is expired
+      if (worker.invite_expires_at && new Date(worker.invite_expires_at) < new Date()) {
+        return { error: 'expired' };
+      }
+
+      // Check if password already set
+      if (worker.password_set) {
+        return { error: 'already_set' };
+      }
+
+      return worker;
+    } catch (e) {
+      console.error('Error verifying worker invite token:', e);
+      return null;
+    }
+  },
+
+  // Set password for invited worker
+  async setWorkerInvitePassword(token, password) {
+    try {
+      // Hash password
+      const encoder = new TextEncoder();
+      const data = encoder.encode(password);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const passwordHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+      await SupabaseClient.update('workers', `invite_token=eq.${token}`, {
+        password_hash: passwordHash,
+        password_set: true,
+        invite_token: null,
+        invite_expires_at: null
+      });
+
+      return { success: true };
+    } catch (e) {
+      console.error('Error setting worker invite password:', e);
+      throw e;
+    }
+  },
+
+  // Resend worker invite
+  async resendWorkerInvite(workerId) {
+    try {
+      const inviteToken = this.generateInviteToken();
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + 7);
+
+      await SupabaseClient.update('workers', `id=eq.${workerId}`, {
+        invite_token: inviteToken,
+        invite_expires_at: expiresAt.toISOString()
+      });
+
+      // Get updated worker info
+      const workers = await SupabaseClient.select('workers', `id=eq.${workerId}`);
+      return { ...workers[0], inviteToken };
+    } catch (e) {
+      console.error('Error resending worker invite:', e);
       throw e;
     }
   },

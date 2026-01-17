@@ -408,6 +408,58 @@ const templates = {
       </html>
     `,
   }),
+
+  // Worker invite email
+  workerInvite: (data: { name: string; inviteUrl: string }) => ({
+    subject: `[トドケ] 作業者アカウント登録のご招待`,
+    html: `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; }
+          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+          .header { background: linear-gradient(135deg, #10b981, #059669); color: white; padding: 30px; border-radius: 12px 12px 0 0; text-align: center; }
+          .content { background: #f8fafc; padding: 30px; border: 1px solid #e2e8f0; }
+          .footer { background: #1e293b; color: #94a3b8; padding: 20px; border-radius: 0 0 12px 12px; text-align: center; font-size: 14px; }
+          .btn { display: inline-block; background: linear-gradient(135deg, #10b981, #059669); color: white; padding: 16px 32px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 16px; }
+          .highlight-box { background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(5, 150, 105, 0.1)); border-radius: 12px; padding: 24px; margin: 24px 0; text-align: center; }
+          .role-badge { display: inline-block; background: #10b981; color: white; padding: 4px 12px; border-radius: 20px; font-size: 14px; font-weight: 600; margin-top: 8px; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1 style="margin: 0; font-size: 24px;">トドケ作業者ポータル</h1>
+            <p style="margin: 8px 0 0 0; opacity: 0.9;">アカウント登録のご招待</p>
+          </div>
+          <div class="content">
+            <p>${data.name} さん</p>
+            <p>トドケの作業者として登録されました。</p>
+            <p>下のボタンをクリックして、パスワードを設定してアカウントを有効化してください。</p>
+
+            <div class="highlight-box">
+              <p style="margin: 0 0 8px 0; color: #64748b;">あなたのロール</p>
+              <span class="role-badge">作業者</span>
+              <p style="margin: 16px 0 16px 0; color: #64748b;">以下のボタンからパスワードを設定してください</p>
+              <a href="${data.inviteUrl}" class="btn">パスワードを設定する</a>
+            </div>
+
+            <p style="color: #64748b; font-size: 14px;">
+              ※ このリンクは7日間有効です。<br>
+              ※ 期限が切れた場合は、管理者にお問い合わせください。
+            </p>
+          </div>
+          <div class="footer">
+            <p>トドケ - プロジェクト進捗管理サービス</p>
+            <p style="font-size: 12px;">このメールは自動送信されています。</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `,
+  }),
 };
 
 // Send email via Resend

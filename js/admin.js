@@ -1293,15 +1293,27 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 html += `<div style="max-height: 300px; overflow-y: auto;">`;
                 workers.forEach(w => {
+                    const isPending = !w.passwordSet && w.inviteToken;
+                    const statusBadge = isPending
+                        ? '<span style="font-size: var(--font-size-xs); background: #fef3c7; color: #92400e; padding: 2px 8px; border-radius: var(--radius-full); margin-left: var(--space-2);">招待中</span>'
+                        : '<span style="font-size: var(--font-size-xs); background: #d1fae5; color: #065f46; padding: 2px 8px; border-radius: var(--radius-full); margin-left: var(--space-2);">登録済</span>';
+
+                    const resendBtn = isPending
+                        ? `<button class="btn btn--ghost btn--sm" data-resend-worker-invite="${w.id}" style="color: var(--color-primary);">再送信</button>`
+                        : '';
+
                     html += `
                         <div style="display: flex; justify-content: space-between; align-items: center; padding: var(--space-3); border-bottom: 1px solid var(--color-border);">
                             <div>
-                                <div style="font-weight: 500;">${escapeHtml(w.name)}</div>
+                                <div style="font-weight: 500;">${escapeHtml(w.name)}${statusBadge}</div>
                                 <div style="font-size: var(--font-size-sm); color: var(--color-text-muted);">${escapeHtml(w.email)}</div>
                             </div>
-                            <span style="font-size: var(--font-size-sm); color: ${w.is_active ? 'var(--color-success)' : 'var(--color-text-muted)'};">
-                                ${w.is_active ? '有効' : '無効'}
-                            </span>
+                            <div style="display: flex; gap: var(--space-2); align-items: center;">
+                                ${resendBtn}
+                                <span style="font-size: var(--font-size-sm); color: ${w.isActive ? 'var(--color-success)' : 'var(--color-text-muted)'};">
+                                    ${w.isActive ? '有効' : '無効'}
+                                </span>
+                            </div>
                         </div>
                     `;
                 });
@@ -1310,11 +1322,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
             html += `
                 <div style="margin-top: var(--space-4); padding-top: var(--space-4); border-top: 1px solid var(--color-border);">
-                    <h4 style="margin-bottom: var(--space-3);">新規作業者追加</h4>
+                    <h4 style="margin-bottom: var(--space-3);">新規作業者を招待</h4>
                     <input type="text" id="new-worker-name" class="input" placeholder="名前" style="margin-bottom: var(--space-2);">
-                    <input type="email" id="new-worker-email" class="input" placeholder="メールアドレス" style="margin-bottom: var(--space-2);">
-                    <input type="password" id="new-worker-password" class="input" placeholder="パスワード" style="margin-bottom: var(--space-3);">
-                    <button class="btn btn--primary" data-add-worker>追加</button>
+                    <input type="email" id="new-worker-email" class="input" placeholder="メールアドレス" style="margin-bottom: var(--space-3);">
+                    <div id="worker-invite-error" style="color: #ef4444; font-size: var(--font-size-sm); margin-bottom: var(--space-2); display: none;"></div>
+                    <div id="worker-invite-success" style="color: var(--color-success); font-size: var(--font-size-sm); margin-bottom: var(--space-2); display: none;"></div>
+                    <button class="btn btn--primary" data-add-worker>招待メールを送信</button>
                 </div>
             `;
 
@@ -1344,6 +1357,39 @@ document.addEventListener('DOMContentLoaded', () => {
                     e.preventDefault();
                     await handleAddNewWorker();
                 }
+
+                // Handle resend invite
+                const resendBtn = e.target.closest('[data-resend-worker-invite]');
+                if (resendBtn) {
+                    e.preventDefault();
+                    const workerId = resendBtn.dataset.resendWorkerInvite;
+                    resendBtn.disabled = true;
+                    resendBtn.textContent = '送信中...';
+
+                    try {
+                        const result = await DataManager.resendWorkerInvite(workerId);
+
+                        // Get base URL for invite link
+                        const baseUrl = window.location.origin + window.location.pathname.replace(/\/[^\/]*$/, '');
+                        const inviteUrl = `${baseUrl}/worker-invite.html?token=${result.inviteToken}`;
+
+                        // Send invite email
+                        if (window.NotificationService) {
+                            await NotificationService.send('workerInvite', result.email, {
+                                name: result.name,
+                                inviteUrl: inviteUrl
+                            });
+                        }
+
+                        showToast('招待メールを再送信しました');
+                    } catch (err) {
+                        console.error('Error resending worker invite:', err);
+                        showToast('再送信に失敗しました');
+                    } finally {
+                        resendBtn.disabled = false;
+                        resendBtn.textContent = '再送信';
+                    }
+                }
             });
 
         } catch (e) {
@@ -1352,26 +1398,75 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Function to add new worker
+    // Function to invite new worker
     async function handleAddNewWorker() {
         const name = document.getElementById('new-worker-name').value.trim();
         const email = document.getElementById('new-worker-email').value.trim();
-        const password = document.getElementById('new-worker-password').value;
+        const errorEl = document.getElementById('worker-invite-error');
+        const successEl = document.getElementById('worker-invite-success');
 
-        if (!name || !email || !password) {
-            showToast('全ての項目を入力してください');
+        // Hide previous messages
+        errorEl.style.display = 'none';
+        successEl.style.display = 'none';
+
+        if (!name || !email) {
+            errorEl.textContent = '名前とメールアドレスを入力してください';
+            errorEl.style.display = 'block';
             return;
         }
 
+        // Basic email validation
+        if (!email.includes('@') || !email.includes('.')) {
+            errorEl.textContent = '有効なメールアドレスを入力してください';
+            errorEl.style.display = 'block';
+            return;
+        }
+
+        const btn = document.querySelector('[data-add-worker]');
+        const originalText = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = '送信中...';
+
         try {
-            const passwordHash = await hashPassword(password);
-            await DataManager.createWorker({ name, email, passwordHash });
-            showToast('作業者を追加しました');
+            // Create worker with invite token
+            const result = await DataManager.inviteWorker({ email, name });
+
+            // Get base URL for invite link
+            const baseUrl = window.location.origin + window.location.pathname.replace(/\/[^\/]*$/, '');
+            const inviteUrl = `${baseUrl}/worker-invite.html?token=${result.inviteToken}`;
+
+            // Send invite email
+            if (window.NotificationService) {
+                await NotificationService.send('workerInvite', email, {
+                    name: name,
+                    inviteUrl: inviteUrl
+                });
+            }
+
+            // Clear form
+            document.getElementById('new-worker-name').value = '';
+            document.getElementById('new-worker-email').value = '';
+
+            successEl.textContent = '招待メールを送信しました';
+            successEl.style.display = 'block';
+
+            showToast('招待メールを送信しました');
+
+            // Refresh worker list
             document.getElementById('worker-modal-overlay').remove();
-            openWorkerManagement(); // Refresh list
+            openWorkerManagement();
         } catch (e) {
-            console.error('Error adding worker:', e);
-            showToast('作業者の追加に失敗しました');
+            console.error('Error inviting worker:', e);
+            const errorMsg = e.message || String(e);
+            if (errorMsg.includes('duplicate') || errorMsg.includes('unique') || errorMsg.includes('23505')) {
+                errorEl.textContent = 'このメールアドレスは既に使用されています';
+            } else {
+                errorEl.textContent = 'エラーが発生しました: ' + errorMsg;
+            }
+            errorEl.style.display = 'block';
+        } finally {
+            btn.disabled = false;
+            btn.textContent = originalText;
         }
     }
 
