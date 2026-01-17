@@ -2135,7 +2135,7 @@ document.addEventListener('DOMContentLoaded', () => {
             listEl.innerHTML = `
                 <div class="empty-state">
                     <div class="empty-state__icon">✅</div>
-                    <div>今週までのタスクはありません</div>
+                    <div>今週までの提出期限はありません</div>
                 </div>
             `;
             return;
