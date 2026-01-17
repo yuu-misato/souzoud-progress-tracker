@@ -1028,6 +1028,7 @@ const DataManager = {
 
           enrichedSubmissions.push({
             ...s,
+            projectId: assignment.project_id,
             projectName,
             stepName,
             workerName

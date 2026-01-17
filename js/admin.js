@@ -1349,10 +1349,10 @@ document.addEventListener('DOMContentLoaded', () => {
             pendingList.innerHTML = '<div class="dashboard-empty">承認待ちはありません 🎉</div>';
         } else {
             pendingList.innerHTML = submissions.map(sub => `
-                <div class="dashboard-item" onclick="goToProject('${sub.steps?.projectId || sub.projectId}')">
+                <div class="dashboard-item" onclick="goToProject('${sub.projectId}')">
                     <div class="dashboard-item__info">
-                        <div class="dashboard-item__title">${sub.projectName} - ${sub.steps?.name || sub.stepName || '工程'}</div>
-                        <div class="dashboard-item__meta">👤 ${sub.workerName || '作業者'} - ${new Date(sub.created_at).toLocaleDateString('ja-JP')}</div>
+                        <div class="dashboard-item__title">${sub.projectName || 'プロジェクト'} - ${sub.stepName || '工程'}</div>
+                        <div class="dashboard-item__meta">👤 ${sub.workerName || '作業者'} - ${sub.submitted_at ? new Date(sub.submitted_at).toLocaleDateString('ja-JP') : '-'}</div>
                     </div>
                     <span class="dashboard-item__badge dashboard-item__badge--warning">承認待ち</span>
                 </div>
