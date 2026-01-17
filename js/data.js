@@ -836,6 +836,17 @@ const DataManager = {
         name: workerData.name,
         is_active: true
       });
+
+      // Send welcome email to new worker
+      if (window.NotificationService && result[0]) {
+        const appUrl = window.location.origin;
+        window.NotificationService.notifyNewUser(
+          { name: workerData.name, email: workerData.email },
+          'worker',
+          `${appUrl}/worker-login.html`
+        ).catch(err => console.warn('Welcome email failed:', err));
+      }
+
       return result[0];
     } catch (e) {
       console.error('Error creating worker:', e);
@@ -925,6 +936,19 @@ const DataManager = {
         status: 'pending',
         created_by: assignmentData.createdBy
       });
+
+      // Send notification to worker
+      if (window.NotificationService && result[0]) {
+        window.NotificationService.notifyTaskAssigned({
+          workerId: assignmentData.workerId,
+          projectId: assignmentData.projectId,
+          stepId: assignmentData.stepId,
+          stepName: assignmentData.stepName,
+          dueDate: assignmentData.dueDate,
+          notes: assignmentData.notes,
+        }).catch(err => console.warn('Notification failed:', err));
+      }
+
       return result[0];
     } catch (e) {
       console.error('Error creating assignment:', e);
@@ -1081,6 +1105,12 @@ const DataManager = {
       const submissions = await SupabaseClient.select('submissions', `id=eq.${submissionId}`);
       if (submissions[0]) {
         await this.updateAssignment(submissions[0].assignment_id, { status: 'approved' });
+
+        // Send notification to worker
+        if (window.NotificationService) {
+          window.NotificationService.notifySubmissionApproved(submissions[0])
+            .catch(err => console.warn('Notification failed:', err));
+        }
       }
     } catch (e) {
       console.error('Error approving submission:', e);
@@ -1099,6 +1129,12 @@ const DataManager = {
       const submissions = await SupabaseClient.select('submissions', `id=eq.${submissionId}`);
       if (submissions[0]) {
         await this.updateAssignment(submissions[0].assignment_id, { status: 'in_progress' });
+
+        // Send notification to worker
+        if (window.NotificationService) {
+          window.NotificationService.notifySubmissionRejected(submissions[0], comment)
+            .catch(err => console.warn('Notification failed:', err));
+        }
       }
     } catch (e) {
       console.error('Error rejecting submission:', e);

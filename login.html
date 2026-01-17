@@ -137,38 +137,51 @@
 
             form.addEventListener('submit', async (e) => {
                 e.preventDefault();
+
+                // Disable button to prevent double-click
+                const submitBtn = form.querySelector('button[type="submit"]');
+                if (submitBtn.disabled) return;
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'ログイン中...';
+
                 errorDiv.classList.remove('show');
 
-                // レート制限チェック
-                if (typeof SecurityUtils !== 'undefined' && !SecurityUtils.checkRateLimit('login', 5, 60000)) {
-                    errorDiv.textContent = 'ログイン試行回数が多すぎます。1分後に再度お試しください。';
-                    errorDiv.classList.add('show');
-                    return;
-                }
-
-                const email = document.getElementById('email').value.trim();
-                const password = document.getElementById('password').value;
-
-                // 入力バリデーション
-                if (typeof SecurityUtils !== 'undefined') {
-                    const emailValidation = SecurityUtils.validateInput(email, { required: true, type: 'email' });
-                    if (!emailValidation.isValid) {
-                        errorDiv.textContent = emailValidation.message;
+                try {
+                    // レート制限チェック
+                    if (typeof SecurityUtils !== 'undefined' && !SecurityUtils.checkRateLimit('login', 5, 60000)) {
+                        errorDiv.textContent = 'ログイン試行回数が多すぎます。1分後に再度お試しください。';
                         errorDiv.classList.add('show');
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = 'ログイン';
                         return;
                     }
-                }
 
-                try {
+                    const email = document.getElementById('email').value.trim();
+                    const password = document.getElementById('password').value;
+
+                    // 入力バリデーション
+                    if (typeof SecurityUtils !== 'undefined') {
+                        const emailValidation = SecurityUtils.validateInput(email, { required: true, type: 'email' });
+                        if (!emailValidation.isValid) {
+                            errorDiv.textContent = emailValidation.message;
+                            errorDiv.classList.add('show');
+                            submitBtn.disabled = false;
+                            submitBtn.textContent = 'ログイン';
+                            return;
+                        }
+                    }
+
                     // Simple password hash (in production, use proper auth)
                     const passwordHash = await hashPassword(password);
 
-                    // Check credentials against Supabase
-                    const admins = await SupabaseClient.select('admins', `email=eq.${encodeURIComponent(email)}&is_active=eq.true`);
+                    // Check credentials against Supabase (wrap email in double quotes for special chars)
+                    const admins = await SupabaseClient.select('admins', `email=eq."${encodeURIComponent(email)}"&is_active=eq.true`);
 
                     if (admins.length === 0) {
                         errorDiv.textContent = 'メールアドレスまたはパスワードが正しくありません';
                         errorDiv.classList.add('show');
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = 'ログイン';
                         return;
                     }
 
@@ -190,11 +203,15 @@
                     } else {
                         errorDiv.textContent = 'メールアドレスまたはパスワードが正しくありません';
                         errorDiv.classList.add('show');
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = 'ログイン';
                     }
                 } catch (error) {
                     console.error('Login error:', error);
                     errorDiv.textContent = 'ログインに失敗しました。しばらく経ってから再度お試しください。';
                     errorDiv.classList.add('show');
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'ログイン';
                 }
             });
 
