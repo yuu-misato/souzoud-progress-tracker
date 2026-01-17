@@ -128,11 +128,31 @@
           </div>
         </div>
 
+        <!-- マイルストーンバッジ -->
+        <div id="milestone-badges" style="margin-top: var(--space-4);"></div>
+
         <!-- Timeline -->
         <h4 style="margin-top: var(--space-8); margin-bottom: var(--space-4);">タイムライン</h4>
         <div class="timeline" id="timeline">
           <!-- Timeline items will be rendered by JavaScript -->
         </div>
+      </div>
+
+      <!-- プロジェクトの旅路（ストーリーテリング） -->
+      <div class="card" style="margin-top: var(--space-6);">
+        <h3 style="margin-bottom: var(--space-4);">📖 プロジェクトの旅路</h3>
+        <div id="project-story">
+          <!-- Story timeline will be rendered by JavaScript -->
+        </div>
+      </div>
+
+      <!-- マイルストーンパネル -->
+      <div id="milestone-panel" style="margin-top: var(--space-6);"></div>
+
+      <!-- リアクション・メッセージ -->
+      <div style="margin-top: var(--space-6);">
+        <div id="reaction-panel"></div>
+        <div id="message-panel"></div>
       </div>
     </section>
 
@@ -157,7 +177,12 @@
     <p>© 2026 SOUZOUD Inc.</p>
   </footer>
 
+  <script src="js/security.js"></script>
   <script src="js/data.js"></script>
+  <script src="js/celebration.js"></script>
+  <script src="js/storytelling.js"></script>
+  <script src="js/realtime.js"></script>
+  <script src="js/milestones.js"></script>
   <script src="js/app.js"></script>
 
   <style>

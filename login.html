@@ -143,6 +143,7 @@
         </div>
     </div>
 
+    <script src="js/security.js"></script>
     <script src="js/data.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -167,8 +168,25 @@
                 e.preventDefault();
                 errorDiv.classList.remove('show');
 
+                // レート制限チェック
+                if (typeof SecurityUtils !== 'undefined' && !SecurityUtils.checkRateLimit('login', 5, 60000)) {
+                    errorDiv.textContent = 'ログイン試行回数が多すぎます。1分後に再度お試しください。';
+                    errorDiv.classList.add('show');
+                    return;
+                }
+
                 const email = document.getElementById('email').value.trim();
                 const password = document.getElementById('password').value;
+
+                // 入力バリデーション
+                if (typeof SecurityUtils !== 'undefined') {
+                    const emailValidation = SecurityUtils.validateInput(email, { required: true, type: 'email' });
+                    if (!emailValidation.isValid) {
+                        errorDiv.textContent = emailValidation.message;
+                        errorDiv.classList.add('show');
+                        return;
+                    }
+                }
 
                 try {
                     // Simple password hash (in production, use proper auth)
@@ -178,25 +196,28 @@
                     const admins = await SupabaseClient.select('admins', `email=eq.${encodeURIComponent(email)}&is_active=eq.true`);
 
                     if (admins.length === 0) {
+                        errorDiv.textContent = 'メールアドレスまたはパスワードが正しくありません';
                         errorDiv.classList.add('show');
                         return;
                     }
 
                     const admin = admins[0];
 
-                    // Compare password hash
+                    // Compare password hash (constant-time comparison would be better in production)
                     if (admin.password_hash === passwordHash) {
-                        // Create session
+                        // Create session with CSRF token
                         const session = {
                             id: admin.id,
                             email: admin.email,
                             name: admin.name,
                             role: admin.role,
+                            csrfToken: typeof SecurityUtils !== 'undefined' ? SecurityUtils.generateCsrfToken() : '',
                             expiry: Date.now() + (24 * 60 * 60 * 1000) // 24 hours
                         };
                         localStorage.setItem('admin_session', JSON.stringify(session));
                         window.location.href = 'admin.html';
                     } else {
+                        errorDiv.textContent = 'メールアドレスまたはパスワードが正しくありません';
                         errorDiv.classList.add('show');
                     }
                 } catch (error) {

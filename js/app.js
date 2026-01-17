@@ -1,5 +1,6 @@
 /**
  * Client-facing Progress Tracker Application (Supabase Version)
+ * 感動的な進捗共有体験を提供
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -7,6 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentClientId = null;
     let currentProjectId = null;
     let currentUser = null;
+    let previousMilestones = [];
 
     // DOM Elements
     const searchSection = document.getElementById('search-section');
@@ -157,6 +159,20 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        // XSS防止のためのエスケープ関数
+        const escapeHtml = (str) => {
+            if (typeof SecurityUtils !== 'undefined') {
+                return SecurityUtils.escapeHtml(str);
+            }
+            if (str === null || str === undefined) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#x27;');
+        };
+
         projectList.innerHTML = projects.map(project => {
             const progress = DataManager.getProgressPercentage(project);
             const currentStep = DataManager.getCurrentStep(project);
@@ -166,14 +182,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 1: '📋', 2: '💡', 3: '🎨', 4: '🚀', 5: '🔍', 6: '✅', 7: '📦'
             };
             const statusIcon = isCompleted ? '🎉' : (icons[currentStep?.id] || '📊');
-            const statusText = isCompleted ? '納品完了' : currentStep?.name || '-';
+            const statusText = isCompleted ? '納品完了' : escapeHtml(currentStep?.name) || '-';
 
             return `
-        <div class="project-card" data-project-id="${project.id}">
+        <div class="project-card" data-project-id="${escapeHtml(project.id)}">
           <div class="project-card__header">
             <div>
-              <div class="project-card__name">${project.name}</div>
-              ${project.description ? `<div class="project-card__description">${project.description}</div>` : ''}
+              <div class="project-card__name">${escapeHtml(project.name)}</div>
+              ${project.description ? `<div class="project-card__description">${escapeHtml(project.description)}</div>` : ''}
             </div>
             <span class="badge ${isCompleted ? 'badge--success' : 'badge--primary'}">
               ${isCompleted ? '完了' : '進行中'}
@@ -204,6 +220,11 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
 
+        // プロジェクトカードに入場アニメーションを追加
+        if (typeof CelebrationSystem !== 'undefined') {
+            CelebrationSystem.animateProjectCards();
+        }
+
         // Team management button
         document.getElementById('team-btn')?.addEventListener('click', toggleTeamSection);
         document.getElementById('add-team-btn')?.addEventListener('click', showAddTeamMemberForm);
@@ -232,13 +253,27 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        // XSS防止のためのエスケープ関数
+        const escapeHtml = (str) => {
+            if (typeof SecurityUtils !== 'undefined') {
+                return SecurityUtils.escapeHtml(str);
+            }
+            if (str === null || str === undefined) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#x27;');
+        };
+
         teamList.innerHTML = members.map(m => `
             <div style="display: flex; justify-content: space-between; align-items: center; padding: var(--space-3); border-bottom: 1px solid var(--color-border);">
                 <div>
-                    <div style="font-weight: 500;">${m.name}</div>
-                    <div style="font-size: var(--font-size-sm); color: var(--color-text-muted);">${m.email}</div>
+                    <div style="font-weight: 500;">${escapeHtml(m.name)}</div>
+                    <div style="font-size: var(--font-size-sm); color: var(--color-text-muted);">${escapeHtml(m.email)}</div>
                 </div>
-                ${m.id !== currentUser?.id ? `<button class="btn btn--ghost btn--sm" onclick="deleteTeamMember('${m.id}')">削除</button>` : '<span style="color: var(--color-text-muted); font-size: var(--font-size-sm);">(あなた)</span>'}
+                ${m.id !== currentUser?.id ? `<button class="btn btn--ghost btn--sm" onclick="deleteTeamMember('${escapeHtml(m.id)}')">削除</button>` : '<span style="color: var(--color-text-muted); font-size: var(--font-size-sm);">(あなた)</span>'}
             </div>
         `).join('');
     }
@@ -285,8 +320,16 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        if (password.length < 4) {
-            errorEl.textContent = 'パスワードは4文字以上にしてください';
+        // パスワード強度チェック
+        if (typeof SecurityUtils !== 'undefined') {
+            const passwordCheck = SecurityUtils.checkPasswordStrength(password);
+            if (!passwordCheck.isValid) {
+                errorEl.textContent = passwordCheck.message;
+                errorEl.style.display = 'block';
+                return;
+            }
+        } else if (password.length < 8) {
+            errorEl.textContent = 'パスワードは8文字以上にしてください';
             errorEl.style.display = 'block';
             return;
         }
@@ -347,8 +390,20 @@ document.addEventListener('DOMContentLoaded', () => {
         // Project Info
         document.getElementById('display-project-name').textContent = project.name;
         document.getElementById('display-project-client').textContent = project.client;
-        document.getElementById('display-progress').textContent =
-            `${DataManager.getProgressPercentage(project)}%`;
+
+        // 進捗率のカウントアップアニメーション
+        const progressEl = document.getElementById('display-progress');
+        const progress = DataManager.getProgressPercentage(project);
+        if (typeof CelebrationSystem !== 'undefined') {
+            CelebrationSystem.countUp(progressEl, progress);
+            progressEl.textContent = '0%';
+            setTimeout(() => {
+                progressEl.textContent = progress + '%';
+            }, 1000);
+        } else {
+            progressEl.textContent = `${progress}%`;
+        }
+
         document.getElementById('display-updated').textContent =
             DataManager.formatDate(project.updatedAt || project.updated_at);
 
@@ -365,7 +420,77 @@ document.addEventListener('DOMContentLoaded', () => {
             updateStatusCard(currentStep, isCompleted);
             renderProgressSteps(project);
             renderTimeline(project);
+
+            // 感動的な機能を初期化
+            initEmotionalFeatures(project);
         }
+    }
+
+    /**
+     * 感動的な機能を初期化
+     */
+    function initEmotionalFeatures(project) {
+        // リアルタイム更新を開始
+        if (typeof RealtimeSystem !== 'undefined') {
+            RealtimeSystem.init(project.id);
+        }
+
+        // ストーリーテリングをレンダリング
+        if (typeof StorytellingSystem !== 'undefined') {
+            StorytellingSystem.renderStoryTimeline('project-story', project);
+        }
+
+        // マイルストーンをレンダリング
+        if (typeof MilestoneSystem !== 'undefined') {
+            MilestoneSystem.renderMilestonePanel('milestone-panel', project);
+            MilestoneSystem.renderMilestoneBadges('milestone-badges', project);
+
+            // マイルストーン達成チェック
+            previousMilestones = MilestoneSystem.checkAndCelebrate(project, previousMilestones);
+        }
+
+        // リアクションパネルをレンダリング
+        if (typeof RealtimeSystem !== 'undefined') {
+            RealtimeSystem.renderReactionPanel('reaction-panel', project.id);
+            RealtimeSystem.renderShareMessagePanel('message-panel', project.id);
+        }
+
+        // プロジェクト完了時の特別な演出
+        const isCompleted = project.steps?.every(s => s.status === 'completed');
+        if (isCompleted) {
+            showCompletionMessage(project);
+        }
+
+        // 進捗バーに輝きエフェクトを追加
+        const progressFill = document.querySelector('.project-card__progress-fill');
+        if (progressFill && typeof CelebrationSystem !== 'undefined') {
+            CelebrationSystem.addProgressGlow(progressFill);
+        }
+    }
+
+    /**
+     * プロジェクト完了メッセージを表示
+     */
+    function showCompletionMessage(project) {
+        // 初回表示かチェック
+        const shownKey = `completion_shown_${project.id}`;
+        if (sessionStorage.getItem(shownKey)) return;
+        sessionStorage.setItem(shownKey, 'true');
+
+        // 少し遅らせて祝福
+        setTimeout(() => {
+            if (typeof CelebrationSystem !== 'undefined') {
+                const stats = typeof StorytellingSystem !== 'undefined'
+                    ? StorytellingSystem.calculateProjectStats(project)
+                    : { totalDays: 0, stepsCompleted: project.steps?.length || 0 };
+
+                CelebrationSystem.showCompletionCelebration({
+                    projectName: project.name,
+                    totalDays: stats.totalDays,
+                    stepsCompleted: stats.stepsCompleted
+                });
+            }
+        }, 1500);
     }
 
     /**
@@ -377,14 +502,21 @@ document.addEventListener('DOMContentLoaded', () => {
         const statusDescription = document.getElementById('status-description');
         const statusBadge = document.getElementById('status-badge');
 
+        // ステータスカード要素が存在しない場合は何もしない
+        if (!statusIcon || !statusTitle || !statusDescription || !statusBadge) {
+            return;
+        }
+
         if (isCompleted) {
             statusIcon.textContent = '🎉';
             statusTitle.textContent = '納品完了';
             statusDescription.textContent = 'プロジェクトが完了しました。ありがとうございました！';
             statusBadge.textContent = '完了';
             statusBadge.className = 'badge badge--success';
-            document.querySelector('.status-card .status-card__icon').style.background =
-                'linear-gradient(135deg, #10b981 0%, #34d399 100%)';
+            const statusCardIcon = document.querySelector('.status-card .status-card__icon');
+            if (statusCardIcon) {
+                statusCardIcon.style.background = 'linear-gradient(135deg, #10b981 0%, #34d399 100%)';
+            }
         } else if (currentStep) {
             const icons = {
                 1: '📋', 2: '💡', 3: '🎨', 4: '🚀', 5: '🔍', 6: '✅', 7: '📦'
@@ -395,8 +527,10 @@ document.addEventListener('DOMContentLoaded', () => {
             statusDescription.textContent = currentStep.description || getDefaultStepDescription(currentStep.id);
             statusBadge.textContent = '進行中';
             statusBadge.className = 'badge badge--primary';
-            document.querySelector('.status-card .status-card__icon').style.background =
-                'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)';
+            const statusCardIcon = document.querySelector('.status-card .status-card__icon');
+            if (statusCardIcon) {
+                statusCardIcon.style.background = 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)';
+            }
         }
     }
 
@@ -467,12 +601,42 @@ document.addEventListener('DOMContentLoaded', () => {
             const hasDetails = step.description || step.url;
             const detailsId = `step-details-${index}`;
 
+            // XSS防止のためのエスケープ関数
+            const escapeHtml = (str) => {
+                if (typeof SecurityUtils !== 'undefined') {
+                    return SecurityUtils.escapeHtml(str);
+                }
+                if (str === null || str === undefined) return '';
+                return String(str)
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#x27;');
+            };
+
+            // URLサニタイズ
+            const sanitizeUrl = (url) => {
+                if (typeof SecurityUtils !== 'undefined') {
+                    return SecurityUtils.sanitizeUrl(url);
+                }
+                if (!url) return '';
+                const trimmed = url.trim().toLowerCase();
+                if (trimmed.startsWith('javascript:') || trimmed.startsWith('data:') || trimmed.startsWith('vbscript:')) {
+                    return '';
+                }
+                return url;
+            };
+
             let detailsContent = '';
             if (step.description) {
-                detailsContent += `<div class="timeline__description">${step.description.replace(/\n/g, '<br>')}</div>`;
+                detailsContent += `<div class="timeline__description">${escapeHtml(step.description).replace(/\n/g, '<br>')}</div>`;
             }
             if (step.url) {
-                detailsContent += `<div class="timeline__url"><a href="${step.url}" target="_blank" rel="noopener noreferrer">📎 関連ファイルを開く</a></div>`;
+                const safeUrl = sanitizeUrl(step.url);
+                if (safeUrl) {
+                    detailsContent += `<div class="timeline__url"><a href="${escapeHtml(safeUrl)}" target="_blank" rel="noopener noreferrer">📎 関連ファイルを開く</a></div>`;
+                }
             }
 
             // Simple toggle icon next to step name
