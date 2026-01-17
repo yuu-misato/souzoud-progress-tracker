@@ -794,6 +794,77 @@
                 }
 
                 taskList.innerHTML = html;
+
+                // Setup event delegation for task list (faster than inline onclick)
+                setupTaskListEventDelegation();
+            }
+
+            // Track if task list events are set up
+            let taskListEventsAttached = false;
+
+            function setupTaskListEventDelegation() {
+                if (taskListEventsAttached) return;
+                taskListEventsAttached = true;
+
+                taskList.addEventListener('click', (e) => {
+                    // Handle workflow toggle
+                    const toggleHeader = e.target.closest('[data-toggle-workflow]');
+                    if (toggleHeader) {
+                        const workflowId = toggleHeader.dataset.toggleWorkflow;
+                        const el = document.getElementById(workflowId);
+                        if (el) {
+                            el.classList.toggle('show');
+                        }
+                        return;
+                    }
+
+                    // Handle start working button
+                    const startBtn = e.target.closest('[data-action="start-working"]');
+                    if (startBtn) {
+                        e.preventDefault();
+                        const id = startBtn.dataset.id;
+                        if (id) {
+                            handleStartWorking(id);
+                        }
+                        return;
+                    }
+
+                    // Handle open submit button
+                    const submitBtn = e.target.closest('[data-action="open-submit"]');
+                    if (submitBtn) {
+                        e.preventDefault();
+                        const card = submitBtn.closest('.task-card');
+                        if (card) {
+                            const id = card.dataset.assignmentId;
+                            const stepName = card.dataset.stepName;
+                            const projectName = card.dataset.projectName;
+                            handleOpenSubmitModal(id, stepName, projectName);
+                        }
+                        return;
+                    }
+                });
+            }
+
+            // Fast action handlers
+            async function handleStartWorking(assignmentId) {
+                try {
+                    await DataManager.updateAssignmentStatus(assignmentId, 'in_progress');
+                    WorkflowUI.showToast('作業開始', 'タスクを作業中に変更しました', '🚀');
+                    await renderTasks();
+                } catch (e) {
+                    WorkflowUI.showToast('エラー', '更新に失敗しました', '❌');
+                }
+            }
+
+            function handleOpenSubmitModal(assignmentId, stepName, projectName) {
+                document.getElementById('submit-assignment-id').value = assignmentId;
+                document.getElementById('submit-url').value = '';
+                document.getElementById('submit-comment').value = '';
+                document.getElementById('submit-task-info').innerHTML = `
+                    <div style="font-weight: 500;">${escapeHtml(stepName)}</div>
+                    <div style="font-size: var(--font-size-sm); color: var(--color-text-muted);">${escapeHtml(projectName)}</div>
+                `;
+                submitModal.classList.add('active');
             }
 
             function renderTaskCard(assignment, now, showSubmitButton) {
@@ -824,7 +895,7 @@
                 const progress = assignment._projectProgress || 0;
 
                 return `
-                    <div class="${cardClass}" data-assignment-id="${assignment.id}">
+                    <div class="${cardClass}" data-assignment-id="${assignment.id}" data-step-name="${escapeHtml(assignment.stepName)}" data-project-name="${escapeHtml(assignment.projectName)}">
                         <div class="task-header">
                             <div>
                                 <div class="task-title">${escapeHtml(assignment.stepName)}</div>
@@ -848,7 +919,7 @@
 
                         <!-- Project Progress -->
                         <div class="project-progress">
-                            <div class="project-progress__header" onclick="toggleWorkflow('workflow-${assignment.id}')">
+                            <div class="project-progress__header" data-toggle-workflow="workflow-${assignment.id}">
                                 <div class="project-progress__title">
                                     📊 プロジェクト進捗 ${progress}%
                                     <span style="color: var(--color-text-muted);">▼</span>
@@ -872,11 +943,11 @@
                             <div class="submit-section">
                                 <div class="submit-buttons">
                                     ${assignment.status === 'pending' ? `
-                                        <button class="btn btn--secondary btn--sm" onclick="startWorking('${assignment.id}')">
+                                        <button class="btn btn--secondary btn--sm" data-action="start-working" data-id="${assignment.id}">
                                             🚀 作業開始
                                         </button>
                                     ` : ''}
-                                    <button class="btn btn--primary" onclick="openSubmitModal('${assignment.id}', '${escapeHtml(assignment.stepName)}', '${escapeHtml(assignment.projectName)}')">
+                                    <button class="btn btn--primary" data-action="open-submit" data-id="${assignment.id}">
                                         📤 提出する
                                     </button>
                                 </div>
@@ -950,36 +1021,8 @@
                 }
             }
 
-            // Toggle workflow display
-            window.toggleWorkflow = function(id) {
-                const el = document.getElementById(id);
-                if (el) {
-                    el.classList.toggle('show');
-                }
-            };
-
-            // Start working
-            window.startWorking = async function(assignmentId) {
-                try {
-                    await DataManager.updateAssignmentStatus(assignmentId, 'in_progress');
-                    WorkflowUI.showToast('作業開始', 'タスクを作業中に変更しました', '🚀');
-                    await renderTasks();
-                } catch (e) {
-                    WorkflowUI.showToast('エラー', '更新に失敗しました', '❌');
-                }
-            };
-
-            // Open submit modal
-            window.openSubmitModal = function(assignmentId, stepName, projectName) {
-                document.getElementById('submit-assignment-id').value = assignmentId;
-                document.getElementById('submit-url').value = '';
-                document.getElementById('submit-comment').value = '';
-                document.getElementById('submit-task-info').innerHTML = `
-                    <div style="font-weight: 500;">${escapeHtml(stepName)}</div>
-                    <div style="font-size: var(--font-size-sm); color: var(--color-text-muted);">${escapeHtml(projectName)}</div>
-                `;
-                submitModal.classList.add('active');
-            };
+            // Legacy window functions for backwards compatibility with task detail modal
+            window.openSubmitModal = handleOpenSubmitModal;
 
             // Open task detail
             function openTaskDetail(taskId) {

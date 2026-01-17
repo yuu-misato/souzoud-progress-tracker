@@ -629,12 +629,10 @@ const WorkflowUI = {
     });
 
     const html = `
-      <div class="kanban-board">
+      <div class="kanban-board" id="kanban-board-container">
         ${columns.map(col => `
           <div class="kanban-column kanban-column--${col.id.replace('_', '-')}"
-               data-status="${col.id}"
-               ondragover="WorkflowUI.handleDragOver(event)"
-               ondrop="WorkflowUI.handleDrop(event, '${col.id}')">
+               data-status="${col.id}">
             <div class="kanban-column__header">
               <div class="kanban-column__title">
                 <span>${col.icon}</span>
@@ -651,6 +649,77 @@ const WorkflowUI = {
     `;
 
     container.innerHTML = html;
+
+    // Setup event delegation for kanban board (faster than inline onclick)
+    this.setupKanbanEventDelegation();
+  },
+
+  /**
+   * カンバンボードのイベント委譲設定
+   */
+  setupKanbanEventDelegation() {
+    const board = document.getElementById('kanban-board-container');
+    if (!board || board.dataset.eventsAttached) return;
+    board.dataset.eventsAttached = 'true';
+
+    // Click events via delegation
+    board.addEventListener('click', (e) => {
+      const card = e.target.closest('.kanban-card');
+      if (card) {
+        const taskId = card.dataset.taskId;
+        if (taskId && this.onTaskClick) {
+          this.onTaskClick(taskId);
+        }
+      }
+    });
+
+    // Drag events via delegation
+    board.addEventListener('dragstart', (e) => {
+      const card = e.target.closest('.kanban-card');
+      if (card) {
+        this.currentDragId = card.dataset.taskId;
+        card.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+      }
+    });
+
+    board.addEventListener('dragend', (e) => {
+      const card = e.target.closest('.kanban-card');
+      if (card) {
+        card.classList.remove('dragging');
+      }
+      document.querySelectorAll('.kanban-column').forEach(col => {
+        col.classList.remove('drag-over');
+      });
+    });
+
+    board.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      const column = e.target.closest('.kanban-column');
+      if (column) {
+        column.classList.add('drag-over');
+      }
+    });
+
+    board.addEventListener('dragleave', (e) => {
+      const column = e.target.closest('.kanban-column');
+      if (column && !column.contains(e.relatedTarget)) {
+        column.classList.remove('drag-over');
+      }
+    });
+
+    board.addEventListener('drop', (e) => {
+      e.preventDefault();
+      const column = e.target.closest('.kanban-column');
+      if (column) {
+        column.classList.remove('drag-over');
+        const newStatus = column.dataset.status;
+        if (this.currentDragId && this.onStatusChange) {
+          this.onStatusChange(this.currentDragId, newStatus);
+        }
+        this.currentDragId = null;
+      }
+    });
   },
 
   /**
@@ -673,10 +742,7 @@ const WorkflowUI = {
     return `
       <div class="kanban-card"
            draggable="true"
-           data-task-id="${task.id}"
-           ondragstart="WorkflowUI.handleDragStart(event, '${task.id}')"
-           ondragend="WorkflowUI.handleDragEnd(event)"
-           onclick="WorkflowUI.openTaskDetail('${task.id}')">
+           data-task-id="${task.id}">
         <div class="kanban-card__header">
           <div class="kanban-card__title">${this.escapeHtml(task.stepName || task.name)}</div>
           ${priority !== 'normal' ? `
@@ -725,28 +791,28 @@ const WorkflowUI = {
     this.injectStyles();
 
     const html = `
-      <div class="quick-actions">
-        <div class="quick-action" onclick="WorkflowUI.filterByStatus('pending')">
+      <div class="quick-actions" id="quick-actions-bar">
+        <div class="quick-action" data-filter="pending">
           <span class="quick-action__icon">📋</span>
           <span>未着手</span>
           ${stats.pending > 0 ? `<span class="quick-action__badge">${stats.pending}</span>` : ''}
         </div>
-        <div class="quick-action" onclick="WorkflowUI.filterByStatus('in_progress')">
+        <div class="quick-action" data-filter="in_progress">
           <span class="quick-action__icon">🔧</span>
           <span>作業中</span>
           ${stats.inProgress > 0 ? `<span class="quick-action__badge">${stats.inProgress}</span>` : ''}
         </div>
-        <div class="quick-action" onclick="WorkflowUI.filterByStatus('submitted')">
+        <div class="quick-action" data-filter="submitted">
           <span class="quick-action__icon">👀</span>
           <span>レビュー待ち</span>
           ${stats.submitted > 0 ? `<span class="quick-action__badge">${stats.submitted}</span>` : ''}
         </div>
-        <div class="quick-action" onclick="WorkflowUI.filterByStatus('overdue')">
+        <div class="quick-action" data-filter="overdue">
           <span class="quick-action__icon">⚠️</span>
           <span>遅延タスク</span>
           ${stats.overdue > 0 ? `<span class="quick-action__badge" style="background:#dc2626;">${stats.overdue}</span>` : ''}
         </div>
-        <div class="quick-action" onclick="WorkflowUI.showTodaysTasks()">
+        <div class="quick-action" data-filter="today">
           <span class="quick-action__icon">📆</span>
           <span>今日のタスク</span>
           ${stats.today > 0 ? `<span class="quick-action__badge" style="background:#f59e0b;">${stats.today}</span>` : ''}
@@ -755,6 +821,28 @@ const WorkflowUI = {
     `;
 
     container.innerHTML = html;
+
+    // Setup event delegation for quick actions
+    this.setupQuickActionsEventDelegation();
+  },
+
+  /**
+   * クイックアクションのイベント委譲設定
+   */
+  setupQuickActionsEventDelegation() {
+    const bar = document.getElementById('quick-actions-bar');
+    if (!bar || bar.dataset.eventsAttached) return;
+    bar.dataset.eventsAttached = 'true';
+
+    bar.addEventListener('click', (e) => {
+      const action = e.target.closest('.quick-action');
+      if (action) {
+        const filter = action.dataset.filter;
+        if (filter) {
+          this.filterByStatus(filter);
+        }
+      }
+    });
   },
 
   /**
@@ -767,29 +855,29 @@ const WorkflowUI = {
     this.injectStyles();
 
     const html = `
-      <div class="status-grid">
-        <div class="status-card status-card--pending" onclick="WorkflowUI.filterByStatus('pending')">
+      <div class="status-grid" id="status-grid-container">
+        <div class="status-card status-card--pending" data-filter="pending">
           <div class="status-card__icon">📋</div>
           <div class="status-card__content">
             <div class="status-card__value">${stats.pending || 0}</div>
             <div class="status-card__label">未着手タスク</div>
           </div>
         </div>
-        <div class="status-card status-card--progress" onclick="WorkflowUI.filterByStatus('in_progress')">
+        <div class="status-card status-card--progress" data-filter="in_progress">
           <div class="status-card__icon">🔧</div>
           <div class="status-card__content">
             <div class="status-card__value">${stats.inProgress || 0}</div>
             <div class="status-card__label">作業中</div>
           </div>
         </div>
-        <div class="status-card status-card--review" onclick="WorkflowUI.filterByStatus('submitted')">
+        <div class="status-card status-card--review" data-filter="submitted">
           <div class="status-card__icon">👀</div>
           <div class="status-card__content">
             <div class="status-card__value">${stats.submitted || 0}</div>
             <div class="status-card__label">レビュー待ち</div>
           </div>
         </div>
-        <div class="status-card status-card--overdue" onclick="WorkflowUI.filterByStatus('overdue')">
+        <div class="status-card status-card--overdue" data-filter="overdue">
           <div class="status-card__icon">⚠️</div>
           <div class="status-card__content">
             <div class="status-card__value">${stats.overdue || 0}</div>
@@ -800,6 +888,28 @@ const WorkflowUI = {
     `;
 
     container.innerHTML = html;
+
+    // Setup event delegation for status grid
+    this.setupStatusGridEventDelegation();
+  },
+
+  /**
+   * ステータスグリッドのイベント委譲設定
+   */
+  setupStatusGridEventDelegation() {
+    const grid = document.getElementById('status-grid-container');
+    if (!grid || grid.dataset.eventsAttached) return;
+    grid.dataset.eventsAttached = 'true';
+
+    grid.addEventListener('click', (e) => {
+      const card = e.target.closest('.status-card');
+      if (card) {
+        const filter = card.dataset.filter;
+        if (filter) {
+          this.filterByStatus(filter);
+        }
+      }
+    });
   },
 
   /**
@@ -852,23 +962,46 @@ const WorkflowUI = {
     this.injectStyles();
 
     const html = `
-      <div class="view-toggle">
-        <button class="view-toggle__btn ${currentView === 'list' ? 'active' : ''}"
-                onclick="WorkflowUI.switchView('list')">
+      <div class="view-toggle" id="view-toggle-container">
+        <button class="view-toggle__btn ${currentView === 'list' ? 'active' : ''}" data-view="list">
           📋 リスト
         </button>
-        <button class="view-toggle__btn ${currentView === 'kanban' ? 'active' : ''}"
-                onclick="WorkflowUI.switchView('kanban')">
+        <button class="view-toggle__btn ${currentView === 'kanban' ? 'active' : ''}" data-view="kanban">
           📊 カンバン
         </button>
-        <button class="view-toggle__btn ${currentView === 'calendar' ? 'active' : ''}"
-                onclick="WorkflowUI.switchView('calendar')">
+        <button class="view-toggle__btn ${currentView === 'calendar' ? 'active' : ''}" data-view="calendar">
           📅 カレンダー
         </button>
       </div>
     `;
 
     container.innerHTML = html;
+
+    // Setup event delegation for view toggle
+    this.setupViewToggleEventDelegation();
+  },
+
+  /**
+   * ビュートグルのイベント委譲設定
+   */
+  setupViewToggleEventDelegation() {
+    const toggle = document.getElementById('view-toggle-container');
+    if (!toggle || toggle.dataset.eventsAttached) return;
+    toggle.dataset.eventsAttached = 'true';
+
+    toggle.addEventListener('click', (e) => {
+      const btn = e.target.closest('.view-toggle__btn');
+      if (btn) {
+        const view = btn.dataset.view;
+        if (view) {
+          // Update active state immediately for visual feedback
+          toggle.querySelectorAll('.view-toggle__btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+
+          this.switchView(view);
+        }
+      }
+    });
   },
 
   /**
@@ -909,37 +1042,9 @@ const WorkflowUI = {
   },
 
   /**
-   * ドラッグ&ドロップハンドラー
+   * ドラッグ&ドロップ状態
    */
   currentDragId: null,
-
-  handleDragStart(event, taskId) {
-    this.currentDragId = taskId;
-    event.target.classList.add('dragging');
-    event.dataTransfer.effectAllowed = 'move';
-  },
-
-  handleDragEnd(event) {
-    event.target.classList.remove('dragging');
-    document.querySelectorAll('.kanban-column').forEach(col => {
-      col.classList.remove('drag-over');
-    });
-  },
-
-  handleDragOver(event) {
-    event.preventDefault();
-    event.currentTarget.classList.add('drag-over');
-  },
-
-  handleDrop(event, newStatus) {
-    event.preventDefault();
-    event.currentTarget.classList.remove('drag-over');
-
-    if (this.currentDragId && this.onStatusChange) {
-      this.onStatusChange(this.currentDragId, newStatus);
-    }
-    this.currentDragId = null;
-  },
 
   /**
    * コールバック設定

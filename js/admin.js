@@ -1513,10 +1513,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }).join('');
         }
 
-        // Click handlers for stat cards
-        document.getElementById('stat-pending-approvals').onclick = () => openApprovalModal();
-
-        // Setup quick action handlers
+        // Setup quick action handlers (using event delegation for faster response)
         setupQuickActions();
     }
 
@@ -1553,44 +1550,62 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // Track if quick actions are already set up
+    let quickActionsInitialized = false;
+
     function setupQuickActions() {
-        // New project
-        document.getElementById('quick-new-project')?.addEventListener('click', () => {
-            if (window.adminSession?.role !== 'director') {
-                document.getElementById('new-project-btn')?.click();
-            } else {
-                showToast('ディレクターはプロジェクト作成権限がありません');
+        // Prevent duplicate event listeners
+        if (quickActionsInitialized) return;
+        quickActionsInitialized = true;
+
+        // Use event delegation on dashboard for better performance
+        const dashboard = document.getElementById('admin-dashboard');
+        if (!dashboard) return;
+
+        dashboard.addEventListener('click', (e) => {
+            const target = e.target.closest('[id]');
+            if (!target) return;
+
+            switch (target.id) {
+                case 'quick-new-project':
+                    e.preventDefault();
+                    if (window.adminSession?.role !== 'director') {
+                        document.getElementById('new-project-btn')?.click();
+                    } else {
+                        showToast('ディレクターはプロジェクト作成権限がありません');
+                    }
+                    break;
+
+                case 'quick-approval':
+                case 'view-all-approvals':
+                    e.preventDefault();
+                    openApprovalModal();
+                    break;
+
+                case 'quick-workers':
+                    e.preventDefault();
+                    if (window.adminSession?.role === 'master' || window.adminSession?.role === 'admin') {
+                        openWorkerManagement();
+                    } else {
+                        showToast('作業者管理は管理者のみ利用可能です');
+                    }
+                    break;
+
+                case 'quick-reports':
+                    e.preventDefault();
+                    showReportsModal();
+                    break;
+
+                case 'view-all-overdue':
+                    e.preventDefault();
+                    showToast('遅延タスク一覧を表示');
+                    break;
+
+                case 'stat-pending-approvals':
+                    e.preventDefault();
+                    openApprovalModal();
+                    break;
             }
-        });
-
-        // Approval
-        document.getElementById('quick-approval')?.addEventListener('click', () => {
-            openApprovalModal();
-        });
-
-        // Workers
-        document.getElementById('quick-workers')?.addEventListener('click', () => {
-            if (window.adminSession?.role === 'master' || window.adminSession?.role === 'admin') {
-                openWorkerManagement();
-            } else {
-                showToast('作業者管理は管理者のみ利用可能です');
-            }
-        });
-
-        // Reports (placeholder for future feature)
-        document.getElementById('quick-reports')?.addEventListener('click', () => {
-            showReportsModal();
-        });
-
-        // View all approvals
-        document.getElementById('view-all-approvals')?.addEventListener('click', () => {
-            openApprovalModal();
-        });
-
-        // View all overdue
-        document.getElementById('view-all-overdue')?.addEventListener('click', () => {
-            // Future: implement dedicated overdue view
-            showToast('遅延タスク一覧を表示');
         });
     }
 
