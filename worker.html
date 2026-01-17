@@ -420,62 +420,124 @@
 </head>
 
 <body>
-    <header class="header">
+    <header class="header header--minimal">
         <div class="container">
             <div class="header__inner">
                 <a href="worker.html" class="header__logo">
-                    <div class="header__logo-icon">🔧</div>
-                    <span class="header__logo-text">作業者ポータル</span>
+                    <span class="header__logo-text">SOUZOUD</span>
+                    <span class="header__logo-badge">作業者</span>
                 </a>
                 <nav class="header__nav" id="user-nav" style="display: none;">
-                    <span id="worker-name" class="badge badge--secondary"></span>
+                    <span id="worker-name" style="font-size: var(--font-size-sm); color: var(--color-text-muted); margin-right: var(--space-3);"></span>
                     <button id="logout-btn" class="btn btn--ghost btn--sm">ログアウト</button>
                 </nav>
             </div>
         </div>
     </header>
 
+    <style>
+        .header--minimal {
+            padding: var(--space-4) 0;
+            border-bottom: 1px solid var(--color-border);
+            margin-bottom: 0;
+        }
+        .header__logo-badge {
+            font-size: var(--font-size-xs);
+            background: var(--color-bg-secondary);
+            padding: var(--space-1) var(--space-2);
+            border-radius: var(--radius-sm);
+            margin-left: var(--space-2);
+            color: var(--color-text-muted);
+        }
+    </style>
+
     <main class="worker-container">
         <!-- Login Section -->
         <section id="login-section" class="login-section show">
-            <div class="card" style="max-width: 400px; margin: var(--space-10) auto;">
-                <h2 style="margin-bottom: var(--space-4);">作業者ログイン</h2>
+            <div class="login-card-simple">
+                <div class="login-card-simple__header">
+                    <div class="login-card-simple__logo">SOUZOUD</div>
+                    <div class="login-card-simple__subtitle">作業者ログイン</div>
+                </div>
                 <div id="login-error" class="login-error" style="display: none;"></div>
                 <form id="login-form">
-                    <div class="input-group" style="margin-bottom: var(--space-4);">
+                    <div class="form-field">
                         <label for="email">メールアドレス</label>
-                        <input type="email" id="email" class="input" placeholder="worker@example.com" required>
+                        <input type="email" id="email" class="input" placeholder="email@example.com" required>
                     </div>
-                    <div class="input-group" style="margin-bottom: var(--space-4);">
+                    <div class="form-field">
                         <label for="password">パスワード</label>
-                        <input type="password" id="password" class="input" placeholder="パスワード" required>
+                        <input type="password" id="password" class="input" placeholder="パスワードを入力" required>
                     </div>
                     <button type="submit" class="btn btn--primary" style="width: 100%;">ログイン</button>
                 </form>
             </div>
         </section>
 
+        <style>
+            .login-card-simple {
+                max-width: 360px;
+                margin: var(--space-10) auto;
+                background: var(--color-bg-card);
+                border: 1px solid var(--color-border);
+                border-radius: var(--radius-xl);
+                padding: var(--space-8);
+            }
+            .login-card-simple__header {
+                text-align: center;
+                margin-bottom: var(--space-6);
+            }
+            .login-card-simple__logo {
+                font-size: var(--font-size-xl);
+                font-weight: 700;
+                margin-bottom: var(--space-2);
+            }
+            .login-card-simple__subtitle {
+                font-size: var(--font-size-sm);
+                color: var(--color-text-muted);
+            }
+            .form-field {
+                margin-bottom: var(--space-4);
+            }
+            .form-field label {
+                display: block;
+                margin-bottom: var(--space-2);
+                font-size: var(--font-size-sm);
+                font-weight: 500;
+                color: var(--color-text-secondary);
+            }
+        </style>
+
         <!-- Tasks Section -->
         <section id="tasks-section" class="tasks-section">
-            <!-- Dashboard Header -->
-            <div class="dashboard-header">
-                <div class="dashboard-header__welcome">
-                    <div class="dashboard-header__avatar" id="worker-avatar">YS</div>
-                    <div>
-                        <div class="dashboard-header__greeting" id="greeting">おはようございます</div>
-                        <div class="dashboard-header__date" id="today-date"></div>
-                    </div>
-                </div>
-                <div id="view-toggle"></div>
+            <!-- Simple Header -->
+            <div class="worker-welcome">
+                <h1 class="worker-welcome__title" id="greeting">タスク一覧</h1>
+                <p class="worker-welcome__date" id="today-date"></p>
             </div>
 
-            <!-- Status Grid -->
-            <div id="status-grid"></div>
+            <style>
+                .worker-welcome {
+                    margin-bottom: var(--space-6);
+                }
+                .worker-welcome__title {
+                    font-size: var(--font-size-2xl);
+                    font-weight: 600;
+                    margin-bottom: var(--space-1);
+                }
+                .worker-welcome__date {
+                    font-size: var(--font-size-sm);
+                    color: var(--color-text-muted);
+                }
+            </style>
 
-            <!-- Quick Actions -->
-            <div id="quick-actions"></div>
+            <!-- Hidden elements for compatibility -->
+            <div id="worker-avatar" style="display: none;"></div>
+            <div id="view-toggle" style="display: none;"></div>
+            <div id="status-grid" style="display: none;"></div>
+            <div id="quick-actions" style="display: none;"></div>
 
-            <!-- Task List / Kanban View -->
+            <!-- Task List -->
             <div id="task-view">
                 <div id="task-list">
                     <!-- Tasks will be rendered here -->

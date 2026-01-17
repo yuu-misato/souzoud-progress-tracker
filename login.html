@@ -21,50 +21,30 @@
         .login-card {
             background: var(--color-bg-card);
             border-radius: var(--radius-xl);
-            box-shadow: var(--shadow-xl);
             padding: var(--space-8);
             width: 100%;
-            max-width: 400px;
+            max-width: 360px;
             border: 1px solid var(--color-border);
         }
 
         .login-header {
             text-align: center;
-            margin-bottom: var(--space-8);
+            margin-bottom: var(--space-6);
         }
 
         .login-logo {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: var(--space-3);
-            margin-bottom: var(--space-4);
-        }
-
-        .login-logo__icon {
-            width: 48px;
-            height: 48px;
-            background: var(--gradient-primary);
-            border-radius: var(--radius-lg);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-        }
-
-        .login-logo__text {
             font-size: var(--font-size-xl);
             font-weight: 700;
             color: var(--color-text);
+            margin-bottom: var(--space-2);
         }
 
         .login-title {
-            font-size: var(--font-size-lg);
-            color: var(--color-text-secondary);
-            font-weight: 500;
+            font-size: var(--font-size-sm);
+            color: var(--color-text-muted);
         }
 
-        .login-form .input-group {
+        .login-form .form-field {
             margin-bottom: var(--space-4);
         }
 
@@ -73,7 +53,7 @@
             margin-bottom: var(--space-2);
             font-size: var(--font-size-sm);
             font-weight: 500;
-            color: var(--color-text);
+            color: var(--color-text-secondary);
         }
 
         .login-form .input {
@@ -81,11 +61,7 @@
         }
 
         .login-error {
-            background: #fef2f2;
-            border: 1px solid #fecaca;
-            color: #dc2626;
-            padding: var(--space-3);
-            border-radius: var(--radius-md);
+            color: #ef4444;
             font-size: var(--font-size-sm);
             margin-bottom: var(--space-4);
             display: none;
@@ -97,8 +73,6 @@
 
         .login-submit {
             width: 100%;
-            padding: var(--space-4);
-            font-size: var(--font-size-base);
         }
 
         .login-footer {
@@ -114,10 +88,7 @@
     <div class="login-container">
         <div class="login-card">
             <div class="login-header">
-                <div class="login-logo">
-                    <div class="login-logo__icon">📊</div>
-                    <span class="login-logo__text">SOUZOUD Inc.</span>
-                </div>
+                <div class="login-logo">SOUZOUD</div>
                 <p class="login-title">管理者ログイン</p>
             </div>
 
@@ -126,13 +97,13 @@
             </div>
 
             <form id="login-form" class="login-form">
-                <div class="input-group">
+                <div class="form-field">
                     <label for="email">メールアドレス</label>
-                    <input type="email" id="email" class="input" placeholder="admin@example.com" required>
+                    <input type="email" id="email" class="input" placeholder="email@example.com" required>
                 </div>
-                <div class="input-group">
+                <div class="form-field">
                     <label for="password">パスワード</label>
-                    <input type="password" id="password" class="input" placeholder="パスワード" required>
+                    <input type="password" id="password" class="input" placeholder="パスワードを入力" required>
                 </div>
                 <button type="submit" class="btn btn--primary login-submit">ログイン</button>
             </form>

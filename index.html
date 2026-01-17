@@ -14,15 +14,14 @@
 
 <body>
   <!-- Header -->
-  <header class="header">
+  <header class="header header--minimal">
     <div class="container">
       <div class="header__inner">
         <a href="index.html" class="header__logo">
-          <div class="header__logo-icon">📊</div>
-          <span class="header__logo-text">SOUZOUD Inc.</span>
+          <span class="header__logo-text">SOUZOUD</span>
         </a>
-        <nav class="header__nav">
-          <a href="admin.html" class="btn btn--ghost">管理画面</a>
+        <nav class="header__nav" id="header-nav">
+          <!-- Dynamic nav items -->
         </nav>
       </div>
     </div>
@@ -30,150 +29,108 @@
 
   <main class="container container--narrow">
     <!-- Login Section -->
-    <section id="search-section" class="hero">
-      <h1 class="hero__title">プロジェクト進捗確認</h1>
-      <p class="hero__subtitle">
-        メールアドレスとパスワードを入力してログインしてください
-      </p>
-      <div class="login-form" style="max-width: 400px; margin: 0 auto;">
-        <div style="margin-bottom: var(--space-3);">
-          <input type="email" id="client-email-input" class="input input--lg" placeholder="メールアドレス" autocomplete="email"
-            style="width: 100%;">
-        </div>
-        <div style="margin-bottom: var(--space-4);">
-          <input type="password" id="client-password-input" class="input input--lg" placeholder="パスワード"
-            autocomplete="current-password" style="width: 100%;">
-        </div>
-        <div id="login-error"
-          style="color: #ef4444; font-size: var(--font-size-sm); margin-bottom: var(--space-3); display: none;"></div>
-        <button id="search-btn" class="btn btn--primary btn--lg" style="width: 100%;">ログイン</button>
+    <section id="search-section" class="login-section">
+      <div class="login-card">
+        <h1 class="login-card__title">ログイン</h1>
+        <p class="login-card__subtitle">プロジェクトの進捗状況を確認できます</p>
+        <form class="login-form" id="login-form">
+          <div class="form-field">
+            <label for="client-email-input" class="form-label">メールアドレス</label>
+            <input type="email" id="client-email-input" class="input" placeholder="email@example.com" autocomplete="email" required>
+          </div>
+          <div class="form-field">
+            <label for="client-password-input" class="form-label">パスワード</label>
+            <input type="password" id="client-password-input" class="input" placeholder="パスワードを入力" autocomplete="current-password" required>
+          </div>
+          <div id="login-error" class="form-error"></div>
+          <button type="submit" id="search-btn" class="btn btn--primary btn--full">ログイン</button>
+        </form>
       </div>
     </section>
 
     <!-- Client Portal Section (Hidden by default) -->
-    <section id="client-section" style="display: none;">
-      <!-- Back Button -->
-      <button id="back-btn" class="btn btn--ghost" style="margin-bottom: var(--space-6);">
-        ← ログアウト
-      </button>
+    <section id="client-section" class="client-section" style="display: none;">
+      <!-- Welcome Header -->
+      <div class="welcome-header">
+        <h1 id="display-client-name" class="welcome-header__title">-</h1>
+        <button id="back-btn" class="btn btn--ghost btn--sm">ログアウト</button>
+      </div>
 
-      <!-- Client Info -->
-      <div class="card" style="margin-bottom: var(--space-6);">
-        <div style="display: flex; align-items: center; justify-content: space-between;">
-          <div style="display: flex; align-items: center; gap: var(--space-4);">
-            <div class="status-card__icon" style="width: 60px; height: 60px; font-size: 28px; margin: 0;">🏢</div>
-            <div>
-              <h2 id="display-client-name" style="margin-bottom: var(--space-1);">-</h2>
-              <p style="color: var(--color-text-muted);">クライアントID: <span id="display-client-id">-</span></p>
-            </div>
-          </div>
-          <button id="team-btn" class="btn btn--secondary">👥 担当者管理</button>
-        </div>
+      <!-- Project List -->
+      <div class="section-header">
+        <h2 class="section-title">プロジェクト</h2>
+        <button id="team-btn" class="btn btn--ghost btn--sm">担当者管理</button>
       </div>
 
       <!-- Team Members Section (Hidden by default) -->
-      <div id="team-section" class="card" style="margin-bottom: var(--space-6); display: none;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-4);">
-          <h3>👥 担当者一覧</h3>
-          <button id="add-team-btn" class="btn btn--primary btn--sm">+ 担当者を追加</button>
+      <div id="team-section" class="team-section" style="display: none;">
+        <div class="team-section__header">
+          <h3 class="team-section__title">担当者一覧</h3>
+          <button id="add-team-btn" class="btn btn--primary btn--sm">+ 追加</button>
         </div>
-        <div id="team-list">
+        <div id="team-list" class="team-list">
           <!-- Team members will be rendered here -->
         </div>
       </div>
 
-      <!-- Project List -->
-      <h3 style="margin-bottom: var(--space-4);">プロジェクト一覧</h3>
-      <div id="project-list" class="project-cards">
+      <div id="project-list" class="project-list-simple">
         <!-- Projects will be rendered here -->
       </div>
+      <p id="display-client-id" style="display: none;">-</p>
     </section>
 
     <!-- Project Detail Section (Hidden by default) -->
-    <section id="project-section" style="display: none;">
-      <!-- Back Button -->
-      <button id="back-to-list-btn" class="btn btn--ghost" style="margin-bottom: var(--space-6);">
-        ← プロジェクト一覧に戻る
-      </button>
-
-      <!-- Project Info -->
-      <div class="card" style="margin-bottom: var(--space-6);">
-        <div class="project-info">
-          <div class="project-info__item">
-            <div class="project-info__label">プロジェクト名</div>
-            <div class="project-info__value" id="display-project-name">-</div>
-          </div>
-          <div class="project-info__item">
-            <div class="project-info__label">クライアント</div>
-            <div class="project-info__value" id="display-project-client">-</div>
-          </div>
-          <div class="project-info__item">
-            <div class="project-info__label">進捗率</div>
-            <div class="project-info__value" id="display-progress">0%</div>
-          </div>
-          <div class="project-info__item">
-            <div class="project-info__label">最終更新</div>
-            <div class="project-info__value" id="display-updated">-</div>
+    <section id="project-section" class="project-section" style="display: none;">
+      <!-- Project Header -->
+      <div class="project-header">
+        <button id="back-to-list-btn" class="btn btn--ghost btn--sm">
+          <span class="back-arrow">←</span> 戻る
+        </button>
+        <div class="project-header__info">
+          <h1 id="display-project-name" class="project-header__title">-</h1>
+          <div class="project-header__meta">
+            <span id="display-project-client" class="project-header__client">-</span>
+            <span class="project-header__separator">•</span>
+            <span id="display-updated" class="project-header__updated">-</span>
           </div>
         </div>
       </div>
 
-
-      <!-- Progress Steps -->
-      <div class="card">
-        <h3 style="margin-bottom: var(--space-6);">進捗ステップ</h3>
-        <div class="progress-container">
-          <div class="progress-steps" id="progress-steps">
-            <!-- Steps will be rendered by JavaScript -->
-          </div>
+      <!-- Progress Overview -->
+      <div class="progress-overview-simple">
+        <div class="progress-overview-simple__bar">
+          <div id="progress-bar-fill" class="progress-overview-simple__fill" style="width: 0%"></div>
         </div>
+        <span id="display-progress" class="progress-overview-simple__text">0%</span>
+      </div>
 
-        <!-- マイルストーンバッジ -->
-        <div id="milestone-badges" style="margin-top: var(--space-4);"></div>
-
-        <!-- Timeline -->
-        <h4 style="margin-top: var(--space-8); margin-bottom: var(--space-4);">タイムライン</h4>
-        <div class="timeline" id="timeline">
+      <!-- Steps Timeline -->
+      <div class="steps-card">
+        <div class="timeline-simple" id="timeline">
           <!-- Timeline items will be rendered by JavaScript -->
         </div>
       </div>
 
-      <!-- プロジェクトの旅路（ストーリーテリング） -->
-      <div class="card" style="margin-top: var(--space-6);">
-        <h3 style="margin-bottom: var(--space-4);">📖 プロジェクトの旅路</h3>
-        <div id="project-story">
-          <!-- Story timeline will be rendered by JavaScript -->
-        </div>
-      </div>
-
-      <!-- マイルストーンパネル -->
-      <div id="milestone-panel" style="margin-top: var(--space-6);"></div>
-
-      <!-- リアクション・メッセージ -->
-      <div style="margin-top: var(--space-6);">
-        <div id="reaction-panel"></div>
-        <div id="message-panel"></div>
-      </div>
+      <!-- Hidden elements for compatibility -->
+      <div id="progress-steps" style="display: none;"></div>
+      <div id="milestone-badges" style="display: none;"></div>
+      <div id="project-story" style="display: none;"></div>
+      <div id="milestone-panel" style="display: none;"></div>
+      <div id="reaction-panel" style="display: none;"></div>
+      <div id="message-panel" style="display: none;"></div>
     </section>
 
     <!-- Not Found Section -->
     <section id="not-found-section" style="display: none;">
-      <div class="card empty-state">
-        <div class="empty-state__icon">🔍</div>
-        <h2 class="empty-state__title">クライアントが見つかりません</h2>
-        <p class="empty-state__description">
-          入力されたIDに一致するクライアントが見つかりませんでした。IDをご確認ください。
-        </p>
-        <button id="retry-btn" class="btn btn--primary" style="margin-top: var(--space-6);">
-          もう一度検索する
-        </button>
+      <div class="empty-state-simple">
+        <p class="empty-state-simple__text">クライアントが見つかりません</p>
+        <button id="retry-btn" class="btn btn--primary">再試行</button>
       </div>
     </section>
   </main>
 
   <!-- Footer -->
-  <footer
-    style="text-align: center; padding: var(--space-8) 0; color: var(--color-text-muted); font-size: var(--font-size-sm);">
+  <footer class="footer-minimal">
     <p>© 2026 SOUZOUD Inc.</p>
   </footer>
 
@@ -186,53 +143,261 @@
   <script src="js/app.js"></script>
 
   <style>
-    /* Project Cards Grid */
-    .project-cards {
-      display: grid;
+    /* =============================================
+       Simplified Client Portal Styles
+       ============================================= */
+
+    /* Minimal Header */
+    .header--minimal {
+      padding: var(--space-4) 0;
+      border-bottom: 1px solid var(--color-border);
+      margin-bottom: 0;
+    }
+
+    .header--minimal .header__logo-text {
+      font-size: var(--font-size-lg);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    /* Login Section */
+    .login-section {
+      min-height: calc(100vh - 200px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-8) 0;
+    }
+
+    .login-card {
+      width: 100%;
+      max-width: 360px;
+      background: var(--color-bg-card);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-xl);
+      padding: var(--space-8);
+    }
+
+    .login-card__title {
+      font-size: var(--font-size-2xl);
+      margin-bottom: var(--space-2);
+      text-align: center;
+    }
+
+    .login-card__subtitle {
+      font-size: var(--font-size-sm);
+      color: var(--color-text-muted);
+      text-align: center;
+      margin-bottom: var(--space-6);
+    }
+
+    .login-form {
+      display: flex;
+      flex-direction: column;
       gap: var(--space-4);
     }
 
-    .project-card {
-      background: var(--color-bg-card);
-      backdrop-filter: blur(20px);
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-xl);
-      padding: var(--space-6);
-      cursor: pointer;
-      transition: all var(--transition-base);
+    .form-field {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-2);
     }
 
-    .project-card:hover {
-      border-color: var(--color-primary);
-      transform: translateY(-2px);
-      box-shadow: var(--shadow-lg);
+    .form-label {
+      font-size: var(--font-size-sm);
+      font-weight: 500;
+      color: var(--color-text-secondary);
     }
 
-    .project-card__header {
+    .form-error {
+      font-size: var(--font-size-sm);
+      color: #ef4444;
+      display: none;
+    }
+
+    .form-error:not(:empty) {
+      display: block;
+    }
+
+    .btn--full {
+      width: 100%;
+    }
+
+    /* Client Section */
+    .client-section {
+      padding: var(--space-6) 0;
+    }
+
+    .welcome-header {
       display: flex;
       justify-content: space-between;
-      align-items: flex-start;
+      align-items: center;
+      margin-bottom: var(--space-8);
+    }
+
+    .welcome-header__title {
+      font-size: var(--font-size-2xl);
+      font-weight: 600;
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
       margin-bottom: var(--space-4);
     }
 
-    .project-card__name {
+    .section-title {
       font-size: var(--font-size-lg);
       font-weight: 600;
-      margin-bottom: var(--space-1);
     }
 
-    .project-card__description {
+    /* Team Section */
+    .team-section {
+      background: var(--color-bg-card);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-4);
+      margin-bottom: var(--space-6);
+    }
+
+    .team-section__header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: var(--space-3);
+    }
+
+    .team-section__title {
+      font-size: var(--font-size-base);
+      font-weight: 500;
+    }
+
+    /* Project List Simple */
+    .project-list-simple {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-3);
+    }
+
+    .project-item {
+      display: flex;
+      align-items: center;
+      gap: var(--space-4);
+      padding: var(--space-4);
+      background: var(--color-bg-card);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      cursor: pointer;
+      transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+    }
+
+    .project-item:hover {
+      border-color: var(--color-primary);
+      box-shadow: var(--shadow-md);
+    }
+
+    .project-item__info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .project-item__name {
+      font-weight: 500;
+      margin-bottom: var(--space-1);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .project-item__step {
       font-size: var(--font-size-sm);
       color: var(--color-text-muted);
     }
 
-    .project-card__progress {
+    .project-item__progress {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      flex-shrink: 0;
+    }
+
+    .project-item__progress-bar {
+      width: 80px;
+      height: 6px;
+      background: var(--color-bg-secondary);
+      border-radius: var(--radius-full);
+      overflow: hidden;
+    }
+
+    .project-item__progress-fill {
+      height: 100%;
+      background: var(--color-success);
+      border-radius: var(--radius-full);
+      transition: width var(--transition-base);
+    }
+
+    .project-item__progress-text {
+      font-size: var(--font-size-sm);
+      font-weight: 600;
+      color: var(--color-text-secondary);
+      min-width: 40px;
+      text-align: right;
+    }
+
+    .project-item__arrow {
+      color: var(--color-text-muted);
+      font-size: var(--font-size-lg);
+    }
+
+    /* Project Section */
+    .project-section {
+      padding: var(--space-6) 0;
+    }
+
+    .project-header {
+      margin-bottom: var(--space-6);
+    }
+
+    .project-header__info {
+      margin-top: var(--space-4);
+    }
+
+    .project-header__title {
+      font-size: var(--font-size-2xl);
+      font-weight: 600;
+      margin-bottom: var(--space-2);
+    }
+
+    .project-header__meta {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      font-size: var(--font-size-sm);
+      color: var(--color-text-muted);
+    }
+
+    .project-header__separator {
+      opacity: 0.5;
+    }
+
+    .back-arrow {
+      margin-right: var(--space-1);
+    }
+
+    /* Progress Overview Simple */
+    .progress-overview-simple {
       display: flex;
       align-items: center;
       gap: var(--space-4);
+      margin-bottom: var(--space-6);
+      padding: var(--space-4);
+      background: var(--color-bg-card);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
     }
 
-    .project-card__progress-bar {
+    .progress-overview-simple__bar {
       flex: 1;
       height: 8px;
       background: var(--color-bg-secondary);
@@ -240,34 +405,164 @@
       overflow: hidden;
     }
 
-    .project-card__progress-fill {
+    .progress-overview-simple__fill {
       height: 100%;
-      background: var(--gradient-primary);
+      background: var(--gradient-success);
       border-radius: var(--radius-full);
       transition: width var(--transition-base);
     }
 
-    .project-card__progress-text {
-      font-size: var(--font-size-sm);
-      font-weight: 600;
-      color: var(--color-primary-light);
-      min-width: 45px;
+    .progress-overview-simple__text {
+      font-size: var(--font-size-lg);
+      font-weight: 700;
+      color: var(--color-text);
+      min-width: 50px;
       text-align: right;
     }
 
-    .project-card__status {
-      display: flex;
-      align-items: center;
-      gap: var(--space-2);
-      margin-top: var(--space-4);
-      padding-top: var(--space-4);
-      border-top: 1px solid var(--color-border);
-      font-size: var(--font-size-sm);
-      color: var(--color-text-secondary);
+    /* Steps Card */
+    .steps-card {
+      background: var(--color-bg-card);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-6);
     }
 
-    .project-card__status-icon {
-      font-size: 16px;
+    /* Timeline Simple */
+    .timeline-simple {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-1);
+    }
+
+    .timeline-simple__item {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-3);
+      padding: var(--space-3);
+      border-radius: var(--radius-md);
+      transition: background var(--transition-fast);
+    }
+
+    .timeline-simple__item:hover {
+      background: var(--color-bg-secondary);
+    }
+
+    .timeline-simple__indicator {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: var(--font-size-xs);
+      font-weight: 600;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .timeline-simple__item--completed .timeline-simple__indicator {
+      background: var(--color-success);
+      color: white;
+    }
+
+    .timeline-simple__item--current .timeline-simple__indicator {
+      background: var(--color-primary);
+      color: white;
+    }
+
+    .timeline-simple__item--pending .timeline-simple__indicator {
+      background: var(--color-bg-secondary);
+      color: var(--color-text-muted);
+      border: 2px solid var(--color-border);
+    }
+
+    .timeline-simple__content {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .timeline-simple__title {
+      font-weight: 500;
+      margin-bottom: var(--space-1);
+    }
+
+    .timeline-simple__item--pending .timeline-simple__title {
+      color: var(--color-text-muted);
+    }
+
+    .timeline-simple__date {
+      font-size: var(--font-size-sm);
+      color: var(--color-text-muted);
+    }
+
+    .timeline-simple__description {
+      font-size: var(--font-size-sm);
+      color: var(--color-text-secondary);
+      margin-top: var(--space-2);
+      padding: var(--space-3);
+      background: var(--color-bg-secondary);
+      border-radius: var(--radius-md);
+      line-height: 1.5;
+    }
+
+    .timeline-simple__link {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-1);
+      margin-top: var(--space-2);
+      font-size: var(--font-size-sm);
+      color: var(--color-primary);
+      text-decoration: none;
+    }
+
+    .timeline-simple__link:hover {
+      text-decoration: underline;
+    }
+
+    /* Empty State Simple */
+    .empty-state-simple {
+      text-align: center;
+      padding: var(--space-16) 0;
+    }
+
+    .empty-state-simple__text {
+      font-size: var(--font-size-lg);
+      color: var(--color-text-muted);
+      margin-bottom: var(--space-4);
+    }
+
+    /* Footer Minimal */
+    .footer-minimal {
+      text-align: center;
+      padding: var(--space-8) 0;
+      color: var(--color-text-muted);
+      font-size: var(--font-size-sm);
+    }
+
+    /* Responsive */
+    @media (max-width: 640px) {
+      .login-card {
+        padding: var(--space-6);
+      }
+
+      .project-item {
+        flex-direction: column;
+        align-items: stretch;
+        gap: var(--space-3);
+      }
+
+      .project-item__progress {
+        width: 100%;
+      }
+
+      .project-item__progress-bar {
+        flex: 1;
+      }
+
+      .project-item__arrow {
+        display: none;
+      }
     }
   </style>
 </body>
