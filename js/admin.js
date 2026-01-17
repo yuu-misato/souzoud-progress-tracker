@@ -80,6 +80,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (switchBtn) {
                         switchBtn.style.display = 'inline-flex';
                     }
+                    // Also show in mobile menu
+                    const mobileSwitchBtn = document.getElementById('mobile-switch-to-worker-btn');
+                    if (mobileSwitchBtn) {
+                        mobileSwitchBtn.style.display = 'block';
+                    }
                 }
             }
         }
@@ -101,8 +106,100 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
+        // Setup mobile menu
+        setupMobileMenu();
+
         await renderProjectList();
         await initDashboard();
+    }
+
+    // Mobile Menu Setup
+    function setupMobileMenu() {
+        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+        const mobileMenu = document.getElementById('mobile-menu');
+
+        if (!mobileMenuBtn || !mobileMenu) return;
+
+        // Toggle menu
+        mobileMenuBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            mobileMenu.classList.toggle('active');
+        });
+
+        // Close menu when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!mobileMenu.contains(e.target) && e.target !== mobileMenuBtn) {
+                mobileMenu.classList.remove('active');
+            }
+        });
+
+        // Mobile menu item handlers
+        const mobileLogout = document.getElementById('mobile-logout-btn');
+        if (mobileLogout) {
+            mobileLogout.addEventListener('click', () => {
+                localStorage.removeItem('admin_session');
+                window.location.href = 'login.html';
+            });
+        }
+
+        const mobileDashboard = document.getElementById('mobile-dashboard-btn');
+        if (mobileDashboard) {
+            mobileDashboard.addEventListener('click', () => {
+                mobileMenu.classList.remove('active');
+                showEmptyState();
+            });
+        }
+
+        const mobileWorkerSettings = document.getElementById('mobile-worker-settings-btn');
+        if (mobileWorkerSettings) {
+            mobileWorkerSettings.addEventListener('click', () => {
+                mobileMenu.classList.remove('active');
+                openWorkerManagement();
+            });
+        }
+
+        const mobileApproval = document.getElementById('mobile-approval-btn');
+        if (mobileApproval) {
+            mobileApproval.addEventListener('click', () => {
+                mobileMenu.classList.remove('active');
+                openApprovalModal();
+            });
+        }
+
+        const mobileTemplateSettings = document.getElementById('mobile-template-settings-btn');
+        if (mobileTemplateSettings) {
+            mobileTemplateSettings.addEventListener('click', () => {
+                mobileMenu.classList.remove('active');
+                openTemplateManagement();
+            });
+        }
+
+        const mobileAdminSettings = document.getElementById('mobile-admin-settings-btn');
+        if (mobileAdminSettings) {
+            mobileAdminSettings.addEventListener('click', () => {
+                mobileMenu.classList.remove('active');
+                openAdminListModal();
+            });
+        }
+
+        // Show mobile menu items based on role
+        if (window.adminSession) {
+            const role = window.adminSession.role;
+
+            if (role === 'master' || role === 'admin') {
+                document.getElementById('mobile-worker-settings-btn').style.display = 'block';
+                document.getElementById('mobile-template-settings-btn').style.display = 'block';
+            }
+
+            if (role === 'master' || role === 'admin' || role === 'director') {
+                document.getElementById('mobile-dashboard-btn').style.display = 'block';
+                document.getElementById('mobile-approval-btn').style.display = 'block';
+            }
+
+            if (role === 'master') {
+                document.getElementById('mobile-admin-settings-btn').style.display = 'block';
+            }
+        }
     }
 
     // Event Listeners
