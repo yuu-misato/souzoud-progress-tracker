@@ -431,6 +431,12 @@
                     const submissions = await DataManager.getSubmissionsForAssignment(assignment.id);
                     assignment._submissions = submissions;
 
+                    // Fetch project steps for workflow display
+                    if (assignment.projectId) {
+                        const project = await DataManager.getProject(assignment.projectId);
+                        assignment._projectSteps = project?.steps || [];
+                    }
+
                     if (assignment.status === 'pending' || assignment.status === 'in_progress') {
                         pendingTasks.push(assignment);
                     } else {
@@ -517,6 +523,22 @@
                         
                         ${renderSubmissions(submissions)}
                         
+                        <!-- Project Workflow Steps -->
+                        <div class="project-timeline">
+                            <div class="project-timeline__title" onclick="toggleWorkflow('workflow-${assignment.id}')" style="cursor: pointer;">
+                                📋 全体工程を見る ▼
+                            </div>
+                            <div id="workflow-${assignment.id}" class="project-timeline__steps" style="display: none;">
+                                ${assignment._projectSteps ? assignment._projectSteps.map((step, idx) => `
+                                    <div class="project-step ${step.status === 'completed' ? 'project-step--completed' : ''} ${step.name === assignment.stepName ? 'project-step--current' : ''}">
+                                        <span class="project-step__number">${idx + 1}</span>
+                                        <span class="project-step__name">${step.name}</span>
+                                        <span class="project-step__status">${step.status === 'completed' ? '✅' : step.name === assignment.stepName ? '🔵' : '⚪'}</span>
+                                    </div>
+                                `).join('') : '<div style="color: var(--color-text-muted);">工程データなし</div>'}
+                            </div>
+                        </div>
+                        
                         ${showSubmitButton ? `
                             <div class="submit-section">
                                 <button class="btn btn--primary" onclick="openSubmitModal('${assignment.id}')">📤 提出する</button>
@@ -548,6 +570,14 @@
                 html += '</div>';
                 return html;
             }
+
+            // Toggle workflow display
+            window.toggleWorkflow = function (id) {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.style.display = el.style.display === 'none' ? 'flex' : 'none';
+                }
+            };
 
             // Open submit modal
             window.openSubmitModal = function (assignmentId) {
