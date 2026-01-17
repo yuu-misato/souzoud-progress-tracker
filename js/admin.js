@@ -1568,7 +1568,13 @@ document.addEventListener('DOMContentLoaded', () => {
             await renderClientUsersList();
         } catch (e) {
             console.error('Error inviting client user:', e);
-            errorEl.textContent = 'このメールアドレスは既に使用されています';
+            // Check if it's a duplicate email error
+            const errorMsg = e.message || String(e);
+            if (errorMsg.includes('duplicate') || errorMsg.includes('unique') || errorMsg.includes('23505')) {
+                errorEl.textContent = 'このメールアドレスは既に使用されています';
+            } else {
+                errorEl.textContent = 'エラーが発生しました: ' + errorMsg;
+            }
             errorEl.style.display = 'block';
         } finally {
             btn.disabled = false;
