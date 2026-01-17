@@ -373,7 +373,7 @@ document.addEventListener('DOMContentLoaded', () => {
     /**
      * Display project details
      */
-    function displayProject(project) {
+    async function displayProject(project) {
         currentProjectId = project.id;
 
         // Update URL
