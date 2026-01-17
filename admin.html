@@ -441,12 +441,20 @@
                     <textarea id="step-description" class="input" rows="6"
                         placeholder="この工程で対応する内容、決定事項、注意点などを記載"></textarea>
                 </div>
-                <div class="input-group">
+                <div class="input-group" style="margin-bottom: var(--space-4);">
                     <label for="step-url">関連ファイルURL（Google Drive等）</label>
                     <input type="url" id="step-url" class="input" placeholder="https://drive.google.com/...">
                     <p
                         style="font-size: var(--font-size-xs); color: var(--color-text-muted); margin-top: var(--space-1);">
                         クライアント画面に「関連ファイルを開く」リンクとして表示されます
+                    </p>
+                </div>
+                <div class="input-group">
+                    <label for="step-client-due-date">📅 提出予定日（お客様向け表示）</label>
+                    <input type="date" id="step-client-due-date" class="input">
+                    <p
+                        style="font-size: var(--font-size-xs); color: var(--color-text-muted); margin-top: var(--space-1);">
+                        この工程がいつ頃完了予定かをお客様に表示します
                     </p>
                 </div>
 

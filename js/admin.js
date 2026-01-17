@@ -432,6 +432,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('step-name').value = '';
         document.getElementById('step-description').value = '';
         document.getElementById('step-url').value = '';
+        document.getElementById('step-client-due-date').value = '';
         document.getElementById('step-delete-btn').style.display = 'none';
 
         // Populate position selector
@@ -473,6 +474,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('step-name').value = step.name;
         document.getElementById('step-description').value = step.description || '';
         document.getElementById('step-url').value = step.url || '';
+        document.getElementById('step-client-due-date').value = step.dueDate || '';
         document.getElementById('step-delete-btn').style.display = 'block';
 
         // Hide position selector for edit mode
@@ -523,6 +525,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const name = document.getElementById('step-name').value.trim();
         const description = document.getElementById('step-description').value.trim();
         const url = document.getElementById('step-url').value.trim();
+        const clientDueDate = document.getElementById('step-client-due-date').value || null;
 
         if (!name) {
             showToast('工程名は必須です');
@@ -531,7 +534,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (isNewStep) {
             const position = document.getElementById('step-position').value;
-            const newStep = await DataManager.addStep(currentProjectId, { name, description, url }, position === 'end' ? null : parseInt(position));
+            const newStep = await DataManager.addStep(currentProjectId, { name, description, url, dueDate: clientDueDate }, position === 'end' ? null : parseInt(position));
             // Save assignment if worker selected
             const workerId = document.getElementById('step-worker').value;
             if (workerId && newStep) {
@@ -547,7 +550,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             showToast('工程を追加しました');
         } else {
-            await DataManager.updateStep(currentProjectId, currentStepId, { name, description, url });
+            await DataManager.updateStep(currentProjectId, currentStepId, { name, description, url, dueDate: clientDueDate });
             // Update or create assignment
             const workerId = document.getElementById('step-worker').value;
             const assignments = await DataManager.getAssignmentsForStep(currentStepId, currentProjectId);

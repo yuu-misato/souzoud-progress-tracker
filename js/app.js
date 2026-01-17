@@ -522,14 +522,34 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let html = '';
 
+        // 提出予定日のフォーマット関数
+        const formatDueDate = (dateStr) => {
+            if (!dateStr) return '';
+            const date = new Date(dateStr);
+            const year = date.getFullYear();
+            const month = date.getMonth() + 1;
+            const day = date.getDate();
+            return `${year}/${month}/${day}`;
+        };
+
         project.steps.forEach((step, index) => {
             const statusClass = step.status === 'completed' ? 'timeline-simple__item--completed' :
                 step.status === 'current' ? 'timeline-simple__item--current' :
                     'timeline-simple__item--pending';
 
-            const date = step.completedAt
-                ? DataManager.formatDate(step.completedAt)
-                : step.status === 'current' ? '進行中' : '';
+            // 完了日 or 提出予定日の表示
+            let dateHtml = '';
+            if (step.status === 'completed' && step.completedAt) {
+                dateHtml = `<div class="timeline-simple__date">完了: ${DataManager.formatDate(step.completedAt)}</div>`;
+            } else if (step.status === 'current') {
+                if (step.dueDate) {
+                    dateHtml = `<div class="timeline-simple__date timeline-simple__date--due">提出予定: ${formatDueDate(step.dueDate)}</div>`;
+                } else {
+                    dateHtml = `<div class="timeline-simple__date">進行中</div>`;
+                }
+            } else if (step.status === 'pending' && step.dueDate) {
+                dateHtml = `<div class="timeline-simple__date timeline-simple__date--due">提出予定: ${formatDueDate(step.dueDate)}</div>`;
+            }
 
             const icon = step.status === 'completed' ? '✓' : (index + 1);
 
@@ -551,7 +571,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <div class="timeline-simple__indicator">${icon}</div>
           <div class="timeline-simple__content">
             <div class="timeline-simple__title">${escapeHtml(step.name)}</div>
-            ${date ? `<div class="timeline-simple__date">${date}</div>` : ''}
+            ${dateHtml}
             ${descriptionHtml}
             ${linkHtml}
           </div>

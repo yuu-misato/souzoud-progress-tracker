@@ -186,7 +186,8 @@ const DataManager = {
         description: s.description || '',
         url: s.url || '',
         status: s.status,
-        completedAt: s.completed_at
+        completedAt: s.completed_at,
+        dueDate: s.due_date || null
       }));
     } catch (e) {
       console.error('Error fetching steps:', e);
@@ -301,6 +302,7 @@ const DataManager = {
         name: stepData.name,
         description: stepData.description || '',
         url: stepData.url || '',
+        due_date: stepData.dueDate || null,
         status: 'pending'
       });
 
@@ -324,6 +326,7 @@ const DataManager = {
       if (updates.name) updateData.name = updates.name;
       if (updates.description !== undefined) updateData.description = updates.description;
       if (updates.url !== undefined) updateData.url = updates.url;
+      if (updates.dueDate !== undefined) updateData.due_date = updates.dueDate || null;
 
       await SupabaseClient.update('steps', `project_id=eq.${projectId}&step_order=eq.${stepId}`, updateData);
 
