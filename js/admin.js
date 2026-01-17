@@ -87,9 +87,9 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('share-modal-cancel').addEventListener('click', closeShareModal);
     document.getElementById('open-client-users-btn')?.addEventListener('click', () => {
         if (currentProjectId) {
-            const clientId = document.getElementById('project-client-id')?.textContent;
-            const clientName = document.getElementById('project-client')?.textContent;
-            if (clientId) {
+            const clientId = document.getElementById('editor-client-id')?.textContent;
+            const clientName = document.getElementById('editor-client')?.textContent;
+            if (clientId && clientId !== '-') {
                 closeShareModal();
                 openClientUsersModal(clientId, clientName || clientId);
             }
