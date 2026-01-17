@@ -313,14 +313,6 @@
             <div class="modal__body">
                 <input type="hidden" id="submit-assignment-id">
                 <div class="input-group" style="margin-bottom: var(--space-4);">
-                    <label for="submit-stage">提出種別 *</label>
-                    <select id="submit-stage" class="input">
-                        <option value="draft">初稿</option>
-                        <option value="revision">修正稿</option>
-                        <option value="final">最終稿</option>
-                    </select>
-                </div>
-                <div class="input-group" style="margin-bottom: var(--space-4);">
                     <label for="submit-url">成果物URL</label>
                     <input type="url" id="submit-url" class="input" placeholder="https://drive.google.com/...">
                 </div>
@@ -506,12 +498,7 @@
                             
                             ${assignment.status !== 'approved' ? `
                                 <div class="submit-section">
-                                    <div class="submit-title">成果物を提出</div>
-                                    <div class="submit-buttons">
-                                        <button class="btn btn--secondary btn--sm" onclick="openSubmitModal('${assignment.id}', 'draft')">📄 初稿</button>
-                                        <button class="btn btn--secondary btn--sm" onclick="openSubmitModal('${assignment.id}', 'revision')">✏️ 修正稿</button>
-                                        <button class="btn btn--primary btn--sm" onclick="openSubmitModal('${assignment.id}', 'final')">✅ 最終稿</button>
-                                    </div>
+                                    <button class="btn btn--primary" onclick="openSubmitModal('${assignment.id}')">📤 提出する</button>
                                 </div>
                             ` : ''}
                             
@@ -526,7 +513,7 @@
             function renderSubmissions(submissions) {
                 if (submissions.length === 0) return '';
 
-                const stageLabels = { draft: '初稿', revision: '修正稿', final: '最終稿' };
+                const stageLabels = { draft: '初稿', revision: '修正稿', final: '最終稿', submission: '提出' };
                 const statusLabels = { submitted: '確認中', approved: '承認', rejected: '差戻し' };
 
                 let html = '<div class="submission-history"><small style="color: var(--color-text-muted);">提出履歴:</small>';
@@ -547,9 +534,8 @@
             }
 
             // Open submit modal
-            window.openSubmitModal = function (assignmentId, stage) {
+            window.openSubmitModal = function (assignmentId) {
                 document.getElementById('submit-assignment-id').value = assignmentId;
-                document.getElementById('submit-stage').value = stage;
                 document.getElementById('submit-url').value = '';
                 document.getElementById('submit-comment').value = '';
                 submitModal.classList.add('active');
@@ -563,14 +549,13 @@
             // Submit
             document.getElementById('submit-modal-save').addEventListener('click', async () => {
                 const assignmentId = document.getElementById('submit-assignment-id').value;
-                const stage = document.getElementById('submit-stage').value;
                 const url = document.getElementById('submit-url').value;
                 const comment = document.getElementById('submit-comment').value;
 
                 try {
                     await DataManager.createSubmission({
                         assignmentId,
-                        stage,
+                        stage: 'submission',
                         url,
                         comment
                     });
