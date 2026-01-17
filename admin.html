@@ -274,7 +274,8 @@
                     このリンクをクライアントに共有すると、全プロジェクトの進捗状況を確認できます。
                 </p>
             </div>
-            <div class="modal__footer">
+            <div class="modal__footer" style="justify-content: space-between;">
+                <button class="btn btn--secondary" id="open-client-users-btn">👥 ユーザー管理</button>
                 <button class="btn btn--secondary" id="share-modal-cancel">閉じる</button>
             </div>
         </div>
@@ -375,6 +376,37 @@
     </div>
 
     <script src="js/data.js"></script>
+    <!-- Client Users Modal -->
+    <div class="modal-overlay" id="client-users-modal">
+        <div class="modal" style="max-width: 600px;">
+            <div class="modal__header">
+                <h2 class="modal__title">👥 クライアントユーザー管理</h2>
+                <button class="modal__close" onclick="closeClientUsersModal()">&times;</button>
+            </div>
+            <div class="modal__body">
+                <div style="margin-bottom: var(--space-4);">
+                    <strong id="client-users-modal-name">-</strong>
+                    <span style="color: var(--color-text-muted); font-size: var(--font-size-sm);"> のユーザー</span>
+                </div>
+                <div id="client-users-list">
+                    <!-- Users will be rendered here -->
+                </div>
+                <div
+                    style="margin-top: var(--space-4); padding-top: var(--space-4); border-top: 1px solid var(--color-border);">
+                    <h4 style="margin-bottom: var(--space-3);">新規ユーザーを追加</h4>
+                    <div style="display: grid; gap: var(--space-3);">
+                        <input type="text" id="new-client-user-name" class="input" placeholder="担当者名">
+                        <input type="email" id="new-client-user-email" class="input" placeholder="メールアドレス">
+                        <input type="password" id="new-client-user-password" class="input" placeholder="パスワード">
+                        <div id="client-user-error"
+                            style="color: #ef4444; font-size: var(--font-size-sm); display: none;"></div>
+                        <button class="btn btn--primary" onclick="addClientUserFromAdmin()">+ 追加</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Authentication check
         (function () {

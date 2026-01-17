@@ -85,6 +85,16 @@ document.addEventListener('DOMContentLoaded', () => {
     shareBtn.addEventListener('click', openShareModal);
     document.getElementById('share-modal-close').addEventListener('click', closeShareModal);
     document.getElementById('share-modal-cancel').addEventListener('click', closeShareModal);
+    document.getElementById('open-client-users-btn')?.addEventListener('click', () => {
+        if (currentProjectId) {
+            const clientId = document.getElementById('project-client-id')?.textContent;
+            const clientName = document.getElementById('project-client')?.textContent;
+            if (clientId) {
+                closeShareModal();
+                openClientUsersModal(clientId, clientName || clientId);
+            }
+        }
+    });
 
     // Copy button handlers
     document.querySelectorAll('.copy-btn').forEach(btn => {
@@ -1158,6 +1168,99 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (e) {
             console.error('Error adding worker:', e);
             showToast('作業者の追加に失敗しました');
+        }
+    };
+
+    // ==================== CLIENT USER MANAGEMENT ====================
+
+    let currentClientUsersClientId = null;
+
+    window.openClientUsersModal = async function (clientId, clientName) {
+        currentClientUsersClientId = clientId;
+        document.getElementById('client-users-modal-name').textContent = clientName;
+        document.getElementById('client-users-modal').classList.add('active');
+        await renderClientUsersList();
+    };
+
+    window.closeClientUsersModal = function () {
+        document.getElementById('client-users-modal').classList.remove('active');
+        currentClientUsersClientId = null;
+    };
+
+    async function renderClientUsersList() {
+        const listEl = document.getElementById('client-users-list');
+        if (!currentClientUsersClientId) return;
+
+        const users = await DataManager.getClientUsers(currentClientUsersClientId);
+
+        if (users.length === 0) {
+            listEl.innerHTML = '<p style="color: var(--color-text-muted); text-align: center;">ユーザーが登録されていません</p>';
+            return;
+        }
+
+        listEl.innerHTML = users.map(u => `
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: var(--space-3); border-bottom: 1px solid var(--color-border);">
+                <div>
+                    <div style="font-weight: 500;">${u.name}</div>
+                    <div style="font-size: var(--font-size-sm); color: var(--color-text-muted);">${u.email}</div>
+                </div>
+                <button class="btn btn--ghost btn--sm" onclick="deleteClientUserFromAdmin('${u.id}')" style="color: #ef4444;">削除</button>
+            </div>
+        `).join('');
+    }
+
+    window.addClientUserFromAdmin = async function () {
+        const name = document.getElementById('new-client-user-name').value.trim();
+        const email = document.getElementById('new-client-user-email').value.trim();
+        const password = document.getElementById('new-client-user-password').value;
+        const errorEl = document.getElementById('client-user-error');
+
+        if (!name || !email || !password) {
+            errorEl.textContent = 'すべての項目を入力してください';
+            errorEl.style.display = 'block';
+            return;
+        }
+
+        if (password.length < 4) {
+            errorEl.textContent = 'パスワードは4文字以上にしてください';
+            errorEl.style.display = 'block';
+            return;
+        }
+
+        try {
+            const passwordHash = await hashPassword(password);
+            await DataManager.createClientUser({
+                clientId: currentClientUsersClientId,
+                email,
+                name,
+                passwordHash
+            });
+
+            // Clear form
+            document.getElementById('new-client-user-name').value = '';
+            document.getElementById('new-client-user-email').value = '';
+            document.getElementById('new-client-user-password').value = '';
+            errorEl.style.display = 'none';
+
+            showToast('ユーザーを追加しました');
+            await renderClientUsersList();
+        } catch (e) {
+            console.error('Error adding client user:', e);
+            errorEl.textContent = 'このメールアドレスは既に使用されています';
+            errorEl.style.display = 'block';
+        }
+    };
+
+    window.deleteClientUserFromAdmin = async function (userId) {
+        if (!confirm('このユーザーを削除しますか？')) return;
+
+        try {
+            await DataManager.deleteClientUser(userId);
+            showToast('ユーザーを削除しました');
+            await renderClientUsersList();
+        } catch (e) {
+            console.error('Error deleting client user:', e);
+            showToast('削除に失敗しました');
         }
     };
 });
