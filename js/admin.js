@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // DOM Elements
     const projectList = document.getElementById('project-list');
-    const emptyState = document.getElementById('empty-state');
+    const adminDashboard = document.getElementById('admin-dashboard');
     const projectEditor = document.getElementById('project-editor');
     const newProjectBtn = document.getElementById('new-project-btn');
     const shareBtn = document.getElementById('share-btn');
@@ -73,6 +73,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         await renderProjectList();
+        await initDashboard();
     }
 
     // Event Listeners
@@ -253,7 +254,7 @@ document.addEventListener('DOMContentLoaded', () => {
         await renderProjectList();
 
         // Show editor
-        emptyState.style.display = 'none';
+        adminDashboard.style.display = 'none';
         projectEditor.style.display = 'block';
 
         // Update project info
@@ -547,13 +548,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
-     * Show empty state
+     * Show empty state (now dashboard)
      */
     async function showEmptyState() {
-        emptyState.style.display = 'flex';
+        adminDashboard.style.display = 'block';
         projectEditor.style.display = 'none';
         currentProjectId = null;
         await renderProjectList();
+        await initDashboard();
     }
 
     /**
@@ -1291,4 +1293,104 @@ document.addEventListener('DOMContentLoaded', () => {
             showToast('削除に失敗しました');
         }
     };
+
+    // ==================== ADMIN DASHBOARD ====================
+
+    async function initDashboard() {
+        // Fetch all data needed for dashboard
+        const projects = await DataManager.getAllProjects();
+        const submissions = await DataManager.getPendingSubmissions();
+
+        // Calculate stats
+        const activeProjects = projects.filter(p => {
+            const progress = DataManager.calculateProgress(p.steps || []);
+            return progress > 0 && progress < 100;
+        });
+
+        // Find overdue tasks
+        const now = new Date();
+        const overdueTasks = [];
+
+        for (const project of projects) {
+            const steps = project.steps || [];
+            for (const step of steps) {
+                if (step.dueDate && step.status !== 'completed') {
+                    const dueDate = new Date(step.dueDate);
+                    if (dueDate < now) {
+                        overdueTasks.push({
+                            projectId: project.id,
+                            projectName: project.name,
+                            clientName: project.clientName,
+                            stepName: step.name,
+                            dueDate: step.dueDate,
+                            daysOverdue: Math.floor((now - dueDate) / (1000 * 60 * 60 * 24))
+                        });
+                    }
+                }
+            }
+        }
+
+        // Update stat cards
+        document.querySelector('#stat-pending-approvals .stat-card__value').textContent = submissions.length;
+        document.querySelector('#stat-overdue-tasks .stat-card__value').textContent = overdueTasks.length;
+        document.querySelector('#stat-active-projects .stat-card__value').textContent = activeProjects.length;
+
+        // Render pending approvals list
+        const pendingList = document.getElementById('dashboard-pending-list');
+        if (submissions.length === 0) {
+            pendingList.innerHTML = '<div class="dashboard-empty">承認待ちはありません 🎉</div>';
+        } else {
+            pendingList.innerHTML = submissions.map(sub => `
+                <div class="dashboard-item" onclick="goToProject('${sub.steps?.projectId || sub.projectId}')">
+                    <div class="dashboard-item__info">
+                        <div class="dashboard-item__title">${sub.projectName} - ${sub.steps?.name || sub.stepName || '工程'}</div>
+                        <div class="dashboard-item__meta">👤 ${sub.workerName || '作業者'} - ${new Date(sub.created_at).toLocaleDateString('ja-JP')}</div>
+                    </div>
+                    <span class="dashboard-item__badge dashboard-item__badge--warning">承認待ち</span>
+                </div>
+            `).join('');
+        }
+
+        // Render overdue tasks list
+        const overdueList = document.getElementById('dashboard-overdue-list');
+        if (overdueTasks.length === 0) {
+            overdueList.innerHTML = '<div class="dashboard-empty">遅延タスクはありません 🎉</div>';
+        } else {
+            overdueList.innerHTML = overdueTasks.map(task => `
+                <div class="dashboard-item" onclick="goToProject('${task.projectId}')">
+                    <div class="dashboard-item__info">
+                        <div class="dashboard-item__title">${task.projectName} - ${task.stepName}</div>
+                        <div class="dashboard-item__meta">🏢 ${task.clientName} - 期日: ${new Date(task.dueDate).toLocaleDateString('ja-JP')}</div>
+                    </div>
+                    <span class="dashboard-item__badge dashboard-item__badge--danger">${task.daysOverdue}日遅延</span>
+                </div>
+            `).join('');
+        }
+
+        // Click handlers for stat cards
+        document.getElementById('stat-pending-approvals').onclick = () => openApprovalModal();
+    }
+
+    window.goToProject = async function (projectId) {
+        if (projectId) {
+            const project = await DataManager.getProject(projectId);
+            if (project) {
+                selectProject(project);
+            }
+        }
+    };
+
+    function showDashboard() {
+        adminDashboard.style.display = 'block';
+        projectEditor.style.display = 'none';
+        currentProjectId = null;
+
+        // Deselect all projects in list
+        document.querySelectorAll('.project-list__item').forEach(item => {
+            item.classList.remove('active');
+        });
+
+        // Refresh dashboard data
+        initDashboard();
+    }
 });

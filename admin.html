@@ -53,13 +53,50 @@
 
             <!-- Main Content -->
             <div class="main-content">
-                <!-- Empty State -->
-                <div id="empty-state" class="card empty-state">
-                    <div class="empty-state__icon">📁</div>
-                    <h2 class="empty-state__title">プロジェクトを選択</h2>
-                    <p class="empty-state__description">
-                        左のリストからプロジェクトを選択するか、新しいプロジェクトを作成してください。
-                    </p>
+                <!-- Dashboard (shown by default) -->
+                <div id="admin-dashboard">
+                    <h2 class="dashboard-title">📊 ダッシュボード</h2>
+
+                    <!-- Stats Cards -->
+                    <div class="dashboard-stats">
+                        <div class="stat-card stat-card--warning" id="stat-pending-approvals">
+                            <div class="stat-card__icon">📋</div>
+                            <div class="stat-card__content">
+                                <div class="stat-card__value">-</div>
+                                <div class="stat-card__label">承認待ち</div>
+                            </div>
+                        </div>
+                        <div class="stat-card stat-card--danger" id="stat-overdue-tasks">
+                            <div class="stat-card__icon">⚠️</div>
+                            <div class="stat-card__content">
+                                <div class="stat-card__value">-</div>
+                                <div class="stat-card__label">遅延タスク</div>
+                            </div>
+                        </div>
+                        <div class="stat-card stat-card--info" id="stat-active-projects">
+                            <div class="stat-card__icon">📁</div>
+                            <div class="stat-card__content">
+                                <div class="stat-card__value">-</div>
+                                <div class="stat-card__label">進行中PJ</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Pending Approvals List -->
+                    <div class="dashboard-section">
+                        <h3 class="dashboard-section__title">📋 承認待ち一覧</h3>
+                        <div id="dashboard-pending-list" class="dashboard-list">
+                            <!-- Will be rendered by JS -->
+                        </div>
+                    </div>
+
+                    <!-- Overdue Tasks List -->
+                    <div class="dashboard-section">
+                        <h3 class="dashboard-section__title">⚠️ 遅延タスク</h3>
+                        <div id="dashboard-overdue-list" class="dashboard-list">
+                            <!-- Will be rendered by JS -->
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Project Editor -->
