@@ -283,6 +283,7 @@
                     <button id="dashboard-btn" class="btn btn--ghost btn--sm" style="display: none;">ダッシュボード</button>
                     <button id="worker-settings-btn" class="btn btn--ghost btn--sm" style="display: none;">作業者管理</button>
                     <button id="approval-btn" class="btn btn--ghost btn--sm" style="display: none;">承認待ち</button>
+                    <button id="template-settings-btn" class="btn btn--ghost btn--sm" style="display: none;">テンプレート</button>
                     <button id="admin-settings-btn" class="btn btn--ghost btn--sm" style="display: none;">管理者設定</button>
                     <button id="logout-btn" class="btn btn--ghost btn--sm">ログアウト</button>
                 </nav>
@@ -778,6 +779,104 @@
         <span class="toast__icon">✓</span>
         <span class="toast__message" id="toast-message">保存しました</span>
     </div>
+
+    <!-- Template Management Modal -->
+    <div class="modal-overlay" id="template-modal-manage">
+        <div class="modal" style="max-width: 700px;">
+            <div class="modal__header">
+                <h2 class="modal__title">📋 工程テンプレート管理</h2>
+                <button class="modal__close" id="template-manage-close">&times;</button>
+            </div>
+            <div class="modal__body">
+                <div id="template-list" style="max-height: 400px; overflow-y: auto;">
+                    <!-- Templates will be rendered here -->
+                </div>
+            </div>
+            <div class="modal__footer">
+                <button class="btn btn--secondary" id="template-manage-cancel">閉じる</button>
+                <button class="btn btn--primary" id="add-template-btn">+ 新規テンプレート</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Template Edit Modal -->
+    <div class="modal-overlay" id="template-edit-modal">
+        <div class="modal" style="max-width: 600px;">
+            <div class="modal__header">
+                <h2 class="modal__title" id="template-edit-title">テンプレートを編集</h2>
+                <button class="modal__close" id="template-edit-close">&times;</button>
+            </div>
+            <div class="modal__body">
+                <div class="input-group" style="margin-bottom: var(--space-4);">
+                    <label for="template-edit-name">テンプレート名 *</label>
+                    <input type="text" id="template-edit-name" class="input" placeholder="例：LP制作">
+                </div>
+                <div style="margin-bottom: var(--space-3);">
+                    <label style="font-weight: 500; margin-bottom: var(--space-2); display: block;">工程一覧</label>
+                    <div id="template-steps-list" style="display: flex; flex-direction: column; gap: var(--space-2);">
+                        <!-- Steps will be rendered here -->
+                    </div>
+                </div>
+                <button class="btn btn--secondary btn--sm" id="add-template-step-btn" style="margin-top: var(--space-2);">+ 工程を追加</button>
+            </div>
+            <div class="modal__footer">
+                <button class="btn btn--ghost" id="template-delete-btn" style="margin-right: auto; color: #ef4444;">削除</button>
+                <button class="btn btn--secondary" id="template-edit-cancel">キャンセル</button>
+                <button class="btn btn--primary" id="template-edit-save">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .template-step-row {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            padding: var(--space-2);
+            background: var(--color-bg-secondary);
+            border-radius: var(--radius-md);
+        }
+        .template-step-row input {
+            flex: 1;
+        }
+        .template-step-row .step-actions {
+            display: flex;
+            gap: var(--space-1);
+        }
+        .template-step-row .step-actions button {
+            padding: var(--space-1) var(--space-2);
+            font-size: var(--font-size-sm);
+        }
+        .template-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--space-3);
+            border-bottom: 1px solid var(--color-border);
+        }
+        .template-item:last-child {
+            border-bottom: none;
+        }
+        .template-item__info {
+            flex: 1;
+        }
+        .template-item__name {
+            font-weight: 500;
+        }
+        .template-item__steps {
+            font-size: var(--font-size-sm);
+            color: var(--color-text-muted);
+            margin-top: var(--space-1);
+        }
+        .template-item__badge {
+            font-size: var(--font-size-xs);
+            background: var(--color-bg-secondary);
+            padding: var(--space-1) var(--space-2);
+            border-radius: var(--radius-sm);
+            color: var(--color-text-muted);
+            margin-left: var(--space-2);
+        }
+    </style>
 
     <script src="js/security.js"></script>
     <script src="js/data.js"></script>

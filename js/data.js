@@ -652,6 +652,22 @@ const DataManager = {
     localStorage.setItem(this.TEMPLATES_KEY, JSON.stringify(filtered));
   },
 
+  updateTemplate(templateId, name, steps) {
+    if (!templateId.startsWith('custom_')) return null; // Can't update default templates
+
+    const stored = localStorage.getItem(this.TEMPLATES_KEY);
+    const customTemplates = stored ? JSON.parse(stored) : [];
+
+    const index = customTemplates.findIndex(t => t.id === templateId);
+    if (index === -1) return null;
+
+    customTemplates[index].name = name;
+    customTemplates[index].steps = steps.map(s => ({ name: s.name, description: s.description || '' }));
+
+    localStorage.setItem(this.TEMPLATES_KEY, JSON.stringify(customTemplates));
+    return customTemplates[index];
+  },
+
   async createProjectWithTemplate(projectData, templateId) {
     try {
       const client = await this.getOrCreateClient(projectData.client);

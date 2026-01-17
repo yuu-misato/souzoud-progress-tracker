@@ -61,6 +61,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     approvalBtn.addEventListener('click', openApprovalModal);
                 }
             }
+
+            // Show template management button for master/admin
+            if (window.adminSession.role === 'master' || window.adminSession.role === 'admin') {
+                const templateSettingsBtn = document.getElementById('template-settings-btn');
+                if (templateSettingsBtn) {
+                    templateSettingsBtn.style.display = 'inline-block';
+                    templateSettingsBtn.addEventListener('click', openTemplateManagement);
+                }
+            }
         }
 
         // Logout button handler
@@ -2182,4 +2191,284 @@ SOUZOUDへようこそ！
 
     // Initialize email settings
     initEmailSettings();
+
+    // ==================== TEMPLATE MANAGEMENT ====================
+
+    const templateManageModal = document.getElementById('template-modal-manage');
+    const templateEditModal = document.getElementById('template-edit-modal');
+    let currentEditTemplateId = null;
+    let currentTemplateSteps = [];
+
+    // Template management modal events
+    document.getElementById('template-manage-close')?.addEventListener('click', closeTemplateManagement);
+    document.getElementById('template-manage-cancel')?.addEventListener('click', closeTemplateManagement);
+    document.getElementById('add-template-btn')?.addEventListener('click', openAddTemplateModal);
+
+    // Template edit modal events
+    document.getElementById('template-edit-close')?.addEventListener('click', closeTemplateEditModal);
+    document.getElementById('template-edit-cancel')?.addEventListener('click', closeTemplateEditModal);
+    document.getElementById('template-edit-save')?.addEventListener('click', saveTemplateEdit);
+    document.getElementById('template-delete-btn')?.addEventListener('click', deleteTemplate);
+    document.getElementById('add-template-step-btn')?.addEventListener('click', addTemplateStep);
+
+    // Close on overlay click
+    [templateManageModal, templateEditModal].forEach(modal => {
+        if (modal) {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.classList.remove('active');
+                }
+            });
+        }
+    });
+
+    function openTemplateManagement() {
+        renderTemplateList();
+        templateManageModal.classList.add('active');
+    }
+
+    function closeTemplateManagement() {
+        templateManageModal.classList.remove('active');
+    }
+
+    function renderTemplateList() {
+        const templateList = document.getElementById('template-list');
+        const templates = DataManager.getAllTemplates();
+
+        if (templates.length === 0) {
+            templateList.innerHTML = '<p style="text-align: center; color: var(--color-text-muted); padding: var(--space-4);">テンプレートがありません</p>';
+            return;
+        }
+
+        templateList.innerHTML = templates.map(template => {
+            const isDefault = !template.id.startsWith('custom_');
+            const stepsPreview = template.steps.slice(0, 3).map(s => s.name).join(' → ');
+            const moreSteps = template.steps.length > 3 ? ` ... 他${template.steps.length - 3}工程` : '';
+
+            return `
+                <div class="template-item">
+                    <div class="template-item__info">
+                        <div class="template-item__name">
+                            ${escapeHtml(template.name)}
+                            ${isDefault ? '<span class="template-item__badge">デフォルト</span>' : ''}
+                        </div>
+                        <div class="template-item__steps">${escapeHtml(stepsPreview)}${moreSteps}</div>
+                    </div>
+                    <div>
+                        <button class="btn btn--secondary btn--sm" data-view-template="${template.id}">詳細</button>
+                        ${!isDefault ? `<button class="btn btn--ghost btn--sm" data-edit-template="${template.id}">編集</button>` : ''}
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        // Setup event delegation
+        setupTemplateListEvents();
+    }
+
+    let templateListEventsInitialized = false;
+
+    function setupTemplateListEvents() {
+        if (templateListEventsInitialized) return;
+        templateListEventsInitialized = true;
+
+        const templateList = document.getElementById('template-list');
+        if (!templateList) return;
+
+        templateList.addEventListener('click', (e) => {
+            const viewBtn = e.target.closest('[data-view-template]');
+            if (viewBtn) {
+                e.preventDefault();
+                const templateId = viewBtn.dataset.viewTemplate;
+                openViewTemplateModal(templateId);
+                return;
+            }
+
+            const editBtn = e.target.closest('[data-edit-template]');
+            if (editBtn) {
+                e.preventDefault();
+                const templateId = editBtn.dataset.editTemplate;
+                openEditTemplateModal(templateId);
+            }
+        });
+    }
+
+    function openAddTemplateModal() {
+        currentEditTemplateId = null;
+        currentTemplateSteps = [{ name: '' }];
+
+        document.getElementById('template-edit-title').textContent = '新規テンプレート';
+        document.getElementById('template-edit-name').value = '';
+        document.getElementById('template-delete-btn').style.display = 'none';
+
+        renderTemplateStepsEditor();
+        templateEditModal.classList.add('active');
+        document.getElementById('template-edit-name').focus();
+    }
+
+    function openViewTemplateModal(templateId) {
+        const template = DataManager.getTemplate(templateId);
+        if (!template) return;
+
+        currentEditTemplateId = templateId;
+        currentTemplateSteps = template.steps.map(s => ({ name: s.name, description: s.description || '' }));
+
+        const isDefault = !templateId.startsWith('custom_');
+
+        document.getElementById('template-edit-title').textContent = isDefault ? 'テンプレート詳細（読み取り専用）' : 'テンプレートを編集';
+        document.getElementById('template-edit-name').value = template.name;
+        document.getElementById('template-edit-name').readOnly = isDefault;
+        document.getElementById('template-delete-btn').style.display = isDefault ? 'none' : 'inline-flex';
+        document.getElementById('template-edit-save').style.display = isDefault ? 'none' : 'inline-flex';
+        document.getElementById('add-template-step-btn').style.display = isDefault ? 'none' : 'inline-flex';
+
+        renderTemplateStepsEditor(isDefault);
+        templateEditModal.classList.add('active');
+    }
+
+    function openEditTemplateModal(templateId) {
+        const template = DataManager.getTemplate(templateId);
+        if (!template) return;
+
+        currentEditTemplateId = templateId;
+        currentTemplateSteps = template.steps.map(s => ({ name: s.name, description: s.description || '' }));
+
+        document.getElementById('template-edit-title').textContent = 'テンプレートを編集';
+        document.getElementById('template-edit-name').value = template.name;
+        document.getElementById('template-edit-name').readOnly = false;
+        document.getElementById('template-delete-btn').style.display = 'inline-flex';
+        document.getElementById('template-edit-save').style.display = 'inline-flex';
+        document.getElementById('add-template-step-btn').style.display = 'inline-flex';
+
+        renderTemplateStepsEditor();
+        templateEditModal.classList.add('active');
+    }
+
+    function closeTemplateEditModal() {
+        templateEditModal.classList.remove('active');
+        currentEditTemplateId = null;
+        currentTemplateSteps = [];
+    }
+
+    function renderTemplateStepsEditor(readOnly = false) {
+        const container = document.getElementById('template-steps-list');
+
+        container.innerHTML = currentTemplateSteps.map((step, index) => `
+            <div class="template-step-row" data-index="${index}">
+                <span style="color: var(--color-text-muted); font-size: var(--font-size-sm); min-width: 24px;">${index + 1}.</span>
+                <input type="text" class="input step-name-input" value="${escapeHtml(step.name)}" placeholder="工程名" ${readOnly ? 'readonly' : ''}>
+                ${!readOnly ? `
+                    <div class="step-actions">
+                        <button class="btn btn--ghost btn--sm step-move-up" ${index === 0 ? 'disabled' : ''} title="上へ">↑</button>
+                        <button class="btn btn--ghost btn--sm step-move-down" ${index === currentTemplateSteps.length - 1 ? 'disabled' : ''} title="下へ">↓</button>
+                        <button class="btn btn--ghost btn--sm step-delete" title="削除" ${currentTemplateSteps.length <= 1 ? 'disabled' : ''}>✕</button>
+                    </div>
+                ` : ''}
+            </div>
+        `).join('');
+
+        // Setup step events
+        if (!readOnly) {
+            setupTemplateStepEvents();
+        }
+    }
+
+    function setupTemplateStepEvents() {
+        const container = document.getElementById('template-steps-list');
+
+        container.querySelectorAll('.step-name-input').forEach((input, index) => {
+            input.addEventListener('input', (e) => {
+                currentTemplateSteps[index].name = e.target.value;
+            });
+        });
+
+        container.querySelectorAll('.step-move-up').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const row = e.target.closest('.template-step-row');
+                const index = parseInt(row.dataset.index);
+                if (index > 0) {
+                    const temp = currentTemplateSteps[index];
+                    currentTemplateSteps[index] = currentTemplateSteps[index - 1];
+                    currentTemplateSteps[index - 1] = temp;
+                    renderTemplateStepsEditor();
+                }
+            });
+        });
+
+        container.querySelectorAll('.step-move-down').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const row = e.target.closest('.template-step-row');
+                const index = parseInt(row.dataset.index);
+                if (index < currentTemplateSteps.length - 1) {
+                    const temp = currentTemplateSteps[index];
+                    currentTemplateSteps[index] = currentTemplateSteps[index + 1];
+                    currentTemplateSteps[index + 1] = temp;
+                    renderTemplateStepsEditor();
+                }
+            });
+        });
+
+        container.querySelectorAll('.step-delete').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                if (currentTemplateSteps.length <= 1) return;
+                const row = e.target.closest('.template-step-row');
+                const index = parseInt(row.dataset.index);
+                currentTemplateSteps.splice(index, 1);
+                renderTemplateStepsEditor();
+            });
+        });
+    }
+
+    function addTemplateStep() {
+        currentTemplateSteps.push({ name: '' });
+        renderTemplateStepsEditor();
+        // Focus the new input
+        const inputs = document.querySelectorAll('#template-steps-list .step-name-input');
+        if (inputs.length > 0) {
+            inputs[inputs.length - 1].focus();
+        }
+    }
+
+    function saveTemplateEdit() {
+        const name = document.getElementById('template-edit-name').value.trim();
+
+        if (!name) {
+            showToast('テンプレート名を入力してください');
+            return;
+        }
+
+        // Filter out empty steps
+        const validSteps = currentTemplateSteps.filter(s => s.name.trim());
+        if (validSteps.length === 0) {
+            showToast('少なくとも1つの工程を入力してください');
+            return;
+        }
+
+        if (currentEditTemplateId && currentEditTemplateId.startsWith('custom_')) {
+            // Update existing template
+            DataManager.updateTemplate(currentEditTemplateId, name, validSteps);
+            showToast('テンプレートを更新しました');
+        } else {
+            // Create new template
+            DataManager.saveTemplate(name, validSteps);
+            showToast('テンプレートを作成しました');
+        }
+
+        closeTemplateEditModal();
+        renderTemplateList();
+    }
+
+    function deleteTemplate() {
+        if (!currentEditTemplateId || !currentEditTemplateId.startsWith('custom_')) {
+            showToast('デフォルトテンプレートは削除できません');
+            return;
+        }
+
+        if (confirm('このテンプレートを削除しますか？')) {
+            DataManager.deleteTemplate(currentEditTemplateId);
+            showToast('テンプレートを削除しました');
+            closeTemplateEditModal();
+            renderTemplateList();
+        }
+    }
 });
