@@ -274,6 +274,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 ? step.description.substring(0, 60) + (step.description.length > 60 ? '...' : '')
                 : '仕様未設定（クリックで編集）';
 
+            const isFirst = step.id === project.steps[0].id;
+            const isLast = step.id === project.steps[project.steps.length - 1].id;
+
             return `
         <div class="step-editor__item ${statusClass}" data-step-id="${step.id}">
           <div class="step-editor__number">${icon}</div>
@@ -285,6 +288,8 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
           </div>
           <div class="step-editor__actions">
+            <button class="btn btn--ghost btn--sm action-move-up" title="上へ移動" ${isFirst ? 'disabled' : ''}>↑</button>
+            <button class="btn btn--ghost btn--sm action-move-down" title="下へ移動" ${isLast ? 'disabled' : ''}>↓</button>
             ${step.status !== 'completed' ? `
               <button class="btn btn--success btn--sm action-complete" title="完了にする">✓</button>
             ` : ''}
@@ -305,6 +310,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
             item.querySelector('[data-edit-step]')?.addEventListener('click', () => {
                 openEditStepModal(stepId);
+            });
+
+            item.querySelector('.action-move-up')?.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                await DataManager.reorderStep(currentProjectId, stepId, 'up');
+                await selectProject(currentProjectId);
+                showToast('工程を上に移動しました');
+            });
+
+            item.querySelector('.action-move-down')?.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                await DataManager.reorderStep(currentProjectId, stepId, 'down');
+                await selectProject(currentProjectId);
+                showToast('工程を下に移動しました');
             });
 
             item.querySelector('.action-complete')?.addEventListener('click', async (e) => {

@@ -399,6 +399,45 @@ const DataManager = {
     }
   },
 
+  async reorderStep(projectId, stepId, direction) {
+    try {
+      const steps = await this.getStepsForProject(projectId);
+      const currentIndex = steps.findIndex(s => s.id === stepId || s.step_order === stepId);
+
+      if (currentIndex === -1) return null;
+
+      const newIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+
+      // Check bounds
+      if (newIndex < 0 || newIndex >= steps.length) return null;
+
+      const currentStep = steps[currentIndex];
+      const swapStep = steps[newIndex];
+
+      // Swap step_order values
+      const tempOrder = currentStep.step_order;
+
+      await SupabaseClient.update('steps',
+        `project_id=eq.${projectId}&id=eq.${currentStep.id}`,
+        { step_order: swapStep.step_order }
+      );
+
+      await SupabaseClient.update('steps',
+        `project_id=eq.${projectId}&id=eq.${swapStep.id}`,
+        { step_order: tempOrder }
+      );
+
+      await SupabaseClient.update('projects', `id=eq.${projectId}`, {
+        updated_at: new Date().toISOString()
+      });
+
+      return await this.getProject(projectId);
+    } catch (e) {
+      console.error('Error reordering step:', e);
+      return null;
+    }
+  },
+
   // ==================== UTILITY FUNCTIONS ====================
 
   getCurrentStep(project) {
