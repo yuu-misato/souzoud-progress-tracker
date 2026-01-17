@@ -346,6 +346,20 @@
                         </div>
                     </div>
 
+                    <!-- My Tasks Section -->
+                    <div id="my-tasks-section" class="dashboard-section" style="margin-top: var(--space-6);">
+                        <h3 style="font-size: var(--font-size-lg); font-weight: 600; margin-bottom: var(--space-4); display: flex; align-items: center; gap: var(--space-2);">
+                            📋 自分の作業
+                            <span id="my-tasks-count" style="font-size: var(--font-size-sm); background: var(--color-primary); color: white; padding: var(--space-1) var(--space-2); border-radius: var(--radius-full);">0</span>
+                        </h3>
+                        <div id="my-tasks-list" class="task-list" style="background: var(--color-bg-secondary); border-radius: var(--radius-lg); padding: var(--space-4);">
+                            <div class="empty-state">
+                                <div class="empty-state__icon">✅</div>
+                                <div>割り当てられた作業はありません</div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Hidden compatibility elements -->
                     <div id="director-avatar" style="display: none;"></div>
                     <div id="director-role" style="display: none;"></div>
@@ -901,7 +915,7 @@
         <div class="modal" style="max-width: 600px;">
             <div class="modal__header">
                 <h2 class="modal__title">👥 クライアントユーザー管理</h2>
-                <button class="modal__close" onclick="closeClientUsersModal()">&times;</button>
+                <button class="modal__close" id="client-users-modal-close">&times;</button>
             </div>
             <div class="modal__body">
                 <div style="margin-bottom: var(--space-4);">

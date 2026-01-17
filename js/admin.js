@@ -1400,6 +1400,19 @@ document.addEventListener('DOMContentLoaded', () => {
         const modal = document.getElementById('client-users-modal');
         if (!modal) return;
 
+        // Close button handler
+        const closeBtn = document.getElementById('client-users-modal-close');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => closeClientUsersModal());
+        }
+
+        // Click outside to close
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                closeClientUsersModal();
+            }
+        });
+
         modal.addEventListener('click', async (e) => {
             // Handle delete button
             const deleteBtn = e.target.closest('[data-delete-client-user]');

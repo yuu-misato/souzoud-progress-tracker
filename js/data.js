@@ -900,6 +900,41 @@ const DataManager = {
 
   // ==================== TASK ASSIGNMENT OPERATIONS ====================
 
+  async getAssignmentsForAdmin(adminId) {
+    try {
+      const assignments = await SupabaseClient.select('task_assignments', `admin_assignee_id=eq.${adminId}&order=due_date.asc`);
+      // Fetch related step and project data
+      const enrichedAssignments = await Promise.all(assignments.map(async a => {
+        const steps = await SupabaseClient.select('steps', `project_id=eq.${a.project_id}&step_order=eq.${a.step_id}`);
+        const step = steps[0];
+        let project = null;
+        if (a.project_id) {
+          const projects = await SupabaseClient.select('projects', `id=eq.${a.project_id}`);
+          project = projects[0];
+        }
+        return {
+          id: a.id,
+          stepId: a.step_id,
+          stepName: step?.name || '',
+          projectId: a.project_id || '',
+          projectName: project?.name || '',
+          clientName: project?.client || '',
+          adminAssigneeId: a.admin_assignee_id,
+          directorId: a.director_id,
+          dueDate: a.due_date,
+          notes: a.notes,
+          status: a.status,
+          createdAt: a.created_at,
+          stepDueDate: step?.due_date || null
+        };
+      }));
+      return enrichedAssignments;
+    } catch (e) {
+      console.error('Error fetching admin assignments:', e);
+      return [];
+    }
+  },
+
   async getAssignmentsForWorker(workerId) {
     try {
       const assignments = await SupabaseClient.select('task_assignments', `worker_id=eq.${workerId}&order=due_date.asc`);
@@ -947,19 +982,27 @@ const DataManager = {
 
   async createAssignment(assignmentData) {
     try {
-      const result = await SupabaseClient.insert('task_assignments', {
+      const insertData = {
         step_id: assignmentData.stepId,
         project_id: assignmentData.projectId,
-        worker_id: assignmentData.workerId,
         director_id: assignmentData.directorId,
         due_date: assignmentData.dueDate,
         notes: assignmentData.notes || '',
         status: 'pending',
         created_by: assignmentData.createdBy
-      });
+      };
+      // Support both worker and admin assignees
+      if (assignmentData.workerId) {
+        insertData.worker_id = assignmentData.workerId;
+      }
+      if (assignmentData.adminAssigneeId) {
+        insertData.admin_assignee_id = assignmentData.adminAssigneeId;
+      }
 
-      // Send notification to worker
-      if (window.NotificationService && result[0]) {
+      const result = await SupabaseClient.insert('task_assignments', insertData);
+
+      // Send notification to worker (if assigned to worker)
+      if (window.NotificationService && result[0] && assignmentData.workerId) {
         window.NotificationService.notifyTaskAssigned({
           workerId: assignmentData.workerId,
           projectId: assignmentData.projectId,
@@ -1198,7 +1241,8 @@ const DataManager = {
       const hashArray = Array.from(new Uint8Array(hashBuffer));
       const passwordHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 
-      const users = await SupabaseClient.select('client_users', `email=eq.${email}&is_active=eq.true`);
+      const encodedEmail = encodeURIComponent(email);
+      const users = await SupabaseClient.select('client_users', `email=eq.${encodedEmail}&is_active=eq.true`);
       if (users.length === 0) return null;
 
       const user = users[0];
