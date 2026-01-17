@@ -535,6 +535,79 @@ const DataManager = {
           { name: 'ガイドライン作成', description: '' },
           { name: '納品', description: '' }
         ]
+      },
+      {
+        id: 'video',
+        name: '動画制作',
+        steps: [
+          { name: 'ヒアリング・企画', description: '' },
+          { name: '構成・絵コンテ作成', description: '' },
+          { name: '撮影・素材収集', description: '' },
+          { name: '編集（初稿）', description: '' },
+          { name: '修正・調整', description: '' },
+          { name: '最終確認・納品', description: '' }
+        ]
+      },
+      {
+        id: 'print',
+        name: '印刷物・グラフィック',
+        steps: [
+          { name: 'ヒアリング・仕様確認', description: '' },
+          { name: 'ラフデザイン', description: '' },
+          { name: 'デザイン制作', description: '' },
+          { name: '校正・修正', description: '' },
+          { name: '入稿データ作成', description: '' },
+          { name: '納品', description: '' }
+        ]
+      },
+      {
+        id: 'catalog',
+        name: 'カタログ・パンフレット',
+        steps: [
+          { name: 'ヒアリング・構成決定', description: '' },
+          { name: '素材・原稿収集', description: '' },
+          { name: 'レイアウト設計', description: '' },
+          { name: 'デザイン制作', description: '' },
+          { name: '校正（初校）', description: '' },
+          { name: '校正（再校）', description: '' },
+          { name: '入稿・納品', description: '' }
+        ]
+      },
+      {
+        id: 'photo',
+        name: '撮影（写真・動画）',
+        steps: [
+          { name: '企画・ロケハン', description: '' },
+          { name: '撮影準備', description: '' },
+          { name: '撮影', description: '' },
+          { name: 'セレクト', description: '' },
+          { name: 'レタッチ・編集', description: '' },
+          { name: 'データ納品', description: '' }
+        ]
+      },
+      {
+        id: 'illustration',
+        name: 'イラスト制作',
+        steps: [
+          { name: 'ヒアリング・打ち合わせ', description: '' },
+          { name: 'ラフスケッチ', description: '' },
+          { name: '清書・着色', description: '' },
+          { name: '修正対応', description: '' },
+          { name: '納品', description: '' }
+        ]
+      },
+      {
+        id: 'app',
+        name: 'アプリ・システム開発',
+        steps: [
+          { name: '要件定義', description: '' },
+          { name: '設計', description: '' },
+          { name: '開発', description: '' },
+          { name: 'テスト', description: '' },
+          { name: 'リリース準備', description: '' },
+          { name: '本番リリース', description: '' },
+          { name: '運用開始', description: '' }
+        ]
       }
     ];
   },

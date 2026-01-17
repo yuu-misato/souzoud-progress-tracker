@@ -1075,17 +1075,45 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     window.rejectSubmission = async function (submissionId) {
-        const comment = prompt('差戻しの理由を入力してください:');
-        if (comment === null) return;
-        try {
-            await DataManager.rejectSubmission(submissionId, comment);
-            showToast('差戻しました');
-            // Refresh the modal
-            document.getElementById('approval-modal-overlay')?.remove();
-            openApprovalModal();
-        } catch (e) {
-            showToast('差戻しに失敗しました');
-        }
+        // Create rejection modal
+        const existing = document.getElementById('rejection-modal-overlay');
+        if (existing) existing.remove();
+
+        const modalHtml = `
+            <div id="rejection-modal-overlay" class="modal-overlay active" style="z-index: 10001;">
+                <div class="modal" style="max-width: 450px;">
+                    <div class="modal__header">
+                        <h2 class="modal__title">↩️ 差し戻し理由</h2>
+                        <button class="modal__close" onclick="document.getElementById('rejection-modal-overlay').remove()">&times;</button>
+                    </div>
+                    <div class="modal__body">
+                        <div class="input-group">
+                            <label for="rejection-comment">理由（作業者に通知されます）</label>
+                            <textarea id="rejection-comment" class="input" rows="3" placeholder="修正点や指摘事項を入力してください"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal__footer">
+                        <button class="btn btn--ghost" onclick="document.getElementById('rejection-modal-overlay').remove()">キャンセル</button>
+                        <button class="btn btn--danger" id="confirm-rejection-btn">差し戻す</button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+        document.getElementById('confirm-rejection-btn').addEventListener('click', async () => {
+            const comment = document.getElementById('rejection-comment').value.trim();
+            try {
+                await DataManager.rejectSubmission(submissionId, comment);
+                showToast('差し戻しました');
+                document.getElementById('rejection-modal-overlay').remove();
+                document.getElementById('approval-modal-overlay')?.remove();
+                openApprovalModal();
+            } catch (e) {
+                showToast('差し戻しに失敗しました');
+            }
+        });
     };
 
     /**
