@@ -70,6 +70,18 @@ document.addEventListener('DOMContentLoaded', () => {
                     templateSettingsBtn.addEventListener('click', openTemplateManagement);
                 }
             }
+
+            // Check if admin is also registered as a worker
+            const adminEmail = window.adminSession.email;
+            if (adminEmail) {
+                const workerAccount = await DataManager.getWorkerByEmail(adminEmail);
+                if (workerAccount) {
+                    const switchBtn = document.getElementById('switch-to-worker-btn');
+                    if (switchBtn) {
+                        switchBtn.style.display = 'inline-flex';
+                    }
+                }
+            }
         }
 
         // Logout button handler

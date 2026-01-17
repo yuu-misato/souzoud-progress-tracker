@@ -733,6 +733,25 @@ const DataManager = {
     }
   },
 
+  async getAdminByEmail(email) {
+    try {
+      const encodedEmail = encodeURIComponent(email);
+      const admins = await SupabaseClient.select('admins', `email=eq.${encodedEmail}&is_active=eq.true`);
+      if (admins.length === 0) return null;
+      const a = admins[0];
+      return {
+        id: a.id,
+        email: a.email,
+        name: a.name,
+        role: a.role,
+        isActive: a.is_active
+      };
+    } catch (e) {
+      console.error('Error fetching admin by email:', e);
+      return null;
+    }
+  },
+
   async createAdmin(adminData) {
     try {
       const result = await SupabaseClient.insert('admins', {
@@ -848,6 +867,25 @@ const DataManager = {
     } catch (e) {
       console.error('Error fetching workers:', e);
       return [];
+    }
+  },
+
+  async getWorkerByEmail(email) {
+    try {
+      const encodedEmail = encodeURIComponent(email);
+      const workers = await SupabaseClient.select('workers', `email=eq.${encodedEmail}&is_active=eq.true`);
+      if (workers.length === 0) return null;
+      const w = workers[0];
+      return {
+        id: w.id,
+        email: w.email,
+        name: w.name,
+        isActive: w.is_active,
+        passwordSet: w.password_set
+      };
+    } catch (e) {
+      console.error('Error fetching worker by email:', e);
+      return null;
     }
   },
 
