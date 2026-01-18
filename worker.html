@@ -241,6 +241,36 @@
             white-space: pre-wrap;
         }
 
+        /* Project Description */
+        .project-description-display {
+            background: var(--color-bg-secondary);
+            padding: var(--space-3) var(--space-4);
+            border-radius: var(--radius-md);
+            font-size: var(--font-size-sm);
+            color: var(--color-text-secondary);
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+
+        /* Project Folder Link */
+        .project-folder-link {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-2);
+            font-size: var(--font-size-sm);
+            color: var(--color-primary);
+            text-decoration: none;
+            padding: var(--space-2) var(--space-4);
+            background: rgba(99, 102, 241, 0.1);
+            border-radius: var(--radius-md);
+            transition: all var(--transition-fast);
+            font-weight: 500;
+        }
+        .project-folder-link:hover {
+            background: rgba(99, 102, 241, 0.2);
+            transform: translateY(-1px);
+        }
+
         /* Task Notes */
         .task-notes-display {
             background: linear-gradient(135deg, #fefce8 0%, #fef9c3 100%);
@@ -658,6 +688,10 @@
                                     <div style="font-size: var(--font-size-xs); color: var(--color-text-muted); margin-bottom: var(--space-1);">クライアント</div>
                                     <div id="editor-client-name" style="font-size: var(--font-size-sm);">-</div>
                                 </div>
+                                <div id="editor-director-section" style="display: none;">
+                                    <div style="font-size: var(--font-size-xs); color: var(--color-text-muted); margin-bottom: var(--space-1);">担当ディレクター</div>
+                                    <div id="editor-director-name" style="font-size: var(--font-size-sm);">-</div>
+                                </div>
                             </div>
                             <div id="editor-description-section" style="margin-top: var(--space-4); display: none;">
                                 <div style="font-size: var(--font-size-xs); color: var(--color-text-muted); margin-bottom: var(--space-2);">📋 仕様・要件</div>
@@ -666,6 +700,25 @@
                             <div id="editor-notes-section" style="margin-top: var(--space-4); display: none;">
                                 <div style="font-size: var(--font-size-xs); color: var(--color-text-muted); margin-bottom: var(--space-2);">📝 注意事項（あなたへのメモ）</div>
                                 <div id="editor-notes" class="task-notes-display">-</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Project Info Card -->
+                    <div class="editor-card" id="project-info-card" style="display: none;">
+                        <div class="editor-card__header">
+                            <h3 class="editor-card__title">📁 プロジェクト情報</h3>
+                        </div>
+                        <div class="editor-card__body">
+                            <div id="project-description-section" style="display: none; margin-bottom: var(--space-4);">
+                                <div style="font-size: var(--font-size-xs); color: var(--color-text-muted); margin-bottom: var(--space-2);">プロジェクト説明</div>
+                                <div id="project-description" class="project-description-display">-</div>
+                            </div>
+                            <div id="project-folder-section" style="display: none;">
+                                <div style="font-size: var(--font-size-xs); color: var(--color-text-muted); margin-bottom: var(--space-2);">専用フォルダ</div>
+                                <a id="project-folder-link" href="#" target="_blank" class="project-folder-link">
+                                    📂 プロジェクトフォルダを開く
+                                </a>
                             </div>
                         </div>
                     </div>
@@ -1108,6 +1161,14 @@
                     document.getElementById('editor-due-date').textContent = '未設定';
                 }
 
+                // Director name
+                if (task.directorName) {
+                    document.getElementById('editor-director-section').style.display = 'block';
+                    document.getElementById('editor-director-name').textContent = task.directorName;
+                } else {
+                    document.getElementById('editor-director-section').style.display = 'none';
+                }
+
                 // Step description (specs)
                 if (task.stepDescription) {
                     document.getElementById('editor-description-section').style.display = 'block';
@@ -1122,6 +1183,33 @@
                     document.getElementById('editor-notes').textContent = task.notes;
                 } else {
                     document.getElementById('editor-notes-section').style.display = 'none';
+                }
+
+                // Project info (description and folder URL)
+                const projectInfoCard = document.getElementById('project-info-card');
+                const hasProjectDescription = task.projectDescription;
+                const hasProjectFolder = task.projectFolderUrl;
+
+                if (hasProjectDescription || hasProjectFolder) {
+                    projectInfoCard.style.display = 'block';
+
+                    // Project description
+                    if (hasProjectDescription) {
+                        document.getElementById('project-description-section').style.display = 'block';
+                        document.getElementById('project-description').textContent = task.projectDescription;
+                    } else {
+                        document.getElementById('project-description-section').style.display = 'none';
+                    }
+
+                    // Project folder URL
+                    if (hasProjectFolder) {
+                        document.getElementById('project-folder-section').style.display = 'block';
+                        document.getElementById('project-folder-link').href = task.projectFolderUrl;
+                    } else {
+                        document.getElementById('project-folder-section').style.display = 'none';
+                    }
+                } else {
+                    projectInfoCard.style.display = 'none';
                 }
 
                 // Submit section visibility
