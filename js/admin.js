@@ -1959,6 +1959,14 @@ document.addEventListener('DOMContentLoaded', () => {
         sevenDaysLater.setDate(sevenDaysLater.getDate() + 7);
         sevenDaysLater.setHours(23, 59, 59, 999);
 
+        // Get all assignments to map worker IDs to steps
+        const allAssignments = await DataManager.getAllAssignments();
+        const assignmentMap = {};
+        for (const a of allAssignments) {
+            const key = `${a.project_id}-${a.step_id}`;
+            assignmentMap[key] = a.worker_id;
+        }
+
         // Collect tasks due within 7 days (including overdue)
         const thisWeekTasks = [];
         for (const project of projects) {
@@ -1968,6 +1976,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const dueDate = new Date(step.dueDate);
                     if (dueDate <= sevenDaysLater) {
                         const daysUntil = Math.ceil((dueDate - now) / (1000 * 60 * 60 * 24));
+                        const assignmentKey = `${project.id}-${step.id}`;
                         thisWeekTasks.push({
                             projectId: project.id,
                             projectName: project.name,
@@ -1975,7 +1984,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             stepId: step.id,
                             stepName: step.name,
                             stepStatus: step.status,
-                            assignedTo: step.assignedTo || null,
+                            assignedTo: assignmentMap[assignmentKey] || null,
                             dueDate: step.dueDate,
                             daysUntil: daysUntil
                         });

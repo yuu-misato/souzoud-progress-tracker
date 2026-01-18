@@ -1094,6 +1094,16 @@ const DataManager = {
     }
   },
 
+  async getAllAssignments() {
+    try {
+      const assignments = await SupabaseClient.select('task_assignments', 'order=created_at.desc');
+      return assignments;
+    } catch (e) {
+      console.error('Error fetching all assignments:', e);
+      return [];
+    }
+  },
+
   async createAssignment(assignmentData) {
     try {
       const insertData = {
