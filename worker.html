@@ -242,24 +242,75 @@
         /* Submission History */
         .submission-item {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: var(--space-3) var(--space-4);
-            background: var(--color-bg-secondary);
-            border-radius: var(--radius-md);
-            margin-bottom: var(--space-2);
+            padding: var(--space-4);
+            background: var(--color-bg-card);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-lg);
+            margin-bottom: var(--space-3);
         }
         .submission-item--approved {
-            background: #d1fae5;
-            border-left: 3px solid #10b981;
+            background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+            border-left: 4px solid #10b981;
         }
         .submission-item--rejected {
-            background: #fee2e2;
-            border-left: 3px solid #ef4444;
+            background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+            border-left: 4px solid #ef4444;
         }
         .submission-item--submitted {
+            background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+            border-left: 4px solid #f59e0b;
+        }
+        .submission-status-badge {
+            font-size: var(--font-size-xs);
+            padding: 2px 8px;
+            border-radius: var(--radius-full);
+            font-weight: 500;
+        }
+        .submission-status-badge--submitted {
             background: #fef3c7;
-            border-left: 3px solid #f59e0b;
+            color: #d97706;
+        }
+        .submission-status-badge--approved {
+            background: #d1fae5;
+            color: #059669;
+        }
+        .submission-status-badge--rejected {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+        .submission-link {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-1);
+            font-size: var(--font-size-sm);
+            color: var(--color-primary);
+            text-decoration: none;
+            padding: var(--space-1) var(--space-2);
+            background: rgba(99, 102, 241, 0.1);
+            border-radius: var(--radius-sm);
+            transition: background var(--transition-fast);
+        }
+        .submission-link:hover {
+            background: rgba(99, 102, 241, 0.2);
+        }
+        .submission-comment {
+            background: rgba(0, 0, 0, 0.03);
+            padding: var(--space-2) var(--space-3);
+            border-radius: var(--radius-md);
+            margin-top: var(--space-2);
+        }
+        .submission-feedback {
+            padding: var(--space-2) var(--space-3);
+            border-radius: var(--radius-md);
+            margin-top: var(--space-2);
+        }
+        .submission-feedback--rejected {
+            background: rgba(239, 68, 68, 0.1);
+            color: #dc2626;
+        }
+        .submission-feedback--approved {
+            background: rgba(16, 185, 129, 0.1);
+            color: #059669;
         }
 
         /* Responsive */
@@ -1082,19 +1133,45 @@
 
                 const stageLabels = { draft: '初稿', revision: '修正稿', final: '最終稿', submission: '提出' };
                 const statusLabels = { submitted: '確認中', approved: '承認', rejected: '差戻し' };
+                const statusIcons = { submitted: '⏳', approved: '✅', rejected: '↩️' };
 
                 let html = '';
                 for (const s of submissions.sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt))) {
                     html += `
                         <div class="submission-item submission-item--${s.status}">
-                            <div>
-                                <div style="font-weight: 500;">${stageLabels[s.stage] || '提出'}</div>
-                                <div style="font-size: var(--font-size-xs); color: var(--color-text-muted);">${formatDateTime(new Date(s.submittedAt))}</div>
-                                ${s.url ? `<a href="${escapeHtml(s.url)}" target="_blank" style="font-size: var(--font-size-xs); color: var(--color-primary);">📎 ファイルを開く</a>` : ''}
-                            </div>
-                            <div style="text-align: right;">
-                                <div style="font-weight: 500;">${statusLabels[s.status]}</div>
-                                ${s.comment && s.status === 'rejected' ? `<div style="font-size: var(--font-size-xs); color: #dc2626; max-width: 200px;">${escapeHtml(s.comment)}</div>` : ''}
+                            <div style="flex: 1;">
+                                <div style="display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-2);">
+                                    <span style="font-weight: 600;">${statusIcons[s.status]} ${stageLabels[s.stage] || '提出'}</span>
+                                    <span class="submission-status-badge submission-status-badge--${s.status}">${statusLabels[s.status]}</span>
+                                </div>
+                                <div style="font-size: var(--font-size-xs); color: var(--color-text-muted); margin-bottom: var(--space-2);">
+                                    📅 ${formatDateTime(new Date(s.submittedAt))}
+                                </div>
+                                ${s.url ? `
+                                    <div style="margin-bottom: var(--space-2);">
+                                        <a href="${escapeHtml(s.url)}" target="_blank" class="submission-link">
+                                            📎 提出ファイルを開く
+                                        </a>
+                                    </div>
+                                ` : ''}
+                                ${s.comment ? `
+                                    <div class="submission-comment">
+                                        <div style="font-size: var(--font-size-xs); color: var(--color-text-muted); margin-bottom: var(--space-1);">💬 提出時コメント:</div>
+                                        <div style="font-size: var(--font-size-sm);">${escapeHtml(s.comment)}</div>
+                                    </div>
+                                ` : ''}
+                                ${s.status === 'rejected' && s.reviewComment ? `
+                                    <div class="submission-feedback submission-feedback--rejected">
+                                        <div style="font-size: var(--font-size-xs); font-weight: 500; margin-bottom: var(--space-1);">⚠️ 差戻しコメント:</div>
+                                        <div style="font-size: var(--font-size-sm);">${escapeHtml(s.reviewComment)}</div>
+                                    </div>
+                                ` : ''}
+                                ${s.status === 'approved' && s.reviewComment ? `
+                                    <div class="submission-feedback submission-feedback--approved">
+                                        <div style="font-size: var(--font-size-xs); font-weight: 500; margin-bottom: var(--space-1);">✅ 承認コメント:</div>
+                                        <div style="font-size: var(--font-size-sm);">${escapeHtml(s.reviewComment)}</div>
+                                    </div>
+                                ` : ''}
                             </div>
                         </div>
                     `;
