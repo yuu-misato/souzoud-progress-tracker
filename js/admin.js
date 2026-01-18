@@ -498,7 +498,16 @@ document.addEventListener('DOMContentLoaded', () => {
     /**
      * Render the step editor with edit functionality
      */
-    function renderStepEditor(project) {
+    async function renderStepEditor(project) {
+        // Get all assignments for this project to show worker status
+        const assignmentsMap = {};
+        for (const step of project.steps) {
+            const assignments = await DataManager.getAssignmentsForStep(step.id, project.id);
+            if (assignments.length > 0) {
+                assignmentsMap[step.id] = assignments[0];
+            }
+        }
+
         stepEditor.innerHTML = project.steps.map(step => {
             const statusClass = step.status === 'completed' ? 'step-editor__item--completed' :
                 step.status === 'current' ? 'step-editor__item--current' : '';
@@ -514,6 +523,35 @@ document.addEventListener('DOMContentLoaded', () => {
             const isFirst = step.id === project.steps[0].id;
             const isLast = step.id === project.steps[project.steps.length - 1].id;
 
+            // Worker assignment info
+            const assignment = assignmentsMap[step.id];
+            let workerInfo = '';
+            if (assignment) {
+                const workerStatusLabels = {
+                    pending: '⚪ 未着手',
+                    in_progress: '🔵 作業中',
+                    submitted: '🟡 確認待ち',
+                    approved: '✅ 完了'
+                };
+                const workerStatusClass = {
+                    pending: 'worker-status--pending',
+                    in_progress: 'worker-status--in-progress',
+                    submitted: 'worker-status--submitted',
+                    approved: 'worker-status--approved'
+                };
+                const statusLabel = workerStatusLabels[assignment.status] || '⚪ 未着手';
+                const statusCls = workerStatusClass[assignment.status] || 'worker-status--pending';
+                const dueDate = assignment.due_date ? new Date(assignment.due_date).toLocaleDateString('ja-JP', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
+
+                workerInfo = `
+                    <div class="step-editor__worker ${statusCls}">
+                        <span class="step-editor__worker-name">👤 ${escapeHtml(assignment.workerName || '作業者')}</span>
+                        <span class="step-editor__worker-status">${statusLabel}</span>
+                        ${dueDate ? `<span class="step-editor__worker-due">📅 ${dueDate}</span>` : ''}
+                    </div>
+                `;
+            }
+
             return `
         <div class="step-editor__item ${statusClass}" data-step-id="${step.id}">
           <div class="step-editor__number">${icon}</div>
@@ -523,6 +561,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="step-editor__description" style="margin-top: var(--space-2); font-size: var(--font-size-xs); color: ${step.description ? 'var(--color-text-secondary)' : 'var(--color-text-muted)'}; font-style: ${step.description ? 'normal' : 'italic'};">
               ${descriptionPreview}
             </div>
+            ${workerInfo}
           </div>
           <div class="step-editor__actions">
             <button class="btn btn--ghost btn--sm action-move-up" title="上へ移動" ${isFirst ? 'disabled' : ''}>↑</button>
