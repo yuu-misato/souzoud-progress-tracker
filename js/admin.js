@@ -2275,8 +2275,129 @@ document.addEventListener('DOMContentLoaded', () => {
         // Render this week's tasks
         renderThisWeekTasks(thisWeekTasks);
 
+        // Render worker status section
+        await renderWorkerStatus();
+
         // Setup quick action handlers (using event delegation for faster response)
         setupQuickActions();
+    }
+
+    /**
+     * Render worker status section (in progress / pending tasks)
+     */
+    async function renderWorkerStatus() {
+        try {
+            // Get all assignments with worker info
+            const allAssignments = await DataManager.getAllAssignments();
+            const workers = await DataManager.getAllWorkers();
+            const projects = await DataManager.getAllProjects();
+
+            // Create lookup maps
+            const workerMap = {};
+            workers.forEach(w => { workerMap[w.id] = w.name || w.email; });
+
+            const projectMap = {};
+            projects.forEach(p => {
+                projectMap[p.id] = p;
+            });
+
+            // Enrich assignments with names
+            const enrichedAssignments = allAssignments.map(a => {
+                const project = projectMap[a.project_id];
+                const step = project?.steps?.find(s => s.id === a.step_id);
+                return {
+                    ...a,
+                    workerName: workerMap[a.worker_id] || '不明',
+                    projectName: project?.name || '',
+                    clientName: project?.client || '',
+                    stepName: step?.name || '',
+                    dueDate: a.due_date
+                };
+            }).filter(a => a.stepName); // Filter out invalid assignments
+
+            // Separate by status
+            const inProgressTasks = enrichedAssignments.filter(a => a.status === 'in_progress');
+            const pendingTasks = enrichedAssignments.filter(a => a.status === 'pending');
+
+            // Sort by due date
+            const sortByDueDate = (a, b) => {
+                if (!a.dueDate && !b.dueDate) return 0;
+                if (!a.dueDate) return 1;
+                if (!b.dueDate) return -1;
+                return new Date(a.dueDate) - new Date(b.dueDate);
+            };
+            inProgressTasks.sort(sortByDueDate);
+            pendingTasks.sort(sortByDueDate);
+
+            // Update counts
+            document.getElementById('worker-in-progress-count').textContent = inProgressTasks.length;
+            document.getElementById('worker-pending-count').textContent = pendingTasks.length;
+
+            // Render in-progress list
+            const inProgressList = document.getElementById('worker-in-progress-list');
+            if (inProgressTasks.length === 0) {
+                inProgressList.innerHTML = '<div class="empty-state-small">作業中のタスクはありません</div>';
+            } else {
+                inProgressList.innerHTML = inProgressTasks.map(task => renderWorkerTaskItem(task)).join('');
+            }
+
+            // Render pending list
+            const pendingList = document.getElementById('worker-pending-list');
+            if (pendingTasks.length === 0) {
+                pendingList.innerHTML = '<div class="empty-state-small">未着手のタスクはありません</div>';
+            } else {
+                pendingList.innerHTML = pendingTasks.map(task => renderWorkerTaskItem(task)).join('');
+            }
+
+            // Add click handlers to navigate to project
+            document.querySelectorAll('.worker-task-item').forEach(item => {
+                item.addEventListener('click', async () => {
+                    const projectId = item.dataset.projectId;
+                    if (projectId) {
+                        await selectProject(projectId);
+                    }
+                });
+            });
+
+        } catch (e) {
+            console.error('Error rendering worker status:', e);
+        }
+    }
+
+    function renderWorkerTaskItem(task) {
+        const now = new Date();
+        let dueClass = 'worker-task-item__due--none';
+        let dueLabel = '期限なし';
+
+        if (task.dueDate) {
+            const due = new Date(task.dueDate);
+            const diffDays = Math.ceil((due - now) / (1000 * 60 * 60 * 24));
+
+            if (diffDays < 0) {
+                dueClass = 'worker-task-item__due--overdue';
+                dueLabel = `${Math.abs(diffDays)}日超過`;
+            } else if (diffDays === 0) {
+                dueClass = 'worker-task-item__due--today';
+                dueLabel = '今日';
+            } else if (diffDays <= 3) {
+                dueClass = 'worker-task-item__due--soon';
+                dueLabel = `${diffDays}日後`;
+            } else {
+                dueClass = 'worker-task-item__due--soon';
+                dueLabel = `${due.getMonth() + 1}/${due.getDate()}`;
+            }
+        }
+
+        return `
+            <div class="worker-task-item" data-project-id="${task.project_id}">
+                <div style="flex: 1; min-width: 0;">
+                    <div class="worker-task-item__worker">👤 ${escapeHtml(task.workerName)}</div>
+                    <div class="worker-task-item__task">${escapeHtml(task.clientName)} / ${escapeHtml(task.projectName)}</div>
+                    <div class="worker-task-item__task" style="font-weight: 500; color: var(--color-text-secondary);">📋 ${escapeHtml(task.stepName)}</div>
+                </div>
+                <div class="worker-task-item__due ${dueClass}">${dueLabel}</div>
+            </div>
+        `;
     }
 
     async function renderThisWeekTasks(tasks) {

@@ -450,6 +450,97 @@
             border-color: var(--color-primary);
         }
 
+        /* Worker Status Cards */
+        .worker-status-card {
+            background: var(--color-bg-card);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+        }
+        .worker-status-card__header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--space-3) var(--space-4);
+            font-weight: 600;
+            font-size: var(--font-size-sm);
+        }
+        .worker-status-card__header--in-progress {
+            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+            color: #1d4ed8;
+        }
+        .worker-status-card__header--pending {
+            background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+            color: #475569;
+        }
+        .worker-status-card__count {
+            background: rgba(255,255,255,0.8);
+            padding: 2px 10px;
+            border-radius: var(--radius-full);
+            font-size: var(--font-size-xs);
+        }
+        .worker-status-card__list {
+            padding: var(--space-3);
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .worker-task-item {
+            display: flex;
+            align-items: flex-start;
+            gap: var(--space-3);
+            padding: var(--space-2) var(--space-3);
+            border-radius: var(--radius-md);
+            margin-bottom: var(--space-2);
+            background: var(--color-bg-secondary);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+        .worker-task-item:hover {
+            background: var(--color-bg-tertiary, #e2e8f0);
+            transform: translateX(2px);
+        }
+        .worker-task-item:last-child {
+            margin-bottom: 0;
+        }
+        .worker-task-item__worker {
+            font-weight: 500;
+            font-size: var(--font-size-sm);
+            color: var(--color-text);
+        }
+        .worker-task-item__task {
+            font-size: var(--font-size-xs);
+            color: var(--color-text-muted);
+        }
+        .worker-task-item__due {
+            font-size: var(--font-size-xs);
+            padding: 2px 6px;
+            border-radius: var(--radius-sm);
+            white-space: nowrap;
+            margin-left: auto;
+        }
+        .worker-task-item__due--overdue {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+        .worker-task-item__due--today {
+            background: #fef3c7;
+            color: #d97706;
+        }
+        .worker-task-item__due--soon {
+            background: #ecfdf5;
+            color: #059669;
+        }
+        .worker-task-item__due--none {
+            background: #f1f5f9;
+            color: #64748b;
+        }
+        .empty-state-small {
+            text-align: center;
+            padding: var(--space-4);
+            color: var(--color-text-muted);
+            font-size: var(--font-size-sm);
+        }
+
         /* Responsive */
         @media (max-width: 900px) {
             .admin-layout {
@@ -752,6 +843,35 @@
                             <div class="empty-state">
                                 <div class="empty-state__icon">✅</div>
                                 <div>7日以内の提出期限はありません</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Worker Status Section -->
+                    <div id="worker-status-section" class="dashboard-section" style="margin-top: var(--space-6);">
+                        <h3 style="font-size: var(--font-size-lg); font-weight: 600; margin-bottom: var(--space-4);">
+                            👷 作業者の進捗状況
+                        </h3>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: var(--space-4);">
+                            <!-- In Progress -->
+                            <div class="worker-status-card">
+                                <div class="worker-status-card__header worker-status-card__header--in-progress">
+                                    <span>🔵 作業中</span>
+                                    <span id="worker-in-progress-count" class="worker-status-card__count">0</span>
+                                </div>
+                                <div id="worker-in-progress-list" class="worker-status-card__list">
+                                    <div class="empty-state-small">作業中のタスクはありません</div>
+                                </div>
+                            </div>
+                            <!-- Pending (Not Started) -->
+                            <div class="worker-status-card">
+                                <div class="worker-status-card__header worker-status-card__header--pending">
+                                    <span>⚪ 未着手</span>
+                                    <span id="worker-pending-count" class="worker-status-card__count">0</span>
+                                </div>
+                                <div id="worker-pending-list" class="worker-status-card__list">
+                                    <div class="empty-state-small">未着手のタスクはありません</div>
+                                </div>
                             </div>
                         </div>
                     </div>
