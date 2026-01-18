@@ -1066,6 +1066,7 @@ const DataManager = {
           id: a.id,
           stepId: a.step_id,
           stepName: step?.name || '',
+          stepDescription: step?.description || '',
           projectId: a.project_id || '',
           projectName: project?.name || '',
           clientName: project?.client || '',
