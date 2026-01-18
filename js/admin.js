@@ -1975,7 +1975,21 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('[DEBUG] initDashboard - sevenDaysLater:', sevenDaysLater);
         console.log('[DEBUG] initDashboard - upcomingDeadlines:', upcomingDeadlines);
         console.log('[DEBUG] initDashboard - overdueTasks:', overdueTasks);
-        console.log('[DEBUG] initDashboard - projects sample steps:', projects.slice(0, 2).map(p => ({ name: p.name, steps: p.steps })));
+        // Show all steps with dueDates
+        const stepsWithDueDates = [];
+        for (const project of projects) {
+            for (const step of (project.steps || [])) {
+                if (step.dueDate) {
+                    stepsWithDueDates.push({
+                        project: project.name,
+                        step: step.name,
+                        dueDate: step.dueDate,
+                        status: step.status
+                    });
+                }
+            }
+        }
+        console.log('[DEBUG] initDashboard - all steps with dueDates:', stepsWithDueDates);
 
         // Update stat cards (try both class names for compatibility)
         const updateStatValue = (selector, value) => {
