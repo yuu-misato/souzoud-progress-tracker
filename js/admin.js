@@ -1881,8 +1881,13 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('[DEBUG] initDashboard - submissions count:', submissions.length, submissions);
 
         // Calculate stats
+        const calculateProgress = (steps) => {
+            if (!steps || steps.length === 0) return 0;
+            const completed = steps.filter(s => s.status === 'completed').length;
+            return Math.round((completed / steps.length) * 100);
+        };
         const activeProjects = projects.filter(p => {
-            const progress = DataManager.calculateProgress(p.steps || []);
+            const progress = calculateProgress(p.steps || []);
             return progress > 0 && progress < 100;
         });
 
