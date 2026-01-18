@@ -684,6 +684,9 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('step-due-date').value = '';
         document.getElementById('step-notes').value = '';
 
+        // Hide submissions section for new step
+        document.getElementById('step-submissions-section').style.display = 'none';
+
         stepModal.classList.add('active');
         document.getElementById('step-name').focus();
     }
@@ -719,14 +722,88 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('step-worker').value = a.worker_id || '';
             document.getElementById('step-due-date').value = a.due_date ? a.due_date.slice(0, 16) : '';
             document.getElementById('step-notes').value = a.notes || '';
+
+            // Load and display submissions
+            const submissions = await DataManager.getSubmissionsForAssignment(a.id);
+            renderStepSubmissions(submissions, a.workerName);
         } else {
             document.getElementById('step-worker').value = '';
             document.getElementById('step-due-date').value = '';
             document.getElementById('step-notes').value = '';
+            // Hide submissions section
+            document.getElementById('step-submissions-section').style.display = 'none';
         }
 
         stepModal.classList.add('active');
     }
+
+    /**
+     * Render submissions in step modal
+     */
+    function renderStepSubmissions(submissions, workerName) {
+        const section = document.getElementById('step-submissions-section');
+        const list = document.getElementById('step-submissions-list');
+        const countEl = document.getElementById('step-submissions-count');
+
+        if (!submissions || submissions.length === 0) {
+            section.style.display = 'none';
+            return;
+        }
+
+        section.style.display = 'block';
+        countEl.textContent = submissions.length;
+
+        const statusLabels = { submitted: '確認中', approved: '承認済み', rejected: '差戻し' };
+        const statusIcons = { submitted: '⏳', approved: '✅', rejected: '↩️' };
+
+        let html = '';
+        for (const s of submissions.sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt))) {
+            const date = new Date(s.submittedAt).toLocaleString('ja-JP', {
+                year: 'numeric', month: 'short', day: 'numeric',
+                hour: '2-digit', minute: '2-digit'
+            });
+
+            html += `
+                <div class="modal-submission-item modal-submission-item--${s.status}">
+                    <div class="modal-submission-header">
+                        <div>
+                            <span style="font-weight: 500;">${statusIcons[s.status]} ${escapeHtml(workerName || '作業者')}</span>
+                            <span style="font-size: var(--font-size-xs); color: var(--color-text-muted); margin-left: var(--space-2);">${date}</span>
+                        </div>
+                        <span class="modal-submission-status modal-submission-status--${s.status}">${statusLabels[s.status]}</span>
+                    </div>
+                    ${s.url ? `
+                        <div style="display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap;">
+                            <a href="${escapeHtml(s.url)}" target="_blank" class="modal-submission-url">
+                                📎 提出ファイルを開く
+                            </a>
+                            <button class="modal-submission-copy-btn" onclick="copyToClipboard('${escapeHtml(s.url)}')">
+                                📋 URLをコピー
+                            </button>
+                        </div>
+                    ` : '<div style="font-size: var(--font-size-sm); color: var(--color-text-muted);">（URLなし）</div>'}
+                    ${s.comment ? `
+                        <div class="modal-submission-comment">
+                            <div style="font-size: var(--font-size-xs); color: var(--color-text-muted); margin-bottom: var(--space-1);">💬 コメント:</div>
+                            ${escapeHtml(s.comment)}
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+
+        list.innerHTML = html;
+    }
+
+    // Copy URL to clipboard helper
+    window.copyToClipboard = async function(text) {
+        try {
+            await navigator.clipboard.writeText(text);
+            showToast('コピー完了', 'URLをクリップボードにコピーしました');
+        } catch (e) {
+            console.error('Copy failed:', e);
+        }
+    };
 
     /**
      * Populate worker dropdown
