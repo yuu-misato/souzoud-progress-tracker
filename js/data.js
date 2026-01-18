@@ -371,32 +371,11 @@ const DataManager = {
     try {
       const completedAt = status === 'completed' ? new Date().toISOString() : null;
 
-      // Update the target step
+      // Update only the target step (allow multiple steps to be in progress)
       await SupabaseClient.update('steps', `project_id=eq.${projectId}&step_order=eq.${stepId}`, {
         status: status,
         completed_at: completedAt
       });
-
-      // If completing or setting current, update previous steps
-      if (status === 'completed' || status === 'current') {
-        const steps = await SupabaseClient.select('steps', `project_id=eq.${projectId}&step_order=lt.${stepId}`);
-        for (const step of steps) {
-          if (step.status !== 'completed') {
-            await SupabaseClient.update('steps', `project_id=eq.${projectId}&step_order=eq.${step.step_order}`, {
-              status: 'completed',
-              completed_at: step.completed_at || new Date().toISOString()
-            });
-          }
-        }
-      }
-
-      // If setting current, mark subsequent as pending
-      if (status === 'current') {
-        await SupabaseClient.update('steps', `project_id=eq.${projectId}&step_order=gt.${stepId}`, {
-          status: 'pending',
-          completed_at: null
-        });
-      }
 
       await SupabaseClient.update('projects', `id=eq.${projectId}`, {
         updated_at: new Date().toISOString()
