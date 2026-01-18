@@ -1973,6 +1973,12 @@ document.addEventListener('DOMContentLoaded', () => {
         // Sort by due date (earliest first)
         thisWeekTasks.sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
 
+        console.log('[DEBUG] initDashboard - thisWeekTasks:', thisWeekTasks);
+        console.log('[DEBUG] initDashboard - endOfWeek:', endOfWeek);
+        console.log('[DEBUG] initDashboard - upcomingDeadlines:', upcomingDeadlines);
+        console.log('[DEBUG] initDashboard - overdueTasks:', overdueTasks);
+        console.log('[DEBUG] initDashboard - projects sample steps:', projects.slice(0, 2).map(p => ({ name: p.name, steps: p.steps })));
+
         // Update stat cards (try both class names for compatibility)
         const updateStatValue = (selector, value) => {
             const el = document.querySelector(selector);
