@@ -228,15 +228,29 @@
             padding: var(--space-5);
         }
 
+        /* Task Description (Specs) */
+        .task-description-display {
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            border-left: 3px solid #3b82f6;
+            padding: var(--space-4);
+            border-radius: var(--radius-md);
+            margin: var(--space-3) 0;
+            font-size: var(--font-size-sm);
+            color: var(--color-text);
+            line-height: 1.7;
+            white-space: pre-wrap;
+        }
+
         /* Task Notes */
         .task-notes-display {
-            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-            border-left: 3px solid var(--color-primary);
+            background: linear-gradient(135deg, #fefce8 0%, #fef9c3 100%);
+            border-left: 3px solid #eab308;
             padding: var(--space-3) var(--space-4);
             border-radius: var(--radius-md);
             margin: var(--space-3) 0;
             font-size: var(--font-size-sm);
             color: var(--color-text-secondary);
+            white-space: pre-wrap;
         }
 
         /* Submission History */
@@ -645,8 +659,12 @@
                                     <div id="editor-client-name" style="font-size: var(--font-size-sm);">-</div>
                                 </div>
                             </div>
+                            <div id="editor-description-section" style="margin-top: var(--space-4); display: none;">
+                                <div style="font-size: var(--font-size-xs); color: var(--color-text-muted); margin-bottom: var(--space-2);">📋 仕様・要件</div>
+                                <div id="editor-description" class="task-description-display">-</div>
+                            </div>
                             <div id="editor-notes-section" style="margin-top: var(--space-4); display: none;">
-                                <div style="font-size: var(--font-size-xs); color: var(--color-text-muted); margin-bottom: var(--space-2);">📝 注意事項</div>
+                                <div style="font-size: var(--font-size-xs); color: var(--color-text-muted); margin-bottom: var(--space-2);">📝 注意事項（あなたへのメモ）</div>
                                 <div id="editor-notes" class="task-notes-display">-</div>
                             </div>
                         </div>
@@ -1088,6 +1106,14 @@
                     document.getElementById('editor-due-date').textContent = formatDateTime(due);
                 } else {
                     document.getElementById('editor-due-date').textContent = '未設定';
+                }
+
+                // Step description (specs)
+                if (task.stepDescription) {
+                    document.getElementById('editor-description-section').style.display = 'block';
+                    document.getElementById('editor-description').textContent = task.stepDescription;
+                } else {
+                    document.getElementById('editor-description-section').style.display = 'none';
                 }
 
                 // Notes
