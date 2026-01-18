@@ -865,6 +865,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (workerId) {
                 if (assignments.length > 0) {
                     await DataManager.updateAssignment(assignments[0].id, {
+                        workerId: workerId,
                         dueDate: document.getElementById('step-due-date').value || null,
                         notes: document.getElementById('step-notes').value,
                         directorId: window.adminSession?.id

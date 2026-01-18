@@ -1158,6 +1158,7 @@ const DataManager = {
   async updateAssignment(assignmentId, updates) {
     try {
       const updateData = {};
+      if (updates.workerId) updateData.worker_id = updates.workerId;
       if (updates.dueDate) updateData.due_date = updates.dueDate;
       if (updates.notes !== undefined) updateData.notes = updates.notes;
       if (updates.status) updateData.status = updates.status;
