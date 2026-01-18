@@ -1972,6 +1972,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             projectId: project.id,
                             projectName: project.name,
                             clientName: project.client,
+                            stepId: step.id,
                             stepName: step.name,
                             stepStatus: step.status,
                             assignedTo: step.assignedTo || null,
@@ -2205,7 +2206,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const assigneeName = task.assignedTo ? (workerMap[task.assignedTo] || '担当者') : '未割当';
 
             return `
-                <div class="week-task-item" data-project-id="${task.projectId}">
+                <div class="week-task-item" data-project-id="${task.projectId}" data-step-id="${task.stepId}">
                     <div class="week-task-item__due ${dueClass}">
                         ${escapeHtml(dueLabel)}
                     </div>
@@ -2218,12 +2219,15 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
         }).join('');
 
-        // Add click handlers for week-task-items
+        // Add click handlers for week-task-items - open step edit modal
         listEl.querySelectorAll('.week-task-item').forEach(item => {
-            item.addEventListener('click', () => {
+            item.addEventListener('click', async () => {
                 const projectId = item.dataset.projectId;
-                if (projectId) {
-                    selectProject(projectId);
+                const stepId = parseInt(item.dataset.stepId);
+                if (projectId && stepId) {
+                    // Set current project context and open step modal
+                    currentProjectId = projectId;
+                    openEditStepModal(stepId);
                 }
             });
         });
