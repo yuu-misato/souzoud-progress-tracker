@@ -181,6 +181,7 @@ const DataManager = {
   async getStepsForProject(projectId) {
     try {
       const steps = await SupabaseClient.select('steps', `project_id=eq.${projectId}&order=step_order.asc`);
+      console.log('[DEBUG] getStepsForProject - raw steps for', projectId, ':', steps.map(s => ({ name: s.name, due_date: s.due_date, status: s.status })));
       return steps.map(s => ({
         id: s.step_order,
         name: s.name,
