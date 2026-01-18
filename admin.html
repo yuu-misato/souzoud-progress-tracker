@@ -535,6 +535,37 @@
                 display: block;
             }
         }
+
+        /* Footer */
+        .footer-minimal {
+            text-align: center;
+            padding: var(--space-8) 0;
+            color: var(--color-text-muted);
+            font-size: var(--font-size-sm);
+            margin-top: var(--space-8);
+        }
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: var(--space-3);
+            margin-bottom: var(--space-4);
+        }
+        .footer-link {
+            color: var(--color-text-muted);
+            text-decoration: none;
+            transition: color var(--transition-fast);
+        }
+        .footer-link:hover {
+            color: var(--color-primary);
+        }
+        .footer-link--active {
+            color: var(--color-primary);
+            font-weight: 500;
+        }
+        .footer-divider {
+            color: var(--color-border);
+        }
     </style>
 
     <main class="container">
@@ -661,6 +692,18 @@
             </div>
         </div>
     </main>
+
+    <!-- Footer -->
+    <footer class="footer-minimal">
+        <div class="footer-links">
+            <a href="/index.html" class="footer-link">お客様画面</a>
+            <span class="footer-divider">|</span>
+            <a href="/admin.html" class="footer-link footer-link--active">管理者画面</a>
+            <span class="footer-divider">|</span>
+            <a href="/worker.html" class="footer-link">作業者画面</a>
+        </div>
+        <p>© 2026 SOUZOUD Inc.</p>
+    </footer>
 
     <!-- Step Edit Modal -->
     <div class="modal-overlay" id="step-modal">
