@@ -1062,6 +1062,13 @@ const DataManager = {
           const projects = await SupabaseClient.select('projects', `id=eq.${a.project_id}`);
           project = projects[0];
         }
+        // Get director name if assigned
+        let directorName = '';
+        if (a.director_id) {
+          const directors = await SupabaseClient.select('admins', `id=eq.${a.director_id}`);
+          directorName = directors[0]?.name || '';
+        }
+
         return {
           id: a.id,
           stepId: a.step_id,
@@ -1069,9 +1076,12 @@ const DataManager = {
           stepDescription: step?.description || '',
           projectId: a.project_id || '',
           projectName: project?.name || '',
+          projectDescription: project?.description || '',
+          projectFolderUrl: project?.folder_url || '',
           clientName: project?.client || '',
           workerId: a.worker_id,
           directorId: a.director_id,
+          directorName: directorName,
           dueDate: a.due_date,
           notes: a.notes,
           status: a.status,
