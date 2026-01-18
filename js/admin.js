@@ -1940,21 +1940,19 @@ document.addEventListener('DOMContentLoaded', () => {
         // Sort upcoming deadlines by due date
         upcomingDeadlines.sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
 
-        // Calculate end of this week (Sunday 23:59:59)
-        const endOfWeek = new Date(now);
-        const dayOfWeek = endOfWeek.getDay();
-        const daysUntilSunday = dayOfWeek === 0 ? 0 : 7 - dayOfWeek;
-        endOfWeek.setDate(endOfWeek.getDate() + daysUntilSunday);
-        endOfWeek.setHours(23, 59, 59, 999);
+        // Calculate 7 days from now
+        const sevenDaysLater = new Date(now);
+        sevenDaysLater.setDate(sevenDaysLater.getDate() + 7);
+        sevenDaysLater.setHours(23, 59, 59, 999);
 
-        // Collect tasks due by end of this week (including overdue)
+        // Collect tasks due within 7 days (including overdue)
         const thisWeekTasks = [];
         for (const project of projects) {
             const steps = project.steps || [];
             for (const step of steps) {
                 if (step.dueDate && step.status !== 'completed') {
                     const dueDate = new Date(step.dueDate);
-                    if (dueDate <= endOfWeek) {
+                    if (dueDate <= sevenDaysLater) {
                         const daysUntil = Math.ceil((dueDate - now) / (1000 * 60 * 60 * 24));
                         thisWeekTasks.push({
                             projectId: project.id,
@@ -1974,7 +1972,7 @@ document.addEventListener('DOMContentLoaded', () => {
         thisWeekTasks.sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
 
         console.log('[DEBUG] initDashboard - thisWeekTasks:', thisWeekTasks);
-        console.log('[DEBUG] initDashboard - endOfWeek:', endOfWeek);
+        console.log('[DEBUG] initDashboard - sevenDaysLater:', sevenDaysLater);
         console.log('[DEBUG] initDashboard - upcomingDeadlines:', upcomingDeadlines);
         console.log('[DEBUG] initDashboard - overdueTasks:', overdueTasks);
         console.log('[DEBUG] initDashboard - projects sample steps:', projects.slice(0, 2).map(p => ({ name: p.name, steps: p.steps })));
@@ -2141,7 +2139,7 @@ document.addEventListener('DOMContentLoaded', () => {
             listEl.innerHTML = `
                 <div class="empty-state">
                     <div class="empty-state__icon">✅</div>
-                    <div>今週までの提出期限はありません</div>
+                    <div>7日以内の提出期限はありません</div>
                 </div>
             `;
             return;
