@@ -106,6 +106,15 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
+        // Logo click handler - return to dashboard
+        const logoLink = document.getElementById('logo-dashboard-link');
+        if (logoLink) {
+            logoLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                showEmptyState(); // Return to dashboard
+            });
+        }
+
         // Setup menus
         setupMobileMenu();
         setupDesktopSettingsMenu();
