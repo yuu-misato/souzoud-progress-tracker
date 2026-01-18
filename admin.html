@@ -757,7 +757,10 @@
                     </div>
                     <div class="input-group" style="margin-bottom: var(--space-3);">
                         <label for="step-due-date">期日</label>
-                        <input type="datetime-local" id="step-due-date" class="input">
+                        <input type="datetime-local" id="step-due-date" class="input" step="1800">
+                        <p style="font-size: var(--font-size-xs); color: var(--color-text-muted); margin-top: var(--space-1);">
+                            30分単位で設定できます
+                        </p>
                     </div>
                     <div class="input-group">
                         <label for="step-notes">作業者への注意事項（作業者のみ表示）</label>
