@@ -1,0 +1,1953 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MiERU - 進捗、聞かれる前に。| 制作現場の進捗共有サービス</title>
+    <meta name="description" content="クライアントへの進捗報告、まだ手作業ですか？MiERUなら共有リンク1つで報告完了。制作会社・広告代理店のための進捗共有サービス。14日間無料トライアル。">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+JP:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --color-ink: #0a0a0a;
+            --color-ink-secondary: #525252;
+            --color-ink-tertiary: #8a8a8a;
+            --color-ink-quaternary: #b3b3b3;
+            --color-surface: #ffffff;
+            --color-surface-elevated: #fafafa;
+            --color-surface-sunken: #f5f5f5;
+            --color-border: rgba(0,0,0,0.06);
+            --color-border-strong: rgba(0,0,0,0.12);
+            --color-accent: #0066ff;
+            --color-accent-soft: rgba(0,102,255,0.08);
+            --color-success: #00a67e;
+            --color-success-soft: rgba(0,166,126,0.08);
+
+            --font-display: 'Inter', 'Noto Sans JP', -apple-system, sans-serif;
+            --font-body: 'Noto Sans JP', 'Inter', -apple-system, sans-serif;
+
+            --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+            --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+
+            --space-unit: 8px;
+            --container-width: 1120px;
+            --header-height: 72px;
+        }
+
+        *, *::before, *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            font-size: 16px;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: var(--font-body);
+            color: var(--color-ink);
+            line-height: 1.7;
+            background: var(--color-surface);
+            overflow-x: hidden;
+        }
+
+        ::selection {
+            background: var(--color-accent);
+            color: white;
+        }
+
+        img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        /* ==================== Layout ==================== */
+        .container {
+            width: 100%;
+            max-width: var(--container-width);
+            margin: 0 auto;
+            padding: 0 calc(var(--space-unit) * 3);
+        }
+
+        .container--narrow {
+            max-width: 800px;
+        }
+
+        .container--wide {
+            max-width: 1400px;
+        }
+
+        /* ==================== Typography ==================== */
+        .display-xl {
+            font-family: var(--font-display);
+            font-size: clamp(2.5rem, 6vw, 4.5rem);
+            font-weight: 600;
+            line-height: 1.1;
+            letter-spacing: -0.03em;
+        }
+
+        .display-lg {
+            font-family: var(--font-display);
+            font-size: clamp(2rem, 4vw, 3rem);
+            font-weight: 600;
+            line-height: 1.15;
+            letter-spacing: -0.02em;
+        }
+
+        .display-md {
+            font-family: var(--font-display);
+            font-size: clamp(1.5rem, 3vw, 2rem);
+            font-weight: 600;
+            line-height: 1.2;
+            letter-spacing: -0.015em;
+        }
+
+        .text-lg {
+            font-size: 1.125rem;
+            line-height: 1.75;
+        }
+
+        .text-md {
+            font-size: 1rem;
+            line-height: 1.7;
+        }
+
+        .text-sm {
+            font-size: 0.875rem;
+            line-height: 1.6;
+        }
+
+        .text-xs {
+            font-size: 0.75rem;
+            line-height: 1.5;
+            letter-spacing: 0.02em;
+        }
+
+        .text-secondary { color: var(--color-ink-secondary); }
+        .text-tertiary { color: var(--color-ink-tertiary); }
+
+        /* ==================== Header ==================== */
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: var(--header-height);
+            background: rgba(255,255,255,0.72);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            z-index: 1000;
+            transition: all 0.4s var(--ease-out-expo);
+        }
+
+        .header--scrolled {
+            background: rgba(255,255,255,0.92);
+            box-shadow: 0 1px 0 var(--color-border);
+        }
+
+        .header__inner {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 100%;
+        }
+
+        .header__logo {
+            font-family: var(--font-display);
+            font-size: 1.375rem;
+            font-weight: 700;
+            color: var(--color-ink);
+            text-decoration: none;
+            letter-spacing: -0.02em;
+            transition: opacity 0.2s;
+        }
+
+        .header__logo:hover {
+            opacity: 0.7;
+        }
+
+        .header__nav {
+            display: flex;
+            align-items: center;
+            gap: calc(var(--space-unit) * 4);
+        }
+
+        .header__link {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--color-ink-secondary);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .header__link:hover {
+            color: var(--color-ink);
+        }
+
+        .header__cta {
+            display: flex;
+            align-items: center;
+            gap: calc(var(--space-unit) * 2);
+        }
+
+        /* ==================== Buttons ==================== */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: calc(var(--space-unit) * 1);
+            padding: calc(var(--space-unit) * 1.5) calc(var(--space-unit) * 3);
+            font-family: var(--font-body);
+            font-size: 0.875rem;
+            font-weight: 500;
+            text-decoration: none;
+            border: none;
+            border-radius: 100px;
+            cursor: pointer;
+            transition: all 0.25s var(--ease-out-expo);
+            white-space: nowrap;
+        }
+
+        .btn--primary {
+            background: var(--color-ink);
+            color: white;
+        }
+
+        .btn--primary:hover {
+            background: #262626;
+            transform: translateY(-1px);
+        }
+
+        .btn--secondary {
+            background: transparent;
+            color: var(--color-ink);
+            box-shadow: inset 0 0 0 1px var(--color-border-strong);
+        }
+
+        .btn--secondary:hover {
+            background: var(--color-surface-sunken);
+        }
+
+        .btn--ghost {
+            background: transparent;
+            color: var(--color-ink-secondary);
+        }
+
+        .btn--ghost:hover {
+            color: var(--color-ink);
+            background: var(--color-surface-sunken);
+        }
+
+        .btn--lg {
+            padding: calc(var(--space-unit) * 2) calc(var(--space-unit) * 4);
+            font-size: 1rem;
+        }
+
+        .btn--xl {
+            padding: calc(var(--space-unit) * 2.5) calc(var(--space-unit) * 5);
+            font-size: 1rem;
+        }
+
+        .btn--icon {
+            width: 40px;
+            height: 40px;
+            padding: 0;
+            border-radius: 50%;
+        }
+
+        /* ==================== Hero ==================== */
+        .hero {
+            padding-top: calc(var(--header-height) + var(--space-unit) * 12);
+            padding-bottom: calc(var(--space-unit) * 16);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+        }
+
+        .hero__inner {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: calc(var(--space-unit) * 10);
+            align-items: center;
+        }
+
+        .hero__content {
+            max-width: 540px;
+        }
+
+        .hero__badge {
+            display: inline-flex;
+            align-items: center;
+            gap: calc(var(--space-unit) * 1);
+            padding: calc(var(--space-unit) * 0.75) calc(var(--space-unit) * 2);
+            background: var(--color-success-soft);
+            color: var(--color-success);
+            border-radius: 100px;
+            font-size: 0.8125rem;
+            font-weight: 500;
+            margin-bottom: calc(var(--space-unit) * 4);
+        }
+
+        .hero__badge::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            background: currentColor;
+            border-radius: 50%;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        .hero__title {
+            margin-bottom: calc(var(--space-unit) * 4);
+        }
+
+        .hero__title-line {
+            display: block;
+        }
+
+        .hero__title-accent {
+            background: linear-gradient(135deg, var(--color-accent) 0%, #0099ff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero__description {
+            color: var(--color-ink-secondary);
+            margin-bottom: calc(var(--space-unit) * 5);
+        }
+
+        .hero__cta {
+            display: flex;
+            align-items: center;
+            gap: calc(var(--space-unit) * 2);
+            margin-bottom: calc(var(--space-unit) * 4);
+        }
+
+        .hero__meta {
+            display: flex;
+            align-items: center;
+            gap: calc(var(--space-unit) * 3);
+            color: var(--color-ink-tertiary);
+            font-size: 0.8125rem;
+        }
+
+        .hero__meta-item {
+            display: flex;
+            align-items: center;
+            gap: calc(var(--space-unit) * 1);
+        }
+
+        .hero__meta-icon {
+            width: 16px;
+            height: 16px;
+            opacity: 0.6;
+        }
+
+        .hero__visual {
+            position: relative;
+        }
+
+        .hero__visual-frame {
+            position: relative;
+            background: linear-gradient(145deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 24px;
+            padding: 24px;
+            box-shadow:
+                0 0 0 1px rgba(0,0,0,0.03),
+                0 2px 4px rgba(0,0,0,0.02),
+                0 12px 24px rgba(0,0,0,0.04),
+                0 32px 64px rgba(0,0,0,0.06);
+        }
+
+        .hero__visual-screen {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 0 0 1px rgba(0,0,0,0.06);
+        }
+
+        .hero__visual-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 16px;
+            background: #fafafa;
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .hero__visual-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .hero__visual-dot--red { background: #ff5f57; }
+        .hero__visual-dot--yellow { background: #febc2e; }
+        .hero__visual-dot--green { background: #28c840; }
+
+        .hero__visual-content {
+            padding: 24px;
+            min-height: 320px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .hero__visual-progress {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .hero__visual-step {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            background: var(--color-surface-sunken);
+            border-radius: 10px;
+            font-size: 0.875rem;
+        }
+
+        .hero__visual-step-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .hero__visual-step-icon--done {
+            background: var(--color-success);
+            color: white;
+        }
+
+        .hero__visual-step-icon--current {
+            background: var(--color-accent);
+            color: white;
+        }
+
+        .hero__visual-step-icon--pending {
+            background: var(--color-surface);
+            border: 2px solid var(--color-border-strong);
+            color: var(--color-ink-tertiary);
+        }
+
+        .hero__visual-step-text {
+            flex: 1;
+        }
+
+        .hero__visual-step-name {
+            font-weight: 500;
+            color: var(--color-ink);
+        }
+
+        .hero__visual-step-meta {
+            font-size: 0.75rem;
+            color: var(--color-ink-tertiary);
+        }
+
+        .hero__float {
+            position: absolute;
+            background: white;
+            border-radius: 16px;
+            padding: 16px 20px;
+            box-shadow:
+                0 0 0 1px rgba(0,0,0,0.04),
+                0 8px 24px rgba(0,0,0,0.08);
+            animation: float 4s ease-in-out infinite;
+        }
+
+        .hero__float--1 {
+            top: 10%;
+            right: -60px;
+            animation-delay: 0s;
+        }
+
+        .hero__float--2 {
+            bottom: 15%;
+            left: -40px;
+            animation-delay: 2s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-12px); }
+        }
+
+        .hero__float-content {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .hero__float-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .hero__float-icon--success {
+            background: var(--color-success-soft);
+        }
+
+        .hero__float-icon--info {
+            background: var(--color-accent-soft);
+        }
+
+        .hero__float-text {
+            font-size: 0.8125rem;
+        }
+
+        .hero__float-title {
+            font-weight: 600;
+            color: var(--color-ink);
+        }
+
+        .hero__float-subtitle {
+            color: var(--color-ink-tertiary);
+            font-size: 0.75rem;
+        }
+
+        /* ==================== Section ==================== */
+        .section {
+            padding: calc(var(--space-unit) * 16) 0;
+        }
+
+        .section--gray {
+            background: var(--color-surface-elevated);
+        }
+
+        .section--dark {
+            background: var(--color-ink);
+            color: white;
+        }
+
+        .section__header {
+            text-align: center;
+            max-width: 640px;
+            margin: 0 auto calc(var(--space-unit) * 10);
+        }
+
+        .section__label {
+            display: inline-block;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--color-ink-tertiary);
+            margin-bottom: calc(var(--space-unit) * 2);
+        }
+
+        .section--dark .section__label {
+            color: rgba(255,255,255,0.5);
+        }
+
+        .section__title {
+            margin-bottom: calc(var(--space-unit) * 3);
+        }
+
+        .section--dark .section__title {
+            color: white;
+        }
+
+        .section__description {
+            color: var(--color-ink-secondary);
+        }
+
+        .section--dark .section__description {
+            color: rgba(255,255,255,0.7);
+        }
+
+        /* ==================== Problem ==================== */
+        .problem-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: calc(var(--space-unit) * 3);
+        }
+
+        .problem-card {
+            padding: calc(var(--space-unit) * 5);
+            background: white;
+            border-radius: 20px;
+            border: 1px solid var(--color-border);
+            transition: all 0.4s var(--ease-out-expo);
+        }
+
+        .problem-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 32px rgba(0,0,0,0.08);
+            border-color: transparent;
+        }
+
+        .problem-card__icon {
+            width: 56px;
+            height: 56px;
+            background: var(--color-surface-sunken);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-bottom: calc(var(--space-unit) * 3);
+        }
+
+        .problem-card__title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: calc(var(--space-unit) * 1.5);
+            line-height: 1.4;
+        }
+
+        .problem-card__text {
+            color: var(--color-ink-secondary);
+            font-size: 0.9375rem;
+            line-height: 1.7;
+        }
+
+        /* ==================== Solution ==================== */
+        .solution-main {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: calc(var(--space-unit) * 12);
+            align-items: center;
+        }
+
+        .solution-visual {
+            position: relative;
+        }
+
+        .solution-visual__frame {
+            background: linear-gradient(145deg, #f0f4ff 0%, #e8f0ff 100%);
+            border-radius: 24px;
+            padding: 32px;
+            box-shadow:
+                0 0 0 1px rgba(0,102,255,0.08),
+                0 16px 48px rgba(0,102,255,0.12);
+        }
+
+        .solution-visual__screen {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 0 0 1px rgba(0,0,0,0.04);
+        }
+
+        .solution-content__title {
+            margin-bottom: calc(var(--space-unit) * 3);
+        }
+
+        .solution-content__text {
+            color: var(--color-ink-secondary);
+            margin-bottom: calc(var(--space-unit) * 5);
+        }
+
+        .solution-features {
+            display: flex;
+            flex-direction: column;
+            gap: calc(var(--space-unit) * 2);
+        }
+
+        .solution-feature {
+            display: flex;
+            align-items: center;
+            gap: calc(var(--space-unit) * 2);
+        }
+
+        .solution-feature__icon {
+            width: 24px;
+            height: 24px;
+            background: var(--color-success-soft);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--color-success);
+            font-size: 12px;
+            flex-shrink: 0;
+        }
+
+        .solution-feature__text {
+            font-size: 0.9375rem;
+            font-weight: 500;
+        }
+
+        /* ==================== Features ==================== */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: calc(var(--space-unit) * 3);
+        }
+
+        .feature-card {
+            padding: calc(var(--space-unit) * 4);
+            background: var(--color-surface-elevated);
+            border-radius: 20px;
+            transition: all 0.4s var(--ease-out-expo);
+        }
+
+        .feature-card:hover {
+            background: white;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.06);
+        }
+
+        .feature-card__icon {
+            width: 48px;
+            height: 48px;
+            background: white;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            margin-bottom: calc(var(--space-unit) * 3);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+
+        .feature-card__title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: calc(var(--space-unit) * 1);
+        }
+
+        .feature-card__text {
+            color: var(--color-ink-secondary);
+            font-size: 0.875rem;
+            line-height: 1.65;
+        }
+
+        /* ==================== Steps ==================== */
+        .steps-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: calc(var(--space-unit) * 4);
+            position: relative;
+        }
+
+        .steps-grid::before {
+            content: '';
+            position: absolute;
+            top: 48px;
+            left: calc(16.67% + 24px);
+            right: calc(16.67% + 24px);
+            height: 1px;
+            background: var(--color-border-strong);
+        }
+
+        .step-card {
+            text-align: center;
+            position: relative;
+        }
+
+        .step-card__number {
+            width: 96px;
+            height: 96px;
+            margin: 0 auto calc(var(--space-unit) * 4);
+            background: white;
+            border: 1px solid var(--color-border);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-display);
+            font-size: 2rem;
+            font-weight: 600;
+            color: var(--color-ink);
+            position: relative;
+            z-index: 1;
+            transition: all 0.4s var(--ease-out-expo);
+        }
+
+        .step-card:hover .step-card__number {
+            border-color: var(--color-accent);
+            color: var(--color-accent);
+            box-shadow: 0 8px 24px rgba(0,102,255,0.15);
+        }
+
+        .step-card__title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: calc(var(--space-unit) * 1.5);
+        }
+
+        .step-card__text {
+            color: var(--color-ink-secondary);
+            font-size: 0.9375rem;
+            max-width: 280px;
+            margin: 0 auto;
+        }
+
+        /* ==================== Stats ==================== */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: calc(var(--space-unit) * 4);
+        }
+
+        .stat-card {
+            text-align: center;
+            padding: calc(var(--space-unit) * 4) calc(var(--space-unit) * 2);
+        }
+
+        .stat-card__value {
+            font-family: var(--font-display);
+            font-size: 3rem;
+            font-weight: 600;
+            color: white;
+            margin-bottom: calc(var(--space-unit) * 1);
+            letter-spacing: -0.02em;
+        }
+
+        .stat-card__label {
+            font-size: 0.875rem;
+            color: rgba(255,255,255,0.7);
+        }
+
+        /* ==================== Testimonials ==================== */
+        .testimonials-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: calc(var(--space-unit) * 4);
+        }
+
+        .testimonial-card {
+            background: var(--color-surface-elevated);
+            border-radius: 24px;
+            padding: calc(var(--space-unit) * 5);
+            transition: all 0.4s var(--ease-out-expo);
+        }
+
+        .testimonial-card:hover {
+            background: white;
+            box-shadow: 0 12px 48px rgba(0,0,0,0.06);
+        }
+
+        .testimonial-card__rating {
+            display: flex;
+            gap: 2px;
+            margin-bottom: calc(var(--space-unit) * 3);
+        }
+
+        .testimonial-card__star {
+            width: 16px;
+            height: 16px;
+            color: #f59e0b;
+        }
+
+        .testimonial-card__text {
+            font-size: 1.0625rem;
+            line-height: 1.8;
+            margin-bottom: calc(var(--space-unit) * 4);
+            color: var(--color-ink);
+        }
+
+        .testimonial-card__author {
+            display: flex;
+            align-items: center;
+            gap: calc(var(--space-unit) * 2);
+        }
+
+        .testimonial-card__avatar {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--color-accent) 0%, #0099ff 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 1.125rem;
+        }
+
+        .testimonial-card__name {
+            font-weight: 600;
+            font-size: 0.9375rem;
+        }
+
+        .testimonial-card__role {
+            color: var(--color-ink-tertiary);
+            font-size: 0.8125rem;
+        }
+
+        /* ==================== Pricing ==================== */
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: calc(var(--space-unit) * 3);
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .pricing-card {
+            background: white;
+            border: 1px solid var(--color-border);
+            border-radius: 24px;
+            padding: calc(var(--space-unit) * 5);
+            transition: all 0.4s var(--ease-out-expo);
+            position: relative;
+        }
+
+        .pricing-card:hover {
+            border-color: transparent;
+            box-shadow: 0 16px 48px rgba(0,0,0,0.1);
+        }
+
+        .pricing-card--featured {
+            border-color: var(--color-ink);
+            box-shadow: 0 16px 48px rgba(0,0,0,0.1);
+        }
+
+        .pricing-card__badge {
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--color-ink);
+            color: white;
+            padding: 6px 16px;
+            border-radius: 100px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .pricing-card__name {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: calc(var(--space-unit) * 1);
+        }
+
+        .pricing-card__price {
+            display: flex;
+            align-items: baseline;
+            gap: 4px;
+            margin-bottom: calc(var(--space-unit) * 1);
+        }
+
+        .pricing-card__price-value {
+            font-family: var(--font-display);
+            font-size: 2.5rem;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+        }
+
+        .pricing-card__price-unit {
+            color: var(--color-ink-tertiary);
+            font-size: 0.875rem;
+        }
+
+        .pricing-card__desc {
+            color: var(--color-ink-tertiary);
+            font-size: 0.875rem;
+            margin-bottom: calc(var(--space-unit) * 4);
+            padding-bottom: calc(var(--space-unit) * 4);
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .pricing-card__features {
+            display: flex;
+            flex-direction: column;
+            gap: calc(var(--space-unit) * 2);
+            margin-bottom: calc(var(--space-unit) * 4);
+        }
+
+        .pricing-card__feature {
+            display: flex;
+            align-items: center;
+            gap: calc(var(--space-unit) * 1.5);
+            font-size: 0.875rem;
+        }
+
+        .pricing-card__feature-icon {
+            color: var(--color-success);
+            font-size: 1rem;
+        }
+
+        .pricing-card__cta {
+            width: 100%;
+        }
+
+        /* ==================== CTA ==================== */
+        .cta {
+            padding: calc(var(--space-unit) * 16) 0;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+            text-align: center;
+        }
+
+        .cta__title {
+            color: white;
+            margin-bottom: calc(var(--space-unit) * 3);
+        }
+
+        .cta__text {
+            color: rgba(255,255,255,0.7);
+            max-width: 520px;
+            margin: 0 auto calc(var(--space-unit) * 6);
+        }
+
+        .cta__buttons {
+            display: flex;
+            justify-content: center;
+            gap: calc(var(--space-unit) * 2);
+            margin-bottom: calc(var(--space-unit) * 4);
+        }
+
+        .btn--white {
+            background: white;
+            color: var(--color-ink);
+        }
+
+        .btn--white:hover {
+            background: #f5f5f5;
+        }
+
+        .btn--ghost-white {
+            background: transparent;
+            color: white;
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.25);
+        }
+
+        .btn--ghost-white:hover {
+            background: rgba(255,255,255,0.1);
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.4);
+        }
+
+        .cta__meta {
+            display: flex;
+            justify-content: center;
+            gap: calc(var(--space-unit) * 4);
+            color: rgba(255,255,255,0.5);
+            font-size: 0.8125rem;
+        }
+
+        .cta__meta-item {
+            display: flex;
+            align-items: center;
+            gap: calc(var(--space-unit) * 1);
+        }
+
+        /* ==================== FAQ ==================== */
+        .faq-list {
+            max-width: 720px;
+            margin: 0 auto;
+        }
+
+        .faq-item {
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .faq-item__trigger {
+            width: 100%;
+            padding: calc(var(--space-unit) * 3) 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: none;
+            border: none;
+            font-family: inherit;
+            font-size: 1rem;
+            font-weight: 500;
+            text-align: left;
+            color: var(--color-ink);
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .faq-item__trigger:hover {
+            color: var(--color-accent);
+        }
+
+        .faq-item__icon {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            color: var(--color-ink-tertiary);
+            transition: transform 0.3s var(--ease-out-expo);
+        }
+
+        .faq-item.active .faq-item__icon {
+            transform: rotate(45deg);
+        }
+
+        .faq-item__content {
+            display: grid;
+            grid-template-rows: 0fr;
+            transition: grid-template-rows 0.4s var(--ease-out-expo);
+        }
+
+        .faq-item.active .faq-item__content {
+            grid-template-rows: 1fr;
+        }
+
+        .faq-item__content-inner {
+            overflow: hidden;
+        }
+
+        .faq-item__answer {
+            padding-bottom: calc(var(--space-unit) * 3);
+            color: var(--color-ink-secondary);
+            font-size: 0.9375rem;
+            line-height: 1.75;
+        }
+
+        /* ==================== Footer ==================== */
+        .footer {
+            padding: calc(var(--space-unit) * 8) 0 calc(var(--space-unit) * 6);
+            background: var(--color-surface-elevated);
+            border-top: 1px solid var(--color-border);
+        }
+
+        .footer__inner {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: calc(var(--space-unit) * 6);
+        }
+
+        .footer__logo {
+            font-family: var(--font-display);
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--color-ink);
+        }
+
+        .footer__links {
+            display: flex;
+            gap: calc(var(--space-unit) * 4);
+        }
+
+        .footer__link {
+            color: var(--color-ink-secondary);
+            text-decoration: none;
+            font-size: 0.875rem;
+            transition: color 0.2s;
+        }
+
+        .footer__link:hover {
+            color: var(--color-ink);
+        }
+
+        .footer__copyright {
+            text-align: center;
+            padding-top: calc(var(--space-unit) * 4);
+            border-top: 1px solid var(--color-border);
+            color: var(--color-ink-tertiary);
+            font-size: 0.8125rem;
+        }
+
+        /* ==================== Animations ==================== */
+        .reveal {
+            opacity: 0;
+            transform: translateY(32px);
+            transition: opacity 0.8s var(--ease-out-expo), transform 0.8s var(--ease-out-expo);
+        }
+
+        .reveal.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .reveal-delay-1 { transition-delay: 0.1s; }
+        .reveal-delay-2 { transition-delay: 0.2s; }
+        .reveal-delay-3 { transition-delay: 0.3s; }
+
+        /* ==================== Responsive ==================== */
+        @media (max-width: 1024px) {
+            .hero__inner {
+                grid-template-columns: 1fr;
+                text-align: center;
+                gap: calc(var(--space-unit) * 8);
+            }
+
+            .hero__content {
+                max-width: 100%;
+            }
+
+            .hero__cta {
+                justify-content: center;
+            }
+
+            .hero__meta {
+                justify-content: center;
+            }
+
+            .hero__visual {
+                max-width: 560px;
+                margin: 0 auto;
+            }
+
+            .hero__float {
+                display: none;
+            }
+
+            .problem-grid,
+            .features-grid,
+            .steps-grid {
+                grid-template-columns: 1fr;
+                max-width: 480px;
+                margin-left: auto;
+                margin-right: auto;
+            }
+
+            .steps-grid::before {
+                display: none;
+            }
+
+            .solution-main {
+                grid-template-columns: 1fr;
+                gap: calc(var(--space-unit) * 8);
+            }
+
+            .testimonials-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .pricing-grid {
+                grid-template-columns: 1fr;
+                max-width: 400px;
+            }
+        }
+
+        @media (max-width: 640px) {
+            :root {
+                --header-height: 64px;
+            }
+
+            .container {
+                padding: 0 calc(var(--space-unit) * 2);
+            }
+
+            .header__nav {
+                display: none;
+            }
+
+            .section {
+                padding: calc(var(--space-unit) * 10) 0;
+            }
+
+            .hero {
+                padding-top: calc(var(--header-height) + var(--space-unit) * 8);
+                padding-bottom: calc(var(--space-unit) * 10);
+                min-height: auto;
+            }
+
+            .hero__cta {
+                flex-direction: column;
+            }
+
+            .hero__meta {
+                flex-direction: column;
+                gap: calc(var(--space-unit) * 1);
+            }
+
+            .stats-grid {
+                gap: calc(var(--space-unit) * 2);
+            }
+
+            .stat-card__value {
+                font-size: 2rem;
+            }
+
+            .cta__buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .cta__meta {
+                flex-direction: column;
+                gap: calc(var(--space-unit) * 1);
+            }
+
+            .footer__inner {
+                flex-direction: column;
+                gap: calc(var(--space-unit) * 4);
+                text-align: center;
+            }
+
+            .footer__links {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header" id="header">
+        <div class="container">
+            <div class="header__inner">
+                <a href="#" class="header__logo">MiERU</a>
+                <nav class="header__nav">
+                    <a href="#features" class="header__link">機能</a>
+                    <a href="#pricing" class="header__link">料金</a>
+                    <a href="#faq" class="header__link">FAQ</a>
+                </nav>
+                <div class="header__cta">
+                    <a href="#trial" class="btn btn--primary">無料で始める</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero__inner">
+                <div class="hero__content reveal">
+                    <div class="hero__badge">
+                        <span>先着100社 特別価格</span>
+                    </div>
+                    <h1 class="display-xl hero__title">
+                        <span class="hero__title-line">進捗、</span>
+                        <span class="hero__title-line hero__title-accent">聞かれる前に。</span>
+                    </h1>
+                    <p class="text-lg hero__description">
+                        クライアントへの進捗報告、まだ手作業ですか？<br>
+                        共有リンク1つで報告完了。制作現場のための進捗共有サービス。
+                    </p>
+                    <div class="hero__cta">
+                        <a href="#trial" class="btn btn--primary btn--xl">14日間無料で試す</a>
+                        <a href="#demo" class="btn btn--secondary btn--lg">デモを見る</a>
+                    </div>
+                    <div class="hero__meta">
+                        <div class="hero__meta-item">
+                            <svg class="hero__meta-icon" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                            </svg>
+                            <span>クレカ不要</span>
+                        </div>
+                        <div class="hero__meta-item">
+                            <svg class="hero__meta-icon" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                            </svg>
+                            <span>5分で導入</span>
+                        </div>
+                        <div class="hero__meta-item">
+                            <svg class="hero__meta-icon" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                            </svg>
+                            <span>いつでも解約可</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="hero__visual reveal reveal-delay-1">
+                    <div class="hero__visual-frame">
+                        <div class="hero__visual-screen">
+                            <div class="hero__visual-header">
+                                <span class="hero__visual-dot hero__visual-dot--red"></span>
+                                <span class="hero__visual-dot hero__visual-dot--yellow"></span>
+                                <span class="hero__visual-dot hero__visual-dot--green"></span>
+                            </div>
+                            <div class="hero__visual-content">
+                                <div class="hero__visual-progress">
+                                    <div class="hero__visual-step">
+                                        <div class="hero__visual-step-icon hero__visual-step-icon--done">✓</div>
+                                        <div class="hero__visual-step-text">
+                                            <div class="hero__visual-step-name">企画・ヒアリング</div>
+                                            <div class="hero__visual-step-meta">完了 · 1月10日</div>
+                                        </div>
+                                    </div>
+                                    <div class="hero__visual-step">
+                                        <div class="hero__visual-step-icon hero__visual-step-icon--done">✓</div>
+                                        <div class="hero__visual-step-text">
+                                            <div class="hero__visual-step-name">デザイン</div>
+                                            <div class="hero__visual-step-meta">完了 · 1月15日</div>
+                                        </div>
+                                    </div>
+                                    <div class="hero__visual-step">
+                                        <div class="hero__visual-step-icon hero__visual-step-icon--current">3</div>
+                                        <div class="hero__visual-step-text">
+                                            <div class="hero__visual-step-name">コーディング</div>
+                                            <div class="hero__visual-step-meta">進行中 · 山田さん</div>
+                                        </div>
+                                    </div>
+                                    <div class="hero__visual-step">
+                                        <div class="hero__visual-step-icon hero__visual-step-icon--pending">4</div>
+                                        <div class="hero__visual-step-text">
+                                            <div class="hero__visual-step-name">テスト・公開</div>
+                                            <div class="hero__visual-step-meta">予定 · 1月25日</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="hero__float hero__float--1">
+                        <div class="hero__float-content">
+                            <div class="hero__float-icon hero__float-icon--success">✓</div>
+                            <div class="hero__float-text">
+                                <div class="hero__float-title">デザイン完了</div>
+                                <div class="hero__float-subtitle">たった今</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="hero__float hero__float--2">
+                        <div class="hero__float-content">
+                            <div class="hero__float-icon hero__float-icon--info">📊</div>
+                            <div class="hero__float-text">
+                                <div class="hero__float-title">進捗率 75%</div>
+                                <div class="hero__float-subtitle">予定通り</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Problem -->
+    <section class="section section--gray">
+        <div class="container">
+            <div class="section__header reveal">
+                <div class="section__label">課題</div>
+                <h2 class="display-lg section__title">こんなお悩み、ありませんか？</h2>
+            </div>
+            <div class="problem-grid">
+                <div class="problem-card reveal">
+                    <div class="problem-card__icon">📞</div>
+                    <h3 class="problem-card__title">「今どうなってますか？」<br>の電話が多い</h3>
+                    <p class="problem-card__text">クライアントからの進捗確認が頻繁で、その対応だけで1日が終わってしまう。</p>
+                </div>
+                <div class="problem-card reveal reveal-delay-1">
+                    <div class="problem-card__icon">📊</div>
+                    <h3 class="problem-card__title">Excel管理に<br>限界を感じている</h3>
+                    <p class="problem-card__text">複数プロジェクトの管理、共有、更新。手間がかかりすぎて本来の仕事に集中できない。</p>
+                </div>
+                <div class="problem-card reveal reveal-delay-2">
+                    <div class="problem-card__icon">👥</div>
+                    <h3 class="problem-card__title">チーム内の共有が<br>うまくいかない</h3>
+                    <p class="problem-card__text">誰が何をやっているか把握できず、タスクの抜け漏れや重複が発生している。</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Solution -->
+    <section class="section" id="demo">
+        <div class="container">
+            <div class="section__header reveal">
+                <div class="section__label">解決策</div>
+                <h2 class="display-lg section__title">MiERUがすべて解決します</h2>
+                <p class="text-lg section__description">共有リンク1つで、クライアント・チーム全員が<br>同じ画面を見られる。それがMiERUです。</p>
+            </div>
+            <div class="solution-main">
+                <div class="solution-visual reveal">
+                    <div class="solution-visual__frame">
+                        <div class="solution-visual__screen">
+                            <div style="text-align: center; padding: 48px 24px; color: var(--color-ink-secondary);">
+                                <div style="font-size: 48px; margin-bottom: 16px;">👁️</div>
+                                <div style="font-weight: 600; margin-bottom: 8px;">クライアント専用画面</div>
+                                <div style="font-size: 14px;">ログイン不要で進捗を確認</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="solution-content reveal reveal-delay-1">
+                    <h3 class="display-md solution-content__title">クライアント専用画面が<br>標準搭載</h3>
+                    <p class="text-lg solution-content__text">追加料金なしでクライアント向けの専用画面をご提供。共有リンクを送るだけで、進捗状況をリアルタイムで確認してもらえます。</p>
+                    <div class="solution-features">
+                        <div class="solution-feature">
+                            <div class="solution-feature__icon">✓</div>
+                            <span class="solution-feature__text">リアルタイム進捗表示</span>
+                        </div>
+                        <div class="solution-feature">
+                            <div class="solution-feature__icon">✓</div>
+                            <span class="solution-feature__text">パスワード保護で安心</span>
+                        </div>
+                        <div class="solution-feature">
+                            <div class="solution-feature__icon">✓</div>
+                            <span class="solution-feature__text">スマホからもアクセス可能</span>
+                        </div>
+                        <div class="solution-feature">
+                            <div class="solution-feature__icon">✓</div>
+                            <span class="solution-feature__text">「進捗どうですか？」が激減</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features -->
+    <section class="section section--gray" id="features">
+        <div class="container">
+            <div class="section__header reveal">
+                <div class="section__label">機能</div>
+                <h2 class="display-lg section__title">シンプル、だけど必要な機能は全部</h2>
+                <p class="text-lg section__description">複雑なツールはもういらない。<br>制作現場に本当に必要な機能だけを厳選しました。</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card reveal">
+                    <div class="feature-card__icon">👁️</div>
+                    <h3 class="feature-card__title">3つの画面</h3>
+                    <p class="feature-card__text">管理者・作業者・クライアント、それぞれ専用の画面で最適な情報を表示。</p>
+                </div>
+                <div class="feature-card reveal reveal-delay-1">
+                    <div class="feature-card__icon">📋</div>
+                    <h3 class="feature-card__title">工程管理</h3>
+                    <p class="feature-card__text">工程ごとに担当者と期日を設定。複数工程の同時進行にも対応。</p>
+                </div>
+                <div class="feature-card reveal reveal-delay-2">
+                    <div class="feature-card__icon">🔗</div>
+                    <h3 class="feature-card__title">共有リンク</h3>
+                    <p class="feature-card__text">URLを送るだけでクライアントに共有。ログイン不要、パスワード保護付き。</p>
+                </div>
+                <div class="feature-card reveal">
+                    <div class="feature-card__icon">📱</div>
+                    <h3 class="feature-card__title">モバイル対応</h3>
+                    <p class="feature-card__text">外出先でもスマホで進捗確認・更新が可能。いつでもどこでも。</p>
+                </div>
+                <div class="feature-card reveal reveal-delay-1">
+                    <div class="feature-card__icon">📊</div>
+                    <h3 class="feature-card__title">ダッシュボード</h3>
+                    <p class="feature-card__text">全プロジェクトの状況を一画面で把握。締切間近のタスクも一目瞭然。</p>
+                </div>
+                <div class="feature-card reveal reveal-delay-2">
+                    <div class="feature-card__icon">📁</div>
+                    <h3 class="feature-card__title">テンプレート</h3>
+                    <p class="feature-card__text">よく使う工程をテンプレート化。新規プロジェクト作成が数クリックで完了。</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Steps -->
+    <section class="section">
+        <div class="container">
+            <div class="section__header reveal">
+                <div class="section__label">使い方</div>
+                <h2 class="display-lg section__title">3ステップで始められる</h2>
+            </div>
+            <div class="steps-grid">
+                <div class="step-card reveal">
+                    <div class="step-card__number">1</div>
+                    <h3 class="step-card__title">プロジェクト作成</h3>
+                    <p class="step-card__text">プロジェクト名とクライアント名を入力。テンプレートを使えばさらに簡単。</p>
+                </div>
+                <div class="step-card reveal reveal-delay-1">
+                    <div class="step-card__number">2</div>
+                    <h3 class="step-card__title">工程を設定</h3>
+                    <p class="step-card__text">工程名、担当者、期日を設定。ドラッグ&ドロップで順番も変更可能。</p>
+                </div>
+                <div class="step-card reveal reveal-delay-2">
+                    <div class="step-card__number">3</div>
+                    <h3 class="step-card__title">リンクを共有</h3>
+                    <p class="step-card__text">発行された共有リンクをクライアントに送信。これで報告完了。</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats -->
+    <section class="section section--dark">
+        <div class="container">
+            <div class="stats-grid">
+                <div class="stat-card reveal">
+                    <div class="stat-card__value">週3時間</div>
+                    <div class="stat-card__label">報告時間を削減</div>
+                </div>
+                <div class="stat-card reveal reveal-delay-1">
+                    <div class="stat-card__value">80%</div>
+                    <div class="stat-card__label">問い合わせ減少</div>
+                </div>
+                <div class="stat-card reveal reveal-delay-2">
+                    <div class="stat-card__value">5分</div>
+                    <div class="stat-card__label">平均導入時間</div>
+                </div>
+                <div class="stat-card reveal reveal-delay-3">
+                    <div class="stat-card__value">98%</div>
+                    <div class="stat-card__label">継続利用率</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials -->
+    <section class="section">
+        <div class="container">
+            <div class="section__header reveal">
+                <div class="section__label">導入事例</div>
+                <h2 class="display-lg section__title">導入企業の声</h2>
+            </div>
+            <div class="testimonials-grid">
+                <div class="testimonial-card reveal">
+                    <div class="testimonial-card__rating">
+                        <svg class="testimonial-card__star" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                        <svg class="testimonial-card__star" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                        <svg class="testimonial-card__star" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                        <svg class="testimonial-card__star" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                        <svg class="testimonial-card__star" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                    </div>
+                    <p class="testimonial-card__text">「進捗どうなってますか？」という電話が本当に減りました。クライアントも自分で確認できるので、双方にとってストレスフリーです。</p>
+                    <div class="testimonial-card__author">
+                        <div class="testimonial-card__avatar">Y</div>
+                        <div>
+                            <div class="testimonial-card__name">山田 太郎</div>
+                            <div class="testimonial-card__role">Web制作会社 ディレクター</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="testimonial-card reveal reveal-delay-1">
+                    <div class="testimonial-card__rating">
+                        <svg class="testimonial-card__star" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                        <svg class="testimonial-card__star" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                        <svg class="testimonial-card__star" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                        <svg class="testimonial-card__star" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                        <svg class="testimonial-card__star" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                    </div>
+                    <p class="testimonial-card__text">以前はExcelで管理していましたが、MiERUに変えてから作業効率が格段に上がりました。特にクライアント共有機能が素晴らしい。</p>
+                    <div class="testimonial-card__author">
+                        <div class="testimonial-card__avatar">S</div>
+                        <div>
+                            <div class="testimonial-card__name">佐藤 花子</div>
+                            <div class="testimonial-card__role">デザイン事務所 代表</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="testimonial-card reveal">
+                    <div class="testimonial-card__rating">
+                        <svg class="testimonial-card__star" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                        <svg class="testimonial-card__star" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                        <svg class="testimonial-card__star" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                        <svg class="testimonial-card__star" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                        <svg class="testimonial-card__star" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                    </div>
+                    <p class="testimonial-card__text">リモートワーク中心のチームなので、情報共有が課題でした。MiERUのおかげで誰が何をやっているか一目瞭然になりました。</p>
+                    <div class="testimonial-card__author">
+                        <div class="testimonial-card__avatar">T</div>
+                        <div>
+                            <div class="testimonial-card__name">田中 一郎</div>
+                            <div class="testimonial-card__role">フリーランス集団 リーダー</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="testimonial-card reveal reveal-delay-1">
+                    <div class="testimonial-card__rating">
+                        <svg class="testimonial-card__star" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                        <svg class="testimonial-card__star" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                        <svg class="testimonial-card__star" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                        <svg class="testimonial-card__star" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                        <svg class="testimonial-card__star" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                    </div>
+                    <p class="testimonial-card__text">複雑なツールは使いこなせなかったのですが、MiERUはシンプルで助かっています。5分で使い方を覚えられました。</p>
+                    <div class="testimonial-card__author">
+                        <div class="testimonial-card__avatar">K</div>
+                        <div>
+                            <div class="testimonial-card__name">鈴木 健太</div>
+                            <div class="testimonial-card__role">映像制作会社 プロデューサー</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing -->
+    <section class="section section--gray" id="pricing">
+        <div class="container">
+            <div class="section__header reveal">
+                <div class="section__label">料金</div>
+                <h2 class="display-lg section__title">シンプルな料金体系</h2>
+                <p class="text-lg section__description">全プラン14日間無料。クレジットカード不要。</p>
+            </div>
+            <div class="pricing-grid">
+                <div class="pricing-card reveal">
+                    <div class="pricing-card__name">スターター</div>
+                    <div class="pricing-card__price">
+                        <span class="pricing-card__price-value">¥0</span>
+                        <span class="pricing-card__price-unit">/月</span>
+                    </div>
+                    <div class="pricing-card__desc">小規模チーム向け</div>
+                    <div class="pricing-card__features">
+                        <div class="pricing-card__feature">
+                            <span class="pricing-card__feature-icon">✓</span>
+                            <span>プロジェクト3件まで</span>
+                        </div>
+                        <div class="pricing-card__feature">
+                            <span class="pricing-card__feature-icon">✓</span>
+                            <span>管理者1名</span>
+                        </div>
+                        <div class="pricing-card__feature">
+                            <span class="pricing-card__feature-icon">✓</span>
+                            <span>作業者3名まで</span>
+                        </div>
+                        <div class="pricing-card__feature">
+                            <span class="pricing-card__feature-icon">✓</span>
+                            <span>クライアント共有</span>
+                        </div>
+                    </div>
+                    <a href="#trial" class="btn btn--secondary btn--lg pricing-card__cta">無料で始める</a>
+                </div>
+                <div class="pricing-card pricing-card--featured reveal reveal-delay-1">
+                    <div class="pricing-card__badge">人気</div>
+                    <div class="pricing-card__name">プロ</div>
+                    <div class="pricing-card__price">
+                        <span class="pricing-card__price-value">¥4,980</span>
+                        <span class="pricing-card__price-unit">/月</span>
+                    </div>
+                    <div class="pricing-card__desc">成長中のチーム向け</div>
+                    <div class="pricing-card__features">
+                        <div class="pricing-card__feature">
+                            <span class="pricing-card__feature-icon">✓</span>
+                            <span>プロジェクト無制限</span>
+                        </div>
+                        <div class="pricing-card__feature">
+                            <span class="pricing-card__feature-icon">✓</span>
+                            <span>管理者3名まで</span>
+                        </div>
+                        <div class="pricing-card__feature">
+                            <span class="pricing-card__feature-icon">✓</span>
+                            <span>作業者10名まで</span>
+                        </div>
+                        <div class="pricing-card__feature">
+                            <span class="pricing-card__feature-icon">✓</span>
+                            <span>テンプレート機能</span>
+                        </div>
+                        <div class="pricing-card__feature">
+                            <span class="pricing-card__feature-icon">✓</span>
+                            <span>優先サポート</span>
+                        </div>
+                    </div>
+                    <a href="#trial" class="btn btn--primary btn--lg pricing-card__cta">14日間無料で試す</a>
+                </div>
+                <div class="pricing-card reveal reveal-delay-2">
+                    <div class="pricing-card__name">ビジネス</div>
+                    <div class="pricing-card__price">
+                        <span class="pricing-card__price-value">¥9,800</span>
+                        <span class="pricing-card__price-unit">/月</span>
+                    </div>
+                    <div class="pricing-card__desc">大規模チーム向け</div>
+                    <div class="pricing-card__features">
+                        <div class="pricing-card__feature">
+                            <span class="pricing-card__feature-icon">✓</span>
+                            <span>プロジェクト無制限</span>
+                        </div>
+                        <div class="pricing-card__feature">
+                            <span class="pricing-card__feature-icon">✓</span>
+                            <span>管理者無制限</span>
+                        </div>
+                        <div class="pricing-card__feature">
+                            <span class="pricing-card__feature-icon">✓</span>
+                            <span>作業者無制限</span>
+                        </div>
+                        <div class="pricing-card__feature">
+                            <span class="pricing-card__feature-icon">✓</span>
+                            <span>API連携</span>
+                        </div>
+                        <div class="pricing-card__feature">
+                            <span class="pricing-card__feature-icon">✓</span>
+                            <span>専任サポート</span>
+                        </div>
+                    </div>
+                    <a href="#" class="btn btn--secondary btn--lg pricing-card__cta">お問い合わせ</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="cta" id="trial">
+        <div class="container">
+            <h2 class="display-lg cta__title reveal">進捗報告の手間、<br>今日で終わりにしませんか？</h2>
+            <p class="text-lg cta__text reveal">14日間の無料トライアルで、MiERUの全機能をお試しください。<br>クレジットカード登録不要で、今すぐ始められます。</p>
+            <div class="cta__buttons reveal">
+                <a href="/admin.html" class="btn btn--white btn--xl">無料トライアルを始める</a>
+                <a href="#" class="btn btn--ghost-white btn--lg">資料をダウンロード</a>
+            </div>
+            <div class="cta__meta reveal">
+                <div class="cta__meta-item">
+                    <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/></svg>
+                    <span>クレジットカード不要</span>
+                </div>
+                <div class="cta__meta-item">
+                    <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                    <span>いつでもキャンセル可能</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="section" id="faq">
+        <div class="container">
+            <div class="section__header reveal">
+                <div class="section__label">FAQ</div>
+                <h2 class="display-lg section__title">よくある質問</h2>
+            </div>
+            <div class="faq-list">
+                <div class="faq-item reveal">
+                    <button class="faq-item__trigger">
+                        <span>無料トライアル後、自動で課金されますか？</span>
+                        <span class="faq-item__icon">+</span>
+                    </button>
+                    <div class="faq-item__content">
+                        <div class="faq-item__content-inner">
+                            <p class="faq-item__answer">いいえ、自動で課金されることはありません。無料トライアル終了後、有料プランへのアップグレードをご希望の場合のみ、決済情報をご登録いただきます。</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="faq-item reveal">
+                    <button class="faq-item__trigger">
+                        <span>クライアントにアカウント作成してもらう必要はありますか？</span>
+                        <span class="faq-item__icon">+</span>
+                    </button>
+                    <div class="faq-item__content">
+                        <div class="faq-item__content-inner">
+                            <p class="faq-item__answer">いいえ、必要ありません。共有リンクとパスワードがあれば、クライアントはアカウント作成なしで進捗を確認できます。</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="faq-item reveal">
+                    <button class="faq-item__trigger">
+                        <span>データのセキュリティは大丈夫ですか？</span>
+                        <span class="faq-item__icon">+</span>
+                    </button>
+                    <div class="faq-item__content">
+                        <div class="faq-item__content-inner">
+                            <p class="faq-item__answer">はい、SSL暗号化通信を使用し、データは安全なクラウドサーバーで管理されています。また、クライアント共有画面にはパスワード保護がかけられます。</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="faq-item reveal">
+                    <button class="faq-item__trigger">
+                        <span>他のツールからデータを移行できますか？</span>
+                        <span class="faq-item__icon">+</span>
+                    </button>
+                    <div class="faq-item__content">
+                        <div class="faq-item__content-inner">
+                            <p class="faq-item__answer">現在、CSV形式でのインポート機能を開発中です。お急ぎの場合は、サポートチームがデータ移行をお手伝いいたします。</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="faq-item reveal">
+                    <button class="faq-item__trigger">
+                        <span>途中でプランを変更できますか？</span>
+                        <span class="faq-item__icon">+</span>
+                    </button>
+                    <div class="faq-item__content">
+                        <div class="faq-item__content-inner">
+                            <p class="faq-item__answer">はい、いつでもプランのアップグレード・ダウングレードが可能です。アップグレードは即座に反映され、ダウングレードは次回更新日から適用されます。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer__inner">
+                <div class="footer__logo">MiERU</div>
+                <div class="footer__links">
+                    <a href="#features" class="footer__link">機能</a>
+                    <a href="#pricing" class="footer__link">料金</a>
+                    <a href="#faq" class="footer__link">FAQ</a>
+                    <a href="#" class="footer__link">お問い合わせ</a>
+                    <a href="#" class="footer__link">プライバシーポリシー</a>
+                    <a href="#" class="footer__link">利用規約</a>
+                </div>
+            </div>
+            <div class="footer__copyright">
+                © 2026 SOUZOUD Inc. All rights reserved.
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Header scroll effect
+        const header = document.getElementById('header');
+        let lastScroll = 0;
+
+        window.addEventListener('scroll', () => {
+            const currentScroll = window.pageYOffset;
+
+            if (currentScroll > 50) {
+                header.classList.add('header--scrolled');
+            } else {
+                header.classList.remove('header--scrolled');
+            }
+
+            lastScroll = currentScroll;
+        });
+
+        // FAQ accordion
+        document.querySelectorAll('.faq-item__trigger').forEach(trigger => {
+            trigger.addEventListener('click', () => {
+                const item = trigger.parentElement;
+                const isActive = item.classList.contains('active');
+
+                // Close all
+                document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('active'));
+
+                // Open clicked if it wasn't active
+                if (!isActive) {
+                    item.classList.add('active');
+                }
+            });
+        });
+
+        // Scroll reveal animation
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -60px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.reveal').forEach(el => {
+            observer.observe(el);
+        });
+
+        // Smooth scroll
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    const headerOffset = 80;
+                    const elementPosition = target.getBoundingClientRect().top;
+                    const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+
+                    window.scrollTo({
+                        top: offsetPosition,
+                        behavior: 'smooth'
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
